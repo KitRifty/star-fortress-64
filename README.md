@@ -49,6 +49,7 @@ To enter an Arwing, walk up and point at it then call MEDIC (default is 'E').
 | Fire Charged Laser | HOLD Primary Attack then release |
 | Fire Smart Bomb | Secondary Attack |
 | Tilt Left/Right | HOLD Reload + Strafe Key |
+| Barrel Roll | Double tap Reload |
 | Boost | HOLD Jump |
 | Brake | HOLD Crouch |
 | Somersault | Strafe Back + Jump |
