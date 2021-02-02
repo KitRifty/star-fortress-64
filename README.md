@@ -19,7 +19,7 @@ Where Star Fox and Team Fortress 2 two love each other so much they decided to m
 
 This was made seven years ago for the late Lunar Republic Gaming and Gray Mann Gaming communities, but now here it all is for the public. I'm not sure if it'll even run with the current SourceMod version, but I have no interest in updating it myself. Included is both the Arwing core plugin and a custom gamemode I built for the Arwings, but I never got that far with it.
 
-Note: **Arwing** is used here as a generic term for any flying vehicles of this mod. Yes, the Star Fox Arwing is provided here, but you *can* technically create your own flying vehicles. You can use the Arwing's config as a base. Vehicle configs are located at `sourcemod/configs/vehicles/arwing`.
+Note: **Arwing** is used here as a generic term for any flying vehicles of this mod. Yes, the Star Fox Arwing is provided here, but you *can* technically create your own flying vehicles. You can use the Arwing's config as a base. Vehicle configs are located at `sourcemod/configs/starfortress64/vehicles/arwing`.
 
 # Showcase
 https://www.youtube.com/watch?v=5xfbHrXYY_4
@@ -40,10 +40,24 @@ https://www.youtube.com/watch?v=A24JMjyenpI
 [Pickup Models, Sounds, Materials, Test Map, Woonwing](https://drive.google.com/file/d/1auuQE4MMv8O-_sLSpEzukK9l5_EUv3p6/view?usp=sharing)
 > :warning: The Woonwing model is missing its material and is unfortunately lost to time.
 
+# Controls
+To enter an Arwing, walk up and point at it then call MEDIC (default is 'E').
+
+| Name | Keybind (Default) |
+| --- | --- |
+| Fire | Primary Attack |
+| Fire Charged Laser | HOLD Primary Attack then release |
+| Fire Smart Bomb | Secondary Attack |
+| Tilt Left/Right | HOLD Reload + Strafe Key |
+| Boost | HOLD Jump |
+| Brake | HOLD Crouch |
+| Somersault | Strafe Back + Jump |
+| U-Turn | Strafe Back + Crouch |
+
 # Commands
 | Name | Description | Admin Flags |
 | --- | --- | --- |
-| sm_sf64_spawn_arwing \<name\> | Spawns a vehicle at wherever you're pointing. This takes one argument, the vehicle name, which is usually just `arwing` or whatever vehicles are defined in `sourcemod/configs/vehicles/arwing` directory. | ADMFLAG_CHEATS |
+| sm_sf64_spawn_arwing \<name\> | Spawns a vehicle at wherever you're pointing. This takes one argument, the vehicle name, which is usually just `arwing` or whatever vehicles are defined in `sourcemod/configs/starfortress64/vehicles/arwing` directory. | ADMFLAG_CHEATS |
 | sm_sf64_forceintovehicle <#userid\|name> \[targetname\] | Forces the specified player into the Arwing you're pointing at. Optionally, you may also provide a target name of the Arwing entity. | ADMFLAG_CHEATS |
 | sm_sf64_spawn_pickup \<name\> | Spawns a pickup at your location with the provided name. By default, this can be `laser`, `smartbomb`, `ring`, or `ring2`. | ADMFLAG_CHEATS |
 
