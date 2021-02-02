@@ -327,7 +327,7 @@ stock VehicleSpawnEffects(vehicle, EffectEvent:iEvent, bool:bStartOn=false, bool
 // This function is specifically used in special cases where instead of parenting the effect to the vehicle,
 // we want it to be parented to a "fake" model of the vehicle instead. One good example of these "special cases"
 // include the Arwing's classic barrel roll.
-stock VehicleParentMyEffectToSelf(vehicle, iEffectIndex, bool:bOverridePos=false, const Float:flOverridePos[3]=NULL_VECTOR, const Float:flOverrideAng[3]=NULL_VECTOR)
+stock VehicleParentMyEffectToSelf(iVehicle, iEffectIndex, bool:bOverridePos=false, const Float:flOverridePos[3]=NULL_VECTOR, const Float:flOverrideAng[3]=NULL_VECTOR)
 {
 	if (iEffectIndex < 0 || iEffectIndex >= GetArraySize(g_hEffects)) return;
 	
