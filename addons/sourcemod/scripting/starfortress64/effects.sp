@@ -135,7 +135,7 @@ stock RemoveEffect(iEffect, bool:bForce=false)
 		case EffectType_Trail: flDelay = GetEntPropFloat(iEffect, Prop_Send, "m_flLifeTime");
 	}
 	
-	RemoveEntity(iEffect, flDelay);
+	DeleteEntity(iEffect, flDelay);
 }
 
 stock TurnOnEffectsOfEntityOfEvent(iOwner, EffectEvent:iEvent, bool:bIgnoreKill=false)

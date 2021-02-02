@@ -230,7 +230,7 @@ public ChargedLaserOnEntityDestroyed(entity)
 					AcceptEntityInput(iSmoke, "TurnOff");
 					AcceptEntityInput(iSmoke, "ClearParent");
 					TeleportEntity(iSmoke, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
-					RemoveEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
+					DeleteEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
 				}
 				
 				iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt2));
@@ -239,7 +239,7 @@ public ChargedLaserOnEntityDestroyed(entity)
 					AcceptEntityInput(iSmoke, "TurnOff");
 					AcceptEntityInput(iSmoke, "ClearParent");
 					TeleportEntity(iSmoke, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
-					RemoveEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
+					DeleteEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
 				}
 				
 				iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt3));
@@ -248,7 +248,7 @@ public ChargedLaserOnEntityDestroyed(entity)
 					AcceptEntityInput(iSmoke, "TurnOff");
 					AcceptEntityInput(iSmoke, "ClearParent");
 					TeleportEntity(iSmoke, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
-					RemoveEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
+					DeleteEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
 				}
 				
 				EmitSoundToAll(ARWING_CHARGEDLASER_HIT_SOUND, entity, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -294,7 +294,7 @@ public Hook_ChargedLaserStartTouchPost(iChargedLaser, other)
 		if (bHit) 
 		{
 			SetArrayCell(g_hChargedLasers, iIndex, true, ChargedLaser_Hit);
-			RemoveEntity(iChargedLaser);
+			DeleteEntity(iChargedLaser);
 		}
 	}
 }
@@ -480,7 +480,7 @@ ReleaseChargedLaser(iChargedLaser, bool:bForce=false)
 		AcceptEntityInput(iSmoke, "TurnOn");
 	}
 	
-	RemoveEntity(iChargedLaser, Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_LifeTime));
+	DeleteEntity(iChargedLaser, Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_LifeTime));
 }
 
 StartTrackingOnChargedLaser(iChargedLaser, bool:bForce=false)

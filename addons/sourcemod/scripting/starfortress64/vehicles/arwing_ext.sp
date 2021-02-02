@@ -523,7 +523,7 @@ ArwingReleaseChargedLaser(iArwing, bool:bForceKill=false)
 	if (bForceKill || (bool:GetArrayCell(g_hChargedLasers, iChargedLaserIndex, ChargedLaser_IsCharging) &&
 		GetGameTime() < Float:GetArrayCell(g_hChargedLasers, iChargedLaserIndex, ChargedLaser_ChargeEndTime)))
 	{
-		RemoveEntity(iChargedLaser);
+		DeleteEntity(iChargedLaser);
 		return;
 	}
 	
