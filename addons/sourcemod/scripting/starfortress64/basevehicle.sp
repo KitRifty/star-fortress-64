@@ -338,11 +338,11 @@ stock VehicleParentMyEffectToSelf(iVehicle, iEffectIndex, bool:bOverridePos=fals
 	if (!IsVehicle(iVehicle, iVehicleType, iIndex)) return;
 	
 	new iOwner = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex, Effect_Owner));
-	if (!iOwner || iOwner == INVALID_ENT_REFERENCE || iOwner != vehicle) return;
+	if (!iOwner || iOwner == INVALID_ENT_REFERENCE || iOwner != iVehicle) return;
 	
 	switch (iVehicleType)
 	{
-		case VehicleType_Arwing: ArwingParentMyEffectToSelf(vehicle, iEffectIndex, bOverridePos, flOverridePos, flOverrideAng);
+		case VehicleType_Arwing: ArwingParentMyEffectToSelf(iVehicle, iEffectIndex, bOverridePos, flOverridePos, flOverrideAng);
 	}
 }
 
