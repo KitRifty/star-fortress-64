@@ -33,7 +33,7 @@ https://www.youtube.com/watch?v=A24JMjyenpI
 # Assets
 [Star Fox Arwing Model](https://garrysmods.org/download/17957/arwingzip)
 
-[Sounds, HUD Materials, Test Map, Woonwing](https://drive.google.com/file/d/19rv2_lrMDsTLeuc4blrDsxYeilbwVCgO/view?usp=sharing)
+[Pickup Models, Sounds, Materials, Test Map, Woonwing](https://drive.google.com/file/d/1auuQE4MMv8O-_sLSpEzukK9l5_EUv3p6/view?usp=sharing)
 > :warning: The Woonwing model is missing its material and is unfortunately lost to time.
 
 # Commands
