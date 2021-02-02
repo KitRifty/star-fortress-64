@@ -1,0 +1,22 @@
+"Games"
+{
+	"tf"
+	{
+		"Offsets"
+		{
+			"CBaseEntity::GetSmoothedVelocity"
+			{
+				"windows"	"139"
+				"linux"		"140"
+				"mac"		"140"
+			}
+			
+			"CBaseEntity::GetSoundEmissionOrigin"
+			{
+				"windows"	"150"
+				"linux"	"151"
+				"mac"	"151"
+			}
+		}
+	}
+}
