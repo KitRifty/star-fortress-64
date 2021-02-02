@@ -733,8 +733,8 @@ GameRulesInitializeRoundTimer(iRoundTime, Handle:hCallbackPlugin=INVALID_HANDLE,
 	g_iGameRoundTime = iRoundTime;
 	new Handle:hPack;
 	g_hGameRoundTimer = CreateDataTimer(1.0, Timer_GameRound, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	WritePackCell(hPack, _:hCallbackPlugin);
-	WritePackCell(hPack, _:fCallback);
+	WritePackCell(hPack, hCallbackPlugin);
+	WritePackFunction(hPack, fCallback);
 	
 	TriggerTimer(g_hGameRoundTimer, true);
 	
@@ -774,8 +774,8 @@ public Action:Timer_GameRound(Handle:timer, Handle:hPack)
 		g_hGameRoundTimer = INVALID_HANDLE;
 	
 		ResetPack(hPack);
-		new Handle:hCallbackPlugin = Handle:ReadPackCell(hPack);
-		new Function:fCallback = Function:ReadPackCell(hPack);
+		new Handle:hCallbackPlugin = ReadPackCell(hPack);
+		new Function:fCallback = ReadPackFunction(hPack);
 		
 		Call_StartFunction(hCallbackPlugin, fCallback);
 		Call_Finish();
