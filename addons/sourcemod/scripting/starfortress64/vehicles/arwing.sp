@@ -871,13 +871,13 @@ ArwingStartBarrelRoll(iArwing, Float:flDesiredDirection)
 	new iPropEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
 	if (iPropEnt && iPropEnt != INVALID_ENT_REFERENCE)
 	{
-		RemoveEntity(iPropEnt);
+		DeleteEntity(iPropEnt);
 	}
 	
 	new iRotateEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotateEnt));
 	if (iRotateEnt && iRotateEnt != INVALID_ENT_REFERENCE)
 	{
-		RemoveEntity(iRotateEnt);
+		DeleteEntity(iRotateEnt);
 	}
 	
 	SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_BarrelRollEnt);
@@ -1015,13 +1015,13 @@ ArwingStopBarrelRoll(iArwing)
 	new iEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
 	if (iEnt && iEnt != INVALID_ENT_REFERENCE)
 	{
-		RemoveEntity(iEnt);
+		DeleteEntity(iEnt);
 	}
 	
 	iEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotateEnt));
 	if (iEnt && iEnt != INVALID_ENT_REFERENCE)
 	{
-		RemoveEntity(iEnt);
+		DeleteEntity(iEnt);
 	}
 	
 	SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_BarrelRollEnt);
@@ -1560,7 +1560,7 @@ public OnClientEnterArwingPost(client, iArwing)
 	if (iFakeModel && iFakeModel != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(client, "ClearParent");
-		RemoveEntity(iFakeModel, 0.75);
+		DeleteEntity(iFakeModel, 0.75);
 	}
 	
 	// Place the player in our offset position.
@@ -1620,7 +1620,7 @@ public OnClientExitArwing(client, iArwing, bool:bImmediate)
 	if (iCamera && iCamera != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(iCamera, "Disable");
-		RemoveEntity(iCamera, 0.1);
+		DeleteEntity(iCamera, 0.1);
 	}
 	
 	SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_CameraEnt);
@@ -1629,7 +1629,7 @@ public OnClientExitArwing(client, iArwing, bool:bImmediate)
 	if (iFakeModel && iFakeModel != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(client, "ClearParent");
-		RemoveEntity(iFakeModel, 0.75); // we add a 0.75 delay to keep hats from glitching out
+		DeleteEntity(iFakeModel, 0.75); // we add a 0.75 delay to keep hats from glitching out
 	}
 	
 	SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_FakePilotModel);
@@ -2279,7 +2279,7 @@ ObliterateArwing(iArwing)
 	}
 	
 	ArwingSpawnEffects(iArwing, EffectEvent_ArwingObliterated, true);
-	RemoveEntity(iArwing, 5.0);
+	DeleteEntity(iArwing, 5.0);
 	
 	DebugMessage("ObliterateArwing END (%d)", iArwing);
 }
@@ -2378,7 +2378,7 @@ ArwingStartDamageSequence(iArwing, bool:bFromWorld)
 		SetEntityRenderColor(iFade, 255, 0, 0, 100);
 		DispatchSpawn(iFade);
 		AcceptEntityInput(iFade, "Fade", iPilot);
-		RemoveEntity(iFade);
+		DeleteEntity(iFade);
 	}
 }
 

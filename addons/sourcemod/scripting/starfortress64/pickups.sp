@@ -176,7 +176,7 @@ SpawnPickupGet(iPickup, iTarget, &iIndex=-1)
 		new Handle:hTimer = CreateTimer(0.01, Timer_PickupGetThink, EntIndexToEntRef(iPickupGet), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 		TriggerTimer(hTimer, true);
 		
-		RemoveEntity(iPickupGet, 1.0);
+		DeleteEntity(iPickupGet, 1.0);
 		
 		switch (iType)
 		{
@@ -277,7 +277,7 @@ public Hook_PickupStartTouchPost(iPickup, other)
 			}
 			else
 			{
-				RemoveEntity(iPickup, 5.0);
+				DeleteEntity(iPickup, 5.0);
 			}
 		}
 	}

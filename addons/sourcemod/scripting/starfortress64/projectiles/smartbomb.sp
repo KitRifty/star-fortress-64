@@ -306,7 +306,7 @@ DetonateSmartBomb(iSmartBomb)
 	if (iSmoke && iSmoke != INVALID_ENT_REFERENCE)
 	{
 		TurnOffEntity(iSmoke);
-		RemoveEntity(iSmoke, 1.0);
+		DeleteEntity(iSmoke, 1.0);
 	}
 	
 	StopSound(iSmartBomb, SNDCHAN_STATIC, ARWING_SMARTBOMB_FLY_SOUND);
@@ -347,7 +347,7 @@ DetonateSmartBomb(iSmartBomb)
 		AcceptEntityInput(iEffect, "TurnOn");
 		SetEdictFlags(iEffect, FL_EDICT_ALWAYS);
 		TurnOffEntity(iEffect, 1.0);
-		RemoveEntity(iEffect, 5.0);
+		DeleteEntity(iEffect, 5.0);
 	}
 }
 
@@ -383,7 +383,7 @@ public Action:Timer_SmartBombDetonateStopHurt(Handle:timer, any:entref)
 	new iExplode = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateHurtEnt));
 	if (iExplode && iExplode != INVALID_ENT_REFERENCE)
 	{
-		RemoveEntity(iExplode);
+		DeleteEntity(iExplode);
 	}
 	
 	SetArrayCell(g_hSBombs, iIndex, INVALID_HANDLE, SBomb_DetonateHurtTimer);
@@ -400,5 +400,5 @@ public Action:Timer_SmartBombDetonateKill(Handle:timer, any:entref)
 	
 	if (timer != Handle:GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateKillTimer)) return;
 	
-	RemoveEntity(iSmartBomb);
+	DeleteEntity(iSmartBomb);
 }

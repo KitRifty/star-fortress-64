@@ -97,12 +97,12 @@ stock RemoveAllTargetReticlesFromEntity(iEnt, bool:bLockOnOnly=false)
 			{
 				if (bool:GetArrayCell(hArray, i, TargetReticle_IsLockOn))
 				{
-					RemoveEntity(iReticle);
+					DeleteEntity(iReticle);
 				}
 			}
 			else
 			{
-				RemoveEntity(iReticle);
+				DeleteEntity(iReticle);
 			}
 		}
 	}

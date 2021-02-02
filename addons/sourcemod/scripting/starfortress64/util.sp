@@ -27,7 +27,7 @@ stock ClientRemoveAllWearables(client)
 	{
 		if (GetEntPropEnt(iEnt, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			RemoveEntity(iEnt);
+			DeleteEntity(iEnt);
 		}
 	}
 	
@@ -36,7 +36,7 @@ stock ClientRemoveAllWearables(client)
 	{
 		if (GetEntPropEnt(iEnt, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			RemoveEntity(iEnt);
+			DeleteEntity(iEnt);
 		}
 	}
 	
@@ -45,7 +45,7 @@ stock ClientRemoveAllWearables(client)
 	{
 		if (GetEntPropEnt(iEnt, Prop_Send, "m_hOwnerEntity") == client)
 		{
-			RemoveEntity(iEnt);
+			DeleteEntity(iEnt);
 		}
 	}
 }
@@ -168,7 +168,7 @@ public Action:Timer_FakePilotModelMoveToOffsetOfEntity(Handle:timer, Handle:hPac
 	return Plugin_Continue;
 }
 
-stock RemoveEntity(ent, Float:flDelay=0.0)
+stock DeleteEntity(ent, Float:flDelay=0.0)
 {
 	if (!IsValidEntity(ent)) return;
 	if (flDelay > 0.0) CreateTimer(flDelay, Timer_KillEntity, EntIndexToEntRef(ent), TIMER_FLAG_NO_MAPCHANGE);
@@ -288,7 +288,7 @@ stock SpawnParticleSystem(const String:sParticleName[], const Float:flPos[3], co
 		if (bStartOn) AcceptEntityInput(iEnt, "Start");
 		
 		if (flTimeToStop > 0.0) StopEntity(iEnt, flTimeToStop);
-		if (flTimeToRemove > 0.0) RemoveEntity(iEnt, flTimeToRemove);
+		if (flTimeToRemove > 0.0) DeleteEntity(iEnt, flTimeToRemove);
 	}
 	
 	return iEnt;

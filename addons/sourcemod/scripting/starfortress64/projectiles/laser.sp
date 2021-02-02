@@ -83,7 +83,7 @@ SpawnLaser(const Float:flPos[3], const Float:flAng[3], const Float:flVelocity[3]
 		SDKHook(iLaser, SDKHook_Touch, Hook_LaserTouch);
 		SDKHook(iLaser, SDKHook_ThinkPost, Hook_LaserThinkPost);
 		
-		RemoveEntity(iLaser, flLifeTime);
+		DeleteEntity(iLaser, flLifeTime);
 		TeleportEntity(iLaser, flPos, flAng, flVelocity);
 	}
 	
@@ -102,7 +102,7 @@ public LaserOnEntityDestroyed(entity)
 			{
 				TeleportEntity(iTrailEnt, NULL_VECTOR, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
 				AcceptEntityInput(iTrailEnt, "ClearParent");
-				RemoveEntity(iTrailEnt, Float:GetArrayCell(g_hLasers, iIndex, Laser_TrailLifeTime));
+				DeleteEntity(iTrailEnt, Float:GetArrayCell(g_hLasers, iIndex, Laser_TrailLifeTime));
 			}
 			
 			RemoveFromArray(g_hLasers, iIndex);
@@ -211,7 +211,7 @@ public Action:Hook_LaserStartTouch(iLaser, other)
 			EmitSoundToAll(ARWING_LASER_HIT_NODAMAGE_SOUND, iLaser, SNDCHAN_STATIC, SNDLEVEL_MINIBIKE);
 		}
 	
-		RemoveEntity(iLaser);
+		DeleteEntity(iLaser);
 	}
 	
 	return Plugin_Handled;
