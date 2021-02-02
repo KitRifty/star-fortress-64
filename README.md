@@ -30,6 +30,10 @@ https://www.youtube.com/watch?v=rewV_Ntr8PY
 
 https://www.youtube.com/watch?v=A24JMjyenpI
 
+# Requirements
+- [VPhysics](https://forums.alliedmods.net/showthread.php?t=136350)
+- [SteamTools](https://builds.limetech.io/?p=steamtools)
+
 # Assets
 [Star Fox Arwing Model](https://garrysmods.org/download/17957/arwingzip)
 
