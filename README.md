@@ -17,7 +17,7 @@
 
 Where Star Fox and Team Fortress 2 two love each other so much they decided to make a baby.
 
-This was made seven years ago for the late Lunar Republic Gaming and Gray Mann Gaming communities, but now here it all is for the public. I'm not sure if it'll even run with the current SourceMod version, but I have no interest in updating it myself. Included is both the Arwing core plugin and a custom gamemode I built for the Arwings, but I never got that far with it.
+This was made seven years ago for the late Lunar Republic Gaming and Gray Mann Gaming communities, but now here it all is for the public. Included is both the Arwing core plugin and a custom gamemode I built for the Arwings, but I never got that far with it.
 
 Note: **Arwing** is used here as a generic term for any flying vehicles of this mod. Yes, the Star Fox Arwing is provided here, but you *can* technically create your own flying vehicles. You can use the Arwing's config as a base. Vehicle configs are located at `sourcemod/configs/starfortress64/vehicles/arwing`.
 
@@ -33,6 +33,7 @@ https://www.youtube.com/watch?v=A24JMjyenpI
 # Requirements
 - [VPhysics](https://forums.alliedmods.net/showthread.php?t=136350)
 - [SteamTools](https://builds.limetech.io/?p=steamtools)
+- [DHooks](https://github.com/peace-maker/DHooks2/releases)
 
 # Assets
 [Star Fox Arwing Model](https://garrysmods.org/download/17957/arwingzip)
@@ -60,14 +61,12 @@ To enter an Arwing, walk up and point at it then call MEDIC (default is 'E').
 | --- | --- | --- |
 | sm_sf64_spawn_arwing \<name\> | Spawns a vehicle at wherever you're pointing. This takes one argument, the vehicle name, which is usually just `arwing` or whatever vehicles are defined in `sourcemod/configs/starfortress64/vehicles/arwing` directory. | ADMFLAG_CHEATS |
 | sm_sf64_forceintovehicle <#userid\|name> \[targetname\] | Forces the specified player into the Arwing you're pointing at. Optionally, you may also provide a target name of the Arwing entity. | ADMFLAG_CHEATS |
-| sm_sf64_spawn_pickup \<name\> | Spawns a pickup at your location with the provided name. By default, this can be `laser`, `smartbomb`, `ring`, or `ring2`. | ADMFLAG_CHEATS |
+| sm_sf64_spawn_pickup \<name\> \<quantity\> \[can respawn 0/1\] | Spawns a pickup at your location with the provided name and quantity. The name can be `laser`, `smartbomb`, `ring`, or `ring2`. | ADMFLAG_CHEATS |
 
 # Contributions
-Pull requests are welcome if you're willing to take on the challenge. Just make sure of the following: 
+Pull requests are welcome. Just make sure of the following: 
 1. It compiles
 2. Use tabs for indentation.
-
-For perspective, this required SourceMod v1.5.2.
 
 # Credits
 

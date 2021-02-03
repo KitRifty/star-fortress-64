@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "**.sp"
+      - "**.inc"
+  pull_request:
+    branches: [master]
+    paths:
+      - "**.sp"
+      - "**.inc"
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: SourceMod
+        run: |
+          wget -q "http://www.sourcemod.net/latest.php?version=1.10&os=linux" -O sourcemod.tar.gz
+          tar -xf sourcemod.tar.gz
+
+      - name: External Includes
+        working-directory: ./addons/sourcemod/scripting/include
+        run: |
+          wget -O vphysics.inc https://github.com/asherkin/vphysics/raw/master/vphysics.inc
+          wget -O steamtools.inc https://github.com/asherkin/SteamTools/raw/master/plugin/steamtools.inc
+          wget -O dhooks.inc https://github.com/peace-maker/DHooks2/raw/dynhooks/sourcemod_files/scripting/include/dhooks.inc
+
+      - name: Compile
+        working-directory: ./addons/sourcemod/scripting
+        run: |
+          ./spcomp starfortress64.sp -o starfortress64.smx
+          ./spcomp starfortress64-deathmatch.sp -o starfortress64-deathmatch.smx
+          
+      - uses: marvinpinto/action-automatic-releases@latest
+        if: github.ref == 'refs/heads/master'
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          draft: true
+          prerelease: false
+          automatic_release_tag: "latest"
+          files: |
+            ./addons/sourcemod/scripting/starfortress64.smx
+            ./addons/sourcemod/scripting/starfortress64-deathmatch.smx

@@ -8,7 +8,7 @@
 
 #define PLUGIN_VERSION "1.0.0"
 
-public Plugin:myinfo = 
+public Plugin myinfo = 
 {
     name = "Star Fortress 64",
     author	= "KitRifty",
