@@ -2189,7 +2189,9 @@ public Action:Timer_PlayerEnteredArwing(Handle:timer, any:userid)
 	
 	if (timer != g_hPlayerVehicleSequenceTimer[client]) return;
 	
-	OnClientEnterArwingPost(client, GetArwing(client));
+	// Did the Arwing magically disappear before the enter sequence is finished?
+	int arwing = GetArwing(client);
+	if (arwing != -1) OnClientEnterArwingPost(client, arwing);
 }
 
 DestroyArwing(iArwing, iAttacker, iInflictor)
