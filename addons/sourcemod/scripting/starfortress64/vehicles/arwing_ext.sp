@@ -155,6 +155,18 @@ ArwingPressButton(iArwing, iButton)
 				{
 					ArwingStartBrake(iArwing);
 				}
+
+				new Float:flCrouchStart = Float:GetArrayCell(g_hArwings, iIndex, Arwing_CrouchStartTime);
+				if (flCrouchStart < 0.0 || GetGameTime() > flCrouchStart)
+				{
+					SetArrayCell(g_hArwings, iIndex, GetGameTime() + 0.25, Arwing_CrouchStartTime);
+				}
+				else
+				{
+					new iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot)); 
+					g_bPlayerDisableHUD[iPilot] = !g_bPlayerDisableHUD[iPilot];
+					SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_CrouchStartTime);
+				}
 			}
 		}
 		case IN_RELOAD:
@@ -800,6 +812,23 @@ public Action:Timer_ArwingThink(Handle:timer, any:entref)
 	if (IsValidClient(iPilot))
 	{
 		ArwingUpdateHealthBar(iArwing);
+
+		// Display Controls Hud to the Pilot every few seconds.
+		if (!g_bPlayerDisableHUD[iPilot] && GetGameTime() >= Float:GetArrayCell(g_hArwings, iIndex, Arwing_PilotHudLastTime) + 3.0)
+		{
+			SetHudTextParams(0.01, -1.0, 3.0, 255, 255, 255, 255, 0, 0.0, 0.0, 0.0);
+			ShowSyncHudText(iPilot, g_hHudControls, "%s%s%s%s%s%s%s%s%s",
+			"(HOLD) Mouse1: (Charged) Laser\n",
+			"Mouse2: Bombs\n",
+			"HOLD Reload + Left/Right: Tilt\n",
+			"2x Reload: Barrel Roll\n",
+			"HOLD Jump: Boost\n",
+			"HOLD Crouch: Brake\n",
+			"Back + Jump: Somersault\n",
+			"Back + Crouch: U-Turn\n",
+			"2x Crouch: Toggle HUD");
+			SetArrayCell(g_hArwings, iIndex, GetGameTime(), Arwing_PilotHudLastTime);
+		}
 	}
 	
 	SetEntPropEnt(iArwing, Prop_Data, "m_hPhysicsAttacker", iPilot); // for the kill credit

@@ -36,6 +36,7 @@ new g_iPlayerLastButtons[MAXPLAYERS + 1];
 new Float:g_flPlayerForwardMove[MAXPLAYERS + 1];
 new Float:g_flPlayerSideMove[MAXPLAYERS + 1];
 new Float:g_flPlayerDesiredFOV[MAXPLAYERS + 1];
+new bool:g_bPlayerDisableHUD[MAXPLAYERS + 1] = { false, ... };
 
 new Handle:g_hPlayerVehicleSequenceTimer[MAXPLAYERS + 1];
 new Float:g_flPlayerVehicleBlockVoiceTime[MAXPLAYERS + 1];
@@ -48,6 +49,8 @@ new Handle:g_cvInfiniteBombs;
 #if defined DEBUG
 new Handle:g_hHudSyncDebug;
 #endif
+
+new Handle:g_hHudControls;
 
 new Handle:g_hSDKGetSmoothedVelocity;
 
@@ -135,6 +138,8 @@ public OnPluginStart()
 #if defined DEBUG
 	g_hHudSyncDebug = CreateHudSynchronizer();
 #endif
+
+	g_hHudControls = CreateHudSynchronizer();
 	
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("teamplay_round_win", Event_RoundEnd);
@@ -519,6 +524,7 @@ public OnClientDisconnect_Post(client)
 	g_iPlayerLastButtons[client] = 0;
 	g_flPlayerForwardMove[client] = 0.0;
 	g_flPlayerSideMove[client] = 0.0;
+	g_bPlayerDisableHUD[client] = false;
 }
 
 public Hook_ClientPreThink(client)

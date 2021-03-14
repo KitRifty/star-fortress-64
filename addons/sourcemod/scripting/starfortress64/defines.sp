@@ -48,6 +48,8 @@ enum
 	Arwing_PilotSequence,
 	Arwing_PilotSequenceStartTime,
 	Arwing_PilotSequenceEndTime,
+	Arwing_PilotHudLastTime,
+	Arwing_CrouchStartTime,
 	Arwing_IgnorePilotControls,
 	Arwing_Locked,
 	Arwing_ForwardMove,

@@ -257,7 +257,9 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 		SetArrayCell(g_hArwings, iIndex, -1, Arwing_PilotSequence);
 		SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_PilotSequenceStartTime);
 		SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_PilotSequenceEndTime);
+		SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_PilotHudLastTime);
 		SetArrayCell(g_hArwings, iIndex, 0, Arwing_Buttons);
+		SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_CrouchStartTime);
 		SetArrayCell(g_hArwings, iIndex, false, Arwing_IgnorePilotControls);
 		
 		SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_Target);
