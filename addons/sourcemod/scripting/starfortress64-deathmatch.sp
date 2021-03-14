@@ -22,7 +22,6 @@ new g_iPlayerKills[MAXPLAYERS + 1];
 
 new g_iBGMusic = -1;
 
-new bool:g_bRoundStarting = false;
 new bool:g_bRoundEnded = false;
 new Handle:g_hRoundTimer;
 new g_iRoundTime;
@@ -220,7 +219,6 @@ public Action:Timer_PreActiveRound(Handle:timer)
 	
 	if (g_iRoundTime <= 0)
 	{
-		g_bRoundStarting = false;
 		PrintToChatAll("GO!");
 		return Plugin_Stop;
 	}
@@ -410,7 +408,6 @@ public SF64_GameRulesOnRoundStateStart(iRoundState)
 				}
 			}
 			
-			g_bRoundStarting = true;
 			g_bRoundEnded = false;
 			g_iRoundTime = 4;
 			g_hRoundTimer = CreateTimer(1.0, Timer_PreActiveRound, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
@@ -441,7 +438,6 @@ public SF64_GameRulesOnRoundStateEnd(iRoundState)
 				g_iPlayerKills[i] = 0;
 			}
 			
-			g_bRoundStarting = false;
 			g_bRoundEnded = false;
 			g_hRoundTimer = INVALID_HANDLE;
 			g_iRoundTime = 0;
