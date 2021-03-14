@@ -3,8 +3,6 @@
 #endif
 #define _sf64_util_included
 
-new Float:vec3_origin[3];
-
 stock DebugMessage(const String:sMessage[], any:...)
 {
 #if defined DEBUG

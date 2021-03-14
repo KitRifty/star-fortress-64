@@ -260,10 +260,6 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 		SetArrayCell(g_hArwings, iIndex, 0, Arwing_Buttons);
 		SetArrayCell(g_hArwings, iIndex, false, Arwing_IgnorePilotControls);
 		
-		SetArrayCell(g_hArwings, iIndex, false, Arwing_Intro);
-		SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_IntroStartTime);
-		SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_IntroEndTime);
-		
 		SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_Target);
 		
 		SetArrayCell(g_hArwings, iIndex, false, Arwing_Locked);
@@ -1684,12 +1680,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 	
 	new Float:flPitchRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_PitchRate);
 	new Float:flYawRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_YawRate);
-	new Float:flRollRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_RollRate); 
-	
-	new bool:bInIntro = bool:GetArrayCell(g_hArwings, iIndex, Arwing_Intro);
-	new Float:flIntroStartTime = Float:GetArrayCell(g_hArwings, iIndex, Arwing_IntroStartTime);
-	new Float:flIntroEndTime = Float:GetArrayCell(g_hArwings, iIndex, Arwing_IntroEndTime);
-	new Float:flTotalIntroTime = flIntroEndTime - flIntroStartTime;
+	new Float:flRollRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_RollRate);
 	
 	new bool:bInBarrelRoll = bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll);
 	new bool:bInSomersault = bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault);
