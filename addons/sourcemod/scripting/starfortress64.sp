@@ -17,7 +17,7 @@ public Plugin:myinfo =
     url = ""
 }
 
-#define DEBUG
+//	#define DEBUG						// When debugging, outcomment it.
 
 
 new Handle:g_hTargetReticles;
