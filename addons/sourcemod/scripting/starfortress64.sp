@@ -612,7 +612,9 @@ public Action:Command_SpawnArwing(client, args)
 	TR_GetEndPosition(flEndPos, hTrace);
 	CloseHandle(hTrace);
 	
-	SpawnArwing(sName, flEndPos, NULL_VECTOR, NULL_VECTOR);
+	flEyeAng[0] = 0.0; flEyeAng[2] = 0.0;
+
+	SpawnArwing(sName, flEndPos, flEyeAng, NULL_VECTOR);
 	
 	return Plugin_Handled;
 }
