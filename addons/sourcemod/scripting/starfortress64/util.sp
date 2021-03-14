@@ -200,8 +200,8 @@ stock FindKitRifty()
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i)) continue;
-		GetClientAuthString(i, sAuth, sizeof(sAuth));
-		if (StrContains(sAuth, "0:19146370") != -1)
+		GetClientAuthId(i, AuthId_Steam3, sAuth, sizeof(sAuth));
+		if (strcmp(sAuth, "[U:0:19146370]") == 0)
 		{
 			return i;
 		}

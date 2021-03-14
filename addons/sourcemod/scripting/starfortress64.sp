@@ -257,7 +257,6 @@ public OnMapStart()
 #if defined DEBUG
 public Action:Timer_HudUpdateDebug(Handle:timer)
 {
-	/*
 	new iKitRifty = FindKitRifty();
 	if (iKitRifty == -1) 
 	{
@@ -289,7 +288,6 @@ public Action:Timer_HudUpdateDebug(Handle:timer)
 		GetArraySize(g_hPickups),
 		GetArraySize(g_hEffects),
 		GetArraySize(g_hTargetReticles));
-	*/
 	
 	return Plugin_Continue;
 }
