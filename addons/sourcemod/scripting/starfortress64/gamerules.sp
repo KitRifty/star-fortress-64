@@ -728,7 +728,7 @@ GameRulesSetWarmupStateOfPlayer(client, bool:bState)
 
 GameRulesInitializeRoundTimer(iRoundTime, Handle:hCallbackPlugin=INVALID_HANDLE, Function:fCallback=INVALID_FUNCTION)
 {
-	DebugMessage("START GameRulesInitializeRoundTimer(%d, %d, %d)", iRoundTime, hCallbackPlugin, view_as<int>(fCallback));
+	DebugMessage("START GameRulesInitializeRoundTimer(%d, %d)", iRoundTime, hCallbackPlugin);
 
 	g_iGameRoundTime = iRoundTime;
 	new Handle:hPack;
@@ -738,7 +738,7 @@ GameRulesInitializeRoundTimer(iRoundTime, Handle:hCallbackPlugin=INVALID_HANDLE,
 	
 	TriggerTimer(g_hGameRoundTimer, true);
 	
-	DebugMessage("END GameRulesInitializeRoundTimer(%d, %d, %d)", iRoundTime, hCallbackPlugin, view_as<int>(fCallback));
+	DebugMessage("END GameRulesInitializeRoundTimer(%d, %d)", iRoundTime, hCallbackPlugin);
 }
 
 GameRulesStopRoundTimer()
