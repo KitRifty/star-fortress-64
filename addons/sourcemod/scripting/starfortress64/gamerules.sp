@@ -1057,7 +1057,7 @@ public Native_GameRulesGetRoundTime(Handle:hPlugin, iNumParams)
 
 public Native_GameRulesInitializeRoundTimer(Handle:hPlugin, iNumParams)
 {
-	GameRulesInitializeRoundTimer(GetNativeCell(1), Handle:GetNativeCell(2), Function:GetNativeCell(3));
+	GameRulesInitializeRoundTimer(GetNativeCell(1), Handle:GetNativeCell(2), GetNativeFunction(3));
 }
 
 public Native_GameRulesStopRoundTimer(Handle:hPlugin, iNumParams)
