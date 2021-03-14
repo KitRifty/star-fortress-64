@@ -268,34 +268,30 @@ public Hook_ChargedLaserStartTouchPost(iChargedLaser, other)
 	{
 		new iOwner = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Owner));
 		
-		new bool:bHit = false;
+		new bool:bHitAirwing = false;
+		new bool:bHitPlayer = false;
 		
 		if (iOwner && iOwner != other)
 		{
 			new iOtherEntRef = EntIndexToEntRef(other);
 			new iOtherIndex = FindValueInArray(g_hArwings, iOtherEntRef);
+			// Is the hit entity another Airwing or a player?
 			if (iOtherIndex != -1)
 			{
 				if (EntRefToEntIndex(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot)) != iOwner)
-				{
-					bHit = true;
-				}
+					bHitAirwing = true;
 			}
-			else if (IsValidClient(other))
-			{
-				bHit = true;
-			}
-			else
-			{
-				bHit = true;
-			}
+			else if (other > 0 && other <= MaxClients)
+				bHitPlayer = true;
 		}
 		
-		if (bHit) 
-		{
+		if (bHitAirwing || bHitPlayer)
 			SetArrayCell(g_hChargedLasers, iIndex, true, ChargedLaser_Hit);
+
+		// DO NOT DELETE THE LASER ENTITY WHEN HITTING A PLAYER, IT CRASHES for some godknown reason...
+		// It might try to delete the entity twice in a row, causing the game crash?
+		if (bHitAirwing)
 			DeleteEntity(iChargedLaser);
-		}
 	}
 }
 

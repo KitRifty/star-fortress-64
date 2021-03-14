@@ -132,87 +132,91 @@ public Action:Hook_LaserStartTouch(iLaser, other)
 	new iOwner = EntRefToEntIndex(GetArrayCell(g_hLasers, iIndex, Laser_Owner));
 	new iTeam = GetArrayCell(g_hLasers, iIndex, Laser_Team);
 	
-	new bool:bHit = false;
-	new bool:bDamageHit = false;
+	new bool:bHitAirwing = false;
+	new bool:bHitPlayer = false;
+	new bool:bHitEnemyPlayer = false;
 	
 	if (iOwner && iOwner != other)
 	{
 		new iOtherEntRef = EntIndexToEntRef(other);
 		new iOtherIndex = FindValueInArray(g_hArwings, iOtherEntRef);
-		if (iOtherIndex != -1)
+
+		// Did we hit another Airwing Entity?
+		if (iOtherIndex != -1 && iOwner != EntRefToEntIndex(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot)))
 		{
-			if (iOwner != EntRefToEntIndex(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot)))
+			decl Float:flPos[3];
+			GetEntPropVector(iLaser, Prop_Data, "m_vecAbsOrigin", flPos);
+		
+			// Hit the Airwing, unless if they're doring a Barrel Roll, then deflect the shot instead.
+			if (!bool:GetArrayCell(g_hArwings, iOtherIndex, Arwing_InBarrelRoll))
 			{
-				decl Float:flPos[3];
-				GetEntPropVector(iLaser, Prop_Data, "m_vecAbsOrigin", flPos);
-			
-				if (!bool:GetArrayCell(g_hArwings, iOtherIndex, Arwing_InBarrelRoll))
+				bHitAirwing = true;
+				DamageArwing(other, iOwner, iLaser, Float:GetArrayCell(g_hLasers, iIndex, Laser_Damage), DMG_ENERGYBEAM, -1, NULL_VECTOR, flPos);
+			}
+			else
+			{
+				SetArrayCell(g_hLasers, iIndex, GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot), Laser_Owner);
+				SetArrayCell(g_hLasers, iIndex, GetArrayCell(g_hArwings, iOtherIndex, Arwing_Team), Laser_Team);
+				
+				decl Float:flTargetPos[3], Float:flVelocity[3];
+				GetEntPropVector(other, Prop_Data, "m_vecAbsOrigin", flTargetPos);
+				GetEntPropVector(iLaser, Prop_Data, "m_vecAbsVelocity", flVelocity);
+				new Float:flSpeed = GetVectorLength(flVelocity);
+				
+				SubtractVectors(flTargetPos, flPos, flVelocity);
+				GetAngleVectors(flVelocity, flVelocity, NULL_VECTOR, NULL_VECTOR);
+				NormalizeVector(flVelocity, flVelocity);
+				ScaleVector(flVelocity, flSpeed);
+				
+				TeleportEntity(iLaser, NULL_VECTOR, NULL_VECTOR, flVelocity);
+				
+				new Handle:hConfig = GetConfigOfArwing(other);
+				if (hConfig != INVALID_HANDLE)
 				{
-					bHit = true;
-					bDamageHit = true;
-					DamageArwing(other, iOwner, iLaser, Float:GetArrayCell(g_hLasers, iIndex, Laser_Damage), DMG_ENERGYBEAM, -1, NULL_VECTOR, flPos);
-				}
-				else
-				{
-					SetArrayCell(g_hLasers, iIndex, GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot), Laser_Owner);
-					SetArrayCell(g_hLasers, iIndex, GetArrayCell(g_hArwings, iOtherIndex, Arwing_Team), Laser_Team);
-					
-					decl Float:flTargetPos[3], Float:flVelocity[3];
-					GetEntPropVector(other, Prop_Data, "m_vecAbsOrigin", flTargetPos);
-					GetEntPropVector(iLaser, Prop_Data, "m_vecAbsVelocity", flVelocity);
-					new Float:flSpeed = GetVectorLength(flVelocity);
-					
-					SubtractVectors(flTargetPos, flPos, flVelocity);
-					GetAngleVectors(flVelocity, flVelocity, NULL_VECTOR, NULL_VECTOR);
-					NormalizeVector(flVelocity, flVelocity);
-					ScaleVector(flVelocity, flSpeed);
-					
-					TeleportEntity(iLaser, NULL_VECTOR, NULL_VECTOR, flVelocity);
-					
-					new Handle:hConfig = GetConfigOfArwing(other);
-					if (hConfig != INVALID_HANDLE)
+					decl String:sPath[PLATFORM_MAX_PATH];
+					if (GetRandomStringFromArwingConfig(hConfig, "sound_barrelroll_deflect", sPath, sizeof(sPath)) && sPath[0])
 					{
-						decl String:sPath[PLATFORM_MAX_PATH];
-						if (GetRandomStringFromArwingConfig(hConfig, "sound_barrelroll_deflect", sPath, sizeof(sPath)) && sPath[0])
+						EmitSoundToAll(sPath, other, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
+					}
+				}
+			}
+		}
+		// Detects Player Hits
+		else
+		{
+			if (other > 0 && other <= MaxClients)
+			{
+				bHitPlayer = true;
+				
+				// Make sure not to target players inside Airwings by accident. We wanna damage their Airwings after all!
+				new iArwing = GetArwing(other);
+				if (!iArwing || iArwing == INVALID_ENT_REFERENCE)
+				{
+					new iHitTeam = -1;
+					if (IsValidClient(other)) iHitTeam = GetClientTeam(other);
+					else iHitTeam = GetEntProp(other, Prop_Data, "m_iTeamNum");
+					
+					// Only hurt enemy players.
+					if (iHitTeam != iTeam)
+					{
+						if (GetEntProp(other, Prop_Data, "m_takedamage"))
 						{
-							EmitSoundToAll(sPath, other, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
+							bHitEnemyPlayer = true;
+							SDKHooks_TakeDamage(other, iOwner, iOwner, Float:GetArrayCell(g_hLasers, iIndex, Laser_Damage) * 3.0, DMG_ENERGYBEAM);
 						}
 					}
 				}
 			}
 		}
-		else
-		{
-			new iArwing = GetArwing(other);
-			if (!iArwing || iArwing == INVALID_ENT_REFERENCE)
-			{
-				new iHitTeam = -1;
-				if (IsValidClient(other)) iHitTeam = GetClientTeam(other);
-				else iHitTeam = GetEntProp(other, Prop_Data, "m_iTeamNum");
-				
-				bHit = true;
-				
-				if (iHitTeam != iTeam)
-				{
-					if (GetEntProp(other, Prop_Data, "m_takedamage"))
-					{
-						bDamageHit = true;
-						SDKHooks_TakeDamage(other, iOwner, iOwner, Float:GetArrayCell(g_hLasers, iIndex, Laser_Damage) * 3.0, DMG_ENERGYBEAM);
-					}
-				}
-			}
-		}
 	}
 	
-	if (bHit)
-	{
-		if (!bDamageHit)
-		{
-			EmitSoundToAll(ARWING_LASER_HIT_NODAMAGE_SOUND, iLaser, SNDCHAN_STATIC, SNDLEVEL_MINIBIKE);
-		}
+	if (bHitPlayer && !bHitEnemyPlayer)
+		EmitSoundToAll(ARWING_LASER_HIT_NODAMAGE_SOUND, iLaser, SNDCHAN_STATIC, SNDLEVEL_MINIBIKE);
 	
+	// DO NOT DELETE THE LASER ENTITY WHEN HITTING A PLAYER, IT CRASHES for some godknown reason...
+	// It might try to delete the entity twice in a row, causing the game crash?
+	if (bHitAirwing)
 		DeleteEntity(iLaser);
-	}
 	
 	return Plugin_Handled;
 }
