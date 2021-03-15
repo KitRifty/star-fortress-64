@@ -3,24 +3,24 @@
 #endif
 #define _sf64_util_included
 
-stock DebugMessage(const String:sMessage[], any:...)
+stock void DebugMessage(const char[] sMessage, any ...)
 {
 #if defined DEBUG
-	decl String:sFormattedMessage[1024];
+	char sFormattedMessage[1024];
 	VFormat(sFormattedMessage, sizeof(sFormattedMessage), sMessage, 2);
 	PrintToServer(sFormattedMessage);
 #endif
 }
 
-stock ClientSetFOV(client, iFOV)
+stock void ClientSetFOV(int client, int iFOV)
 {
 	SetEntData(client, g_offsPlayerFOV, iFOV);
 	SetEntData(client, g_offsPlayerDefaultFOV, iFOV);
 }
 
-stock ClientRemoveAllWearables(client)
+stock void ClientRemoveAllWearables(int client)
 {
-	new iEnt = -1;
+	int iEnt = -1;
 	while ((iEnt = FindEntityByClassname(iEnt, "tf_wearable")) != -1)
 	{
 		if (GetEntPropEnt(iEnt, Prop_Send, "m_hOwnerEntity") == client)
@@ -48,16 +48,16 @@ stock ClientRemoveAllWearables(client)
 	}
 }
 
-stock bool:IsPointWithinFOV(const Float:flEyePos[3], const Float:flEyeAng[3], const Float:flFOV, const Float:flTargetPos[3])
+stock bool IsPointWithinFOV(const float flEyePos[3], const float flEyeAng[3], const float flFOV, const float flTargetPos[3])
 {
-	decl Float:flTargetAng[3];
+	float flTargetAng[3];
 	SubtractVectors(flTargetPos, flEyePos, flTargetAng);
 	GetVectorAngles(flTargetAng, flTargetAng);
 	
-	return bool:((FloatAbs(AngleDiff(flEyeAng[0], flTargetAng[0])) + FloatAbs(AngleDiff(flEyeAng[1], flTargetAng[1]))) <= flFOV / 2.0);
+	return view_as<bool>(((FloatAbs(AngleDiff(flEyeAng[0], flTargetAng[0])) + FloatAbs(AngleDiff(flEyeAng[1], flTargetAng[1]))) <= flFOV / 2.0));
 }
 
-stock GetEntityBoundingBoxScaled(entity, Float:flMins[3], Float:flMaxs[3], Float:flScale)
+stock void GetEntityBoundingBoxScaled(int entity, float flMins[3], float flMaxs[3], float flScale)
 {
 	GetEntPropVector(entity, Prop_Send, "m_vecMinsPreScaled", flMins);
 	GetEntPropVector(entity, Prop_Send, "m_vecMaxsPreScaled", flMaxs);
@@ -65,11 +65,11 @@ stock GetEntityBoundingBoxScaled(entity, Float:flMins[3], Float:flMaxs[3], Float
 	ScaleVector(flMaxs, flScale);
 }
 
-stock ResizeEntity(entity, Float:flScale)
+stock void ResizeEntity(int entity, float flScale)
 {
 	SetEntPropFloat(entity, Prop_Send, "m_flModelScale", flScale);
 
-	new Float:flSurroundingMins[3], Float:flSurroundingMaxs[3];
+	float flSurroundingMins[3], flSurroundingMaxs[3];
 	GetEntPropVector(entity, Prop_Send, "m_vecSpecifiedSurroundingMinsPreScaled", flSurroundingMins);
 	GetEntPropVector(entity, Prop_Send, "m_vecSpecifiedSurroundingMaxsPreScaled", flSurroundingMaxs);
 	
@@ -80,18 +80,18 @@ stock ResizeEntity(entity, Float:flScale)
 	SetEntPropVector(entity, Prop_Send, "m_vecSpecifiedSurroundingMaxs", flSurroundingMaxs);
 }
 
-public Action:Timer_FakePilotModelScaleToSize(Handle:timer, Handle:hPack)
+public Action Timer_FakePilotModelScaleToSize(Handle timer, Handle hPack)
 {
 	ResetPack(hPack);
-	new entref = ReadPackCell(hPack);
+	int entref = ReadPackCell(hPack);
 	
-	new iFakeModel = EntRefToEntIndex(entref);
+	int iFakeModel = EntRefToEntIndex(entref);
 	if (!iFakeModel || iFakeModel == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new Float:flTargetModelScale = ReadPackFloat(hPack);
-	new Float:flRate = ReadPackFloat(hPack);
+	float flTargetModelScale = ReadPackFloat(hPack);
+	float flRate = ReadPackFloat(hPack);
 	
-	new Float:flModelScale = GetEntPropFloat(iFakeModel, Prop_Send, "m_flModelScale");
+	float flModelScale = GetEntPropFloat(iFakeModel, Prop_Send, "m_flModelScale");
 	
 	flModelScale = FloatApproach(flModelScale, flTargetModelScale, flRate);
 	SetEntPropFloat(iFakeModel, Prop_Send, "m_flModelScale", flModelScale);
@@ -99,105 +99,105 @@ public Action:Timer_FakePilotModelScaleToSize(Handle:timer, Handle:hPack)
 	return Plugin_Continue;
 }
 
-public Action:Timer_FakePilotModelMoveToPos(Handle:timer, Handle:hPack)
+public Action Timer_FakePilotModelMoveToPos(Handle timer, Handle hPack)
 {
 	ResetPack(hPack);
-	new entref = ReadPackCell(hPack);
+	int entref = ReadPackCell(hPack);
 	
-	new iFakeModel = EntRefToEntIndex(entref);
+	int iFakeModel = EntRefToEntIndex(entref);
 	if (!iFakeModel || iFakeModel == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	decl Float:flTargetPos[3];
+	float flTargetPos[3];
 	flTargetPos[0] = ReadPackFloat(hPack);
 	flTargetPos[1] = ReadPackFloat(hPack);
 	flTargetPos[2] = ReadPackFloat(hPack);
 	
-	decl Float:flMyPos[3], Float:flMyVelocity[3];
+	float flMyPos[3], flMyVelocity[3];
 	GetEntPropVector(iFakeModel, Prop_Data, "m_vecAbsOrigin", flMyPos);
 	GetEntPropVector(iFakeModel, Prop_Data, "m_vecAbsVelocity", flMyVelocity);
 	
-	decl Float:flGoalVelocity[3];
+	float flGoalVelocity[3];
 	SubtractVectors(flTargetPos, flMyPos, flGoalVelocity);
 	NormalizeVector(flGoalVelocity, flGoalVelocity);
 	ScaleVector(flGoalVelocity, 900.0);
 	
-	decl Float:flMoveVelocity[3];
+	float flMoveVelocity[3];
 	LerpVectors(flMyVelocity, flGoalVelocity, flMoveVelocity, 0.25);
 	TeleportEntity(iFakeModel, NULL_VECTOR, NULL_VECTOR, flMoveVelocity);
 	
 	return Plugin_Continue;
 }
 
-public Action:Timer_FakePilotModelMoveToOffsetOfEntity(Handle:timer, Handle:hPack)
+public Action Timer_FakePilotModelMoveToOffsetOfEntity(Handle timer, Handle hPack)
 {
 	ResetPack(hPack);
-	new entref = ReadPackCell(hPack);
-	new entref2 = ReadPackCell(hPack);
+	int entref = ReadPackCell(hPack);
+	int entref2 = ReadPackCell(hPack);
 	
-	new iFakeModel = EntRefToEntIndex(entref);
+	int iFakeModel = EntRefToEntIndex(entref);
 	if (!iFakeModel || iFakeModel == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iEntity = EntRefToEntIndex(entref2);
+	int iEntity = EntRefToEntIndex(entref2);
 	if (!IsValidEntity(iEntity)) return Plugin_Stop;
 	
-	decl Float:flMyPos[3], Float:flMyVelocity[3];
+	float flMyPos[3], flMyVelocity[3];
 	GetEntPropVector(iFakeModel, Prop_Data, "m_vecAbsOrigin", flMyPos);
 	GetEntPropVector(iFakeModel, Prop_Data, "m_vecAbsVelocity", flMyVelocity);
 	
-	decl Float:flOffset[3];
+	float flOffset[3];
 	flOffset[0] = ReadPackFloat(hPack);
 	flOffset[1] = ReadPackFloat(hPack);
 	flOffset[2] = ReadPackFloat(hPack);
 	
-	decl Float:flTargetPos[3], Float:flArwingPos[3], Float:flArwingAng[3];
+	float flTargetPos[3], flArwingPos[3], flArwingAng[3];
 	GetEntPropVector(iEntity, Prop_Data, "m_vecAbsOrigin", flArwingPos);
 	GetEntPropVector(iEntity, Prop_Data, "m_angAbsRotation", flArwingAng);
 	VectorTransform(flOffset, flArwingPos, flArwingAng, flTargetPos);
 	
-	decl Float:flGoalVelocity[3];
+	float flGoalVelocity[3];
 	SubtractVectors(flTargetPos, flMyPos, flGoalVelocity);
 	NormalizeVector(flGoalVelocity, flGoalVelocity);
 	ScaleVector(flGoalVelocity, 900.0);
 	
-	decl Float:flMoveVelocity[3];
+	float flMoveVelocity[3];
 	LerpVectors(flMyVelocity, flGoalVelocity, flMoveVelocity, 0.25);
 	TeleportEntity(iFakeModel, NULL_VECTOR, NULL_VECTOR, flMoveVelocity);
 	
 	return Plugin_Continue;
 }
 
-stock DeleteEntity(ent, Float:flDelay=0.0)
+stock void DeleteEntity(int ent, float flDelay=0.0)
 {
 	if (!IsValidEntity(ent)) return;
 	if (flDelay > 0.0) CreateTimer(flDelay, Timer_KillEntity, EntIndexToEntRef(ent), TIMER_FLAG_NO_MAPCHANGE);
 	else AcceptEntityInput(ent, "Kill");
 }
 
-stock StopEntity(ent, Float:flDelay=0.0)
+stock void StopEntity(int ent, float flDelay=0.0)
 {
 	if (!IsValidEntity(ent)) return;
 	if (flDelay > 0.0) CreateTimer(flDelay, Timer_StopEntity, EntIndexToEntRef(ent), TIMER_FLAG_NO_MAPCHANGE);
 	else AcceptEntityInput(ent, "Stop");
 }
 
-stock TurnOffEntity(ent, Float:flDelay=0.0)
+stock void TurnOffEntity(int ent, float flDelay=0.0)
 {
 	if (!IsValidEntity(ent)) return;
 	if (flDelay > 0.0) CreateTimer(flDelay, Timer_TurnOffEntity, EntIndexToEntRef(ent), TIMER_FLAG_NO_MAPCHANGE);
 	else AcceptEntityInput(ent, "TurnOff");
 }
 
-stock bool:IsValidClient(client)
+stock bool IsValidClient(int client)
 {
 	if (client < 1 || client > MaxClients || !IsClientInGame(client)) return false;
 	return true;
 }
 
-stock FindKitRifty()
+stock int FindKitRifty()
 {
-	decl String:sAuth[64];
+	char sAuth[64];
 	
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i)) continue;
 		GetClientAuthId(i, AuthId_Steam3, sAuth, sizeof(sAuth));
@@ -210,7 +210,7 @@ stock FindKitRifty()
 	return -1;
 }
 
-stock bool:GetEntitySmoothedVelocity(entity, Float:flBuffer[3])
+stock bool GetEntitySmoothedVelocity(int entity, float flBuffer[3])
 {
 	if (!IsValidEntity(entity)) return false;
 
@@ -224,15 +224,15 @@ stock bool:GetEntitySmoothedVelocity(entity, Float:flBuffer[3])
 	return true;
 }
 
-stock TE_SetupTFParticleEffect(iParticleSystemIndex, 
-	const Float:flOrigin[3]=NULL_VECTOR, 
-	const Float:flStart[3]=NULL_VECTOR, 
-	iAttachType=0, 
-	iEntIndex=-1, 
-	iAttachmentPointIndex=0, 
-	bool:bResetParticles=true, 
-	bool:bControlPoint1=false, 
-	const Float:flControlPoint1Offset[3]=NULL_VECTOR)
+stock void TE_SetupTFParticleEffect(int iParticleSystemIndex, 
+	const float flOrigin[3]=NULL_VECTOR, 
+	const float flStart[3]=NULL_VECTOR, 
+	int iAttachType=0, 
+	int iEntIndex=-1, 
+	int iAttachmentPointIndex=0, 
+	bool bResetParticles=true, 
+	bool bControlPoint1=false, 
+	const float flControlPoint1Offset[3]=NULL_VECTOR)
 {
 	TE_Start("TFParticleEffect");
 	TE_WriteFloat("m_vecOrigin[0]", flOrigin[0]);
@@ -252,8 +252,8 @@ stock TE_SetupTFParticleEffect(iParticleSystemIndex,
 	TE_WriteFloat("m_ControlPoint1.m_vecOffset[2]", flControlPoint1Offset[2]);
 }
 
-stock TE_SetupBeamEnts(StartEntity, EndEntity, ModelIndex, HaloIndex, StartFrame, FrameRate, Float:Life,  
-                Float:Width, Float:EndWidth, FadeLength, Float:Amplitude, const Color[4], Speed) 
+stock void TE_SetupBeamEnts(int StartEntity, int EndEntity, int ModelIndex, int HaloIndex, int StartFrame, int FrameRate, float Life,  
+                float Width, float EndWidth, int FadeLength, float Amplitude, const Color[4], int Speed) 
 { 
     TE_Start("BeamEnts"); 
     TE_WriteEncodedEnt("m_nStartEntity", StartEntity); 
@@ -274,9 +274,9 @@ stock TE_SetupBeamEnts(StartEntity, EndEntity, ModelIndex, HaloIndex, StartFrame
     TE_WriteNum("m_nFadeLength", FadeLength); 
 }  
 
-stock SpawnParticleSystem(const String:sParticleName[], const Float:flPos[3], const Float:flAng[3], Float:flTimeToStop=0.0, Float:flTimeToRemove=0.0, bool:bStartOn=true)
+stock int SpawnParticleSystem(const char[] sParticleName, const float flPos[3], const float flAng[3], float flTimeToStop=0.0, float flTimeToRemove=0.0, bool bStartOn=true)
 {
-	new iEnt = CreateEntityByName("info_particle_system");
+	int iEnt = CreateEntityByName("info_particle_system");
 	if (iEnt != -1)
 	{
 		DispatchKeyValue(iEnt, "effect_name", sParticleName);
@@ -292,19 +292,19 @@ stock SpawnParticleSystem(const String:sParticleName[], const Float:flPos[3], co
 	return iEnt;
 }
 
-stock PrecacheParticleSystem(const String:particleSystem[])
+stock int PrecacheParticleSystem(const char[] particleSystem)
 {
-	static particleEffectNames = INVALID_STRING_TABLE;
+	static int particleEffectNames = INVALID_STRING_TABLE;
 
 	if (particleEffectNames == INVALID_STRING_TABLE) 
 	{
 		if ((particleEffectNames = FindStringTable("ParticleEffectNames")) == INVALID_STRING_TABLE) return INVALID_STRING_INDEX;
 	}
 	
-	new index = FindStringIndex2(particleEffectNames, particleSystem);
+	int index = FindStringIndex2(particleEffectNames, particleSystem);
 	if (index == INVALID_STRING_INDEX) 
 	{
-		new numStrings = GetStringTableNumStrings(particleEffectNames);
+		int numStrings = GetStringTableNumStrings(particleEffectNames);
 		if (numStrings >= GetStringTableMaxStrings(particleEffectNames)) return INVALID_STRING_INDEX;
 		
 		AddToStringTable(particleEffectNames, particleSystem);
@@ -314,18 +314,18 @@ stock PrecacheParticleSystem(const String:particleSystem[])
 	return index;
 }
 
-stock PrecacheMaterial(const String:sMaterialName[])
+stock int PrecacheMaterial(const char[] sMaterialName)
 {
-	static iStringTableMaterials = INVALID_STRING_TABLE;
+	static int iStringTableMaterials = INVALID_STRING_TABLE;
 	if (iStringTableMaterials == INVALID_STRING_TABLE) 
 	{
 		if ((iStringTableMaterials = FindStringTable("Materials")) == INVALID_STRING_TABLE) return INVALID_STRING_INDEX;
 	}
 	
-	new index = FindStringIndex2(iStringTableMaterials, sMaterialName);
+	int index = FindStringIndex2(iStringTableMaterials, sMaterialName);
 	if (index == INVALID_STRING_INDEX) 
 	{
-		new numStrings = GetStringTableNumStrings(iStringTableMaterials);
+		int numStrings = GetStringTableNumStrings(iStringTableMaterials);
 		if (numStrings >= GetStringTableMaxStrings(iStringTableMaterials)) return INVALID_STRING_INDEX;
 		
 		AddToStringTable(iStringTableMaterials, sMaterialName);
@@ -333,14 +333,14 @@ stock PrecacheMaterial(const String:sMaterialName[])
 	}
 	
 	// For Linux, since Linux can be a bastard at times.
-	decl String:sBuffer[PLATFORM_MAX_PATH];
+	char sBuffer[PLATFORM_MAX_PATH];
 	Format(sBuffer, sizeof(sBuffer), "materials/%s", sMaterialName);
 	PrecacheModel(sBuffer);
 	
 	return index;
 }
 
-stock PrecacheVGUIScreen(const String:sScreenType[])
+stock int PrecacheVGUIScreen(const char[] sScreenType)
 {
 	static iStringTableMaterials = INVALID_STRING_TABLE;
 	if (iStringTableMaterials == INVALID_STRING_TABLE) 
@@ -348,10 +348,10 @@ stock PrecacheVGUIScreen(const String:sScreenType[])
 		if ((iStringTableMaterials = FindStringTable("VguiScreen")) == INVALID_STRING_TABLE) return INVALID_STRING_INDEX;
 	}
 	
-	new index = FindStringIndex2(iStringTableMaterials, sScreenType);
+	int index = FindStringIndex2(iStringTableMaterials, sScreenType);
 	if (index == INVALID_STRING_INDEX) 
 	{
-		new numStrings = GetStringTableNumStrings(iStringTableMaterials);
+		int numStrings = GetStringTableNumStrings(iStringTableMaterials);
 		if (numStrings >= GetStringTableMaxStrings(iStringTableMaterials)) return INVALID_STRING_INDEX;
 		
 		AddToStringTable(iStringTableMaterials, sScreenType);
@@ -361,11 +361,11 @@ stock PrecacheVGUIScreen(const String:sScreenType[])
 	return index;
 }
 
-stock FindStringIndex2(tableidx, const String:str[])
+stock int FindStringIndex2(int tableidx, const char[] str)
 {
-	decl String:buf[1024];
+	char buf[1024];
 	
-	for (new i = 0, numStrings = GetStringTableNumStrings(tableidx); i < numStrings; i++) 
+	for (int i = 0, numStrings = GetStringTableNumStrings(tableidx); i < numStrings; i++) 
 	{
 		ReadStringTable(tableidx, i, buf, sizeof(buf));
 		if (StrEqual(buf, str)) return i;
@@ -374,34 +374,34 @@ stock FindStringIndex2(tableidx, const String:str[])
 	return INVALID_STRING_INDEX;
 }
 
-stock PrecacheSound2(const String:sPath[])
+stock void PrecacheSound2(const char[] sPath)
 {
 	PrecacheSound(sPath, true);
-	decl String:sDownloadPath[PLATFORM_MAX_PATH];
+	char sDownloadPath[PLATFORM_MAX_PATH];
 	Format(sDownloadPath, sizeof(sDownloadPath), "sound/%s", sPath);
 	AddFileToDownloadsTable(sDownloadPath);
 }
 
-stock PrecacheModel2(const String:sPath[])
+stock void PrecacheModel2(const char[] sPath)
 {
 	PrecacheModel(sPath, true);
 	AddFileToDownloadsTable(sPath);
 	
-	decl String:sPath2[PLATFORM_MAX_PATH];
+	char sPath2[PLATFORM_MAX_PATH];
 	strcopy(sPath2, sizeof(sPath2), sPath);
 	ReplaceString(sPath2, sizeof(sPath2), ".mdl", "", false);
 	
-	decl String:sDownloadPath[PLATFORM_MAX_PATH];
-	new String:sExtensions[][] = { ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
+	char sDownloadPath[PLATFORM_MAX_PATH];
+	char sExtensions[][] = { ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
 	
-	for (new i = 0; i < sizeof(sExtensions); i++)
+	for (int i = 0; i < sizeof(sExtensions); i++)
 	{
 		Format(sDownloadPath, sizeof(sDownloadPath), "%s%s", sPath2, sExtensions[i]);
 		AddFileToDownloadsTable(sDownloadPath);
 	}
 }
 
-stock LerpVectors(const Float:fA[3], const Float:fB[3], Float:fC[3], Float:t)
+stock void LerpVectors(const float fA[3], const float fB[3], float fC[3], float t)
 {
     if (t < 0.0) t = 0.0;
     if (t > 1.0) t = 1.0;
@@ -411,30 +411,30 @@ stock LerpVectors(const Float:fA[3], const Float:fB[3], Float:fC[3], Float:t)
     fC[2] = fA[2] + (fB[2] - fA[2]) * t;
 }
 
-stock CopyVectors(const Float:fFrom[3], Float:fTo[3])
+stock void CopyVectors(const float fFrom[3], float fTo[3])
 {
     fTo[0] = fFrom[0];
     fTo[1] = fFrom[1];
     fTo[2] = fFrom[2];
 }
 
-stock clamp(value, a, b)
+stock int clamp(int value, int a, int b)
 {
 	if (value < a) return a;
 	if (value > b) return b;
 	return value;
 }
 
-stock Float:FloatClamp(Float:value, Float:a, Float:b)
+stock float FloatClamp(float value, float a, float b)
 {
 	if (value < a) return a;
 	if (value > b) return b;
 	return value;
 }
 
-stock VectorTransform(const Float:offset[3], const Float:worldpos[3], const Float:ang[3], Float:buffer[3])
+stock void VectorTransform(const float offset[3], const float worldpos[3], const float ang[3], float buffer[3])
 {
-	decl Float:fwd[3], Float:right[3], Float:up[3];
+	float fwd[3], right[3], up[3];
 	GetAngleVectors(ang, fwd, right, up);
 	
 	NormalizeVector(fwd, fwd);
@@ -450,20 +450,20 @@ stock VectorTransform(const Float:offset[3], const Float:worldpos[3], const Floa
 	buffer[2] = worldpos[2] + right[2] + fwd[2] + up[2];
 }
 
-stock Float:AngleDiff(Float:firstAngle, Float:secondAngle)
+stock float AngleDiff(float firstAngle, float secondAngle)
 {
-	new Float:diff = secondAngle - firstAngle;
+	float diff = secondAngle - firstAngle;
 	return AngleNormalize(diff);
 }
 
-stock Float:AngleNormalize(Float:angle)
+stock float AngleNormalize(float angle)
 {
 	while (angle > 180.0) angle -= 360.0;
 	while (angle < -180.0) angle += 360.0;
 	return angle;
 }
 
-stock Float:FloatApproach(Float:a, Float:b, Float:c)
+stock float FloatApproach(float a, float b, float c)
 {
 	if (FloatAbs(b - a) < FloatAbs(c)) return b;
 	else
@@ -473,7 +473,7 @@ stock Float:FloatApproach(Float:a, Float:b, Float:c)
 	}
 }
 
-stock FloatToTimeHMS(Float:time, &h, &m, &s)
+stock void FloatToTimeHMS(float time, int &h, int &m, int &s)
 {
 	s = RoundFloat(time);
 	h = s / 3600;
@@ -482,35 +482,35 @@ stock FloatToTimeHMS(Float:time, &h, &m, &s)
 	s = s % 60;
 }
 
-public Action:Timer_KillEntity(Handle:timer, any:entref)
+public Action Timer_KillEntity(Handle timer, any entref)
 {
-	new ent = EntRefToEntIndex(entref);
+	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE) return;
 	AcceptEntityInput(ent, "Kill");
 }
 
-public Action:Timer_StopEntity(Handle:timer, any:entref)
+public Action Timer_StopEntity(Handle timer, any entref)
 {
-	new ent = EntRefToEntIndex(entref);
+	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE) return;
 	AcceptEntityInput(ent, "Stop");
 }
 
-public Action:Timer_TurnOffEntity(Handle:timer, any:entref)
+public Action Timer_TurnOffEntity(Handle timer, any entref)
 {
-	new ent = EntRefToEntIndex(entref);
+	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE) return;
 	AcceptEntityInput(ent, "TurnOff");
 }
 
-public Action:Timer_RegeneratePlayer(Handle:timer, any:entref)
+public Action Timer_RegeneratePlayer(Handle timer, any entref)
 {
-	new ent = EntRefToEntIndex(entref);
+	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE || !IsValidClient(ent)) return;
 	TF2_RegeneratePlayer(ent);
 }
 
-public bool:TraceRayDontHitEntity(entity, contentsMask, any:data)
+public bool TraceRayDontHitEntity(int entity, int contentsMask, any data)
 {
 	if (entity == data) return false;
 	return true;

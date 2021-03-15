@@ -4,9 +4,9 @@
 #define _sf64_effects_included
 
 
-stock CreateEffect(EffectType:iType, EffectEvent:iEvent, iOwner, iCustomIndex=-1, bool:bShouldCheckTeam=true, &iIndex=-1)
+stock int CreateEffect(EffectType iType, EffectEvent iEvent, int iOwner, int iCustomIndex=-1, bool bShouldCheckTeam=true, int &iIndex=-1)
 {
-	new iEffect = -1;
+	int iEffect = -1;
 	switch (iType)
 	{
 		case EffectType_Sprite: iEffect = CreateEntityByName("env_sprite");
@@ -30,12 +30,12 @@ stock CreateEffect(EffectType:iType, EffectEvent:iEvent, iOwner, iCustomIndex=-1
 	return iEffect;
 }
 
-stock EffectSetColor(iEffect, r, g, b, a, r2=255, g2=255, b2=255)
+stock void EffectSetColor(int iEffect, int r, int g, int b, int a, int r2=255, int g2=255, int b2=255)
 {
-	new iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
+	int iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
 	if (iIndex == -1) return;
 	
-	new EffectType:iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
+	EffectType iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
 	
 	switch (iType)
 	{
@@ -50,7 +50,7 @@ stock EffectSetColor(iEffect, r, g, b, a, r2=255, g2=255, b2=255)
 		}
 		case EffectType_Smoketrail:
 		{
-			decl Float:flColor[3];
+			float flColor[3];
 			flColor[0] = float(r);
 			flColor[1] = float(g);
 			flColor[2] = float(b);
@@ -63,21 +63,21 @@ stock EffectSetColor(iEffect, r, g, b, a, r2=255, g2=255, b2=255)
 		}
 		case EffectType_Smokestack, EffectType_Trail:
 		{
-			decl String:sForm[64];
+			char sForm[64];
 			Format(sForm, sizeof(sForm), "%d %d %d", r, g, b);
 			DispatchKeyValue(iEffect, "rendercolor", sForm);
 		}
 	}
 }
 
-stock TurnOnEffect(iEffect)
+stock void TurnOnEffect(int iEffect)
 {
 	if (!IsValidEntity(iEffect)) return;
 	
-	new iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
+	int iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
 	if (iIndex == -1) return;
 	
-	new EffectType:iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
+	EffectType iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
 	
 	switch (iType)
 	{
@@ -87,14 +87,14 @@ stock TurnOnEffect(iEffect)
 	}
 }
 
-stock TurnOffEffect(iEffect)
+stock void TurnOffEffect(int iEffect)
 {
 	if (!IsValidEntity(iEffect)) return;
 	
-	new iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
+	int iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
 	if (iIndex == -1) return;
 	
-	new EffectType:iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
+	EffectType iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
 	
 	switch (iType)
 	{
@@ -104,21 +104,21 @@ stock TurnOffEffect(iEffect)
 	}
 }
 
-stock RemoveEffect(iEffect, bool:bForce=false)
+stock void RemoveEffect(int iEffect, bool bForce=false)
 {
 	if (!IsValidEntity(iEffect)) return;
 	
-	new iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
+	int iIndex = FindValueInArray(g_hEffects, EntIndexToEntRef(iEffect));
 	if (iIndex == -1) return;
 	
-	if (!bForce && bool:GetArrayCell(g_hEffects, iIndex, Effect_InKill)) return;
+	if (!bForce && view_as<bool>(GetArrayCell(g_hEffects, iIndex, Effect_InKill))) return;
 	
 	SetArrayCell(g_hEffects, iIndex, true, Effect_InKill);
 	
-	decl Float:flPos[3];
+	float flPos[3];
 	GetEntPropVector(iEffect, Prop_Data, "m_vecAbsOrigin", flPos);
 	
-	new EffectType:iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
+	EffectType iType = GetArrayCell(g_hEffects, iIndex, Effect_Type);
 	
 	if (iType != EffectType_Trail)
 	{
@@ -126,9 +126,9 @@ stock RemoveEffect(iEffect, bool:bForce=false)
 	}
 	
 	AcceptEntityInput(iEffect, "ClearParent");
-	TeleportEntity(iEffect, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
+	TeleportEntity(iEffect, flPos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 	
-	new Float:flDelay = 0.0;
+	float flDelay = 0.0;
 	switch (iType)
 	{
 		case EffectType_Smokestack: flDelay = GetEntPropFloat(iEffect, Prop_Send, "m_JetLength") / GetEntPropFloat(iEffect, Prop_Send, "m_Speed");
@@ -138,22 +138,24 @@ stock RemoveEffect(iEffect, bool:bForce=false)
 	DeleteEntity(iEffect, flDelay);
 }
 
-stock TurnOnEffectsOfEntityOfEvent(iOwner, EffectEvent:iEvent, bool:bIgnoreKill=false)
+stock void TurnOnEffectsOfEntityOfEvent(int iOwner, EffectEvent iEvent, bool bIgnoreKill=false)
 {
 	if (!IsValidEntity(iOwner)) return;
 	
-	decl iEffect, iEffectOwner, EffectEvent:iEffectEvent;
-	for (new i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
+	int iEffect, iEffectOwner;
+	EffectEvent iEffectEvent;
+
+	for (int i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
 	{
 		iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, i));
 		if (!iEffect || iEffect == INVALID_ENT_REFERENCE) continue;
 		
-		if (!bIgnoreKill && bool:GetArrayCell(g_hEffects, i, Effect_InKill)) continue;
+		if (!bIgnoreKill && view_as<bool>(GetArrayCell(g_hEffects, i, Effect_InKill))) continue;
 		
 		iEffectOwner = EntRefToEntIndex(GetArrayCell(g_hEffects, i, Effect_Owner));
 		if (iEffectOwner != iOwner) continue;
 		
-		iEffectEvent = EffectEvent:GetArrayCell(g_hEffects, i, Effect_Event);
+		iEffectEvent = view_as<EffectEvent>(GetArrayCell(g_hEffects, i, Effect_Event));
 		if (iEvent == EffectEvent_All || iEffectEvent == iEvent)
 		{
 			TurnOnEffect(iEffect);
@@ -161,22 +163,24 @@ stock TurnOnEffectsOfEntityOfEvent(iOwner, EffectEvent:iEvent, bool:bIgnoreKill=
 	}
 }
 
-stock TurnOffEffectsOfEntityOfEvent(iOwner, EffectEvent:iEvent, bool:bIgnoreKill=false)
+stock void TurnOffEffectsOfEntityOfEvent(int iOwner, EffectEvent iEvent, bool bIgnoreKill=false)
 {
 	if (!IsValidEntity(iOwner)) return;
 	
-	decl iEffect, iEffectOwner, EffectEvent:iEffectEvent;
-	for (new i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
+	int iEffect, iEffectOwner;
+	EffectEvent iEffectEvent;
+
+	for (int i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
 	{
 		iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, i));
 		if (!iEffect || iEffect == INVALID_ENT_REFERENCE) continue;
 		
-		if (!bIgnoreKill && bool:GetArrayCell(g_hEffects, i, Effect_InKill)) continue;
+		if (!bIgnoreKill && view_as<bool>(GetArrayCell(g_hEffects, i, Effect_InKill))) continue;
 		
 		iEffectOwner = EntRefToEntIndex(GetArrayCell(g_hEffects, i, Effect_Owner));
 		if (iEffectOwner != iOwner) continue;
 		
-		iEffectEvent = EffectEvent:GetArrayCell(g_hEffects, i, Effect_Event);
+		iEffectEvent = view_as<EffectEvent>(GetArrayCell(g_hEffects, i, Effect_Event));
 		if (iEvent == EffectEvent_All || iEffectEvent == iEvent)
 		{
 			TurnOffEffect(iEffect);
@@ -184,24 +188,26 @@ stock TurnOffEffectsOfEntityOfEvent(iOwner, EffectEvent:iEvent, bool:bIgnoreKill
 	}
 }
 
-stock RemoveEffectsFromEntityOfEvent(iOwner, EffectEvent:iEvent, bool:bForce=false)
+stock void RemoveEffectsFromEntityOfEvent(int iOwner, EffectEvent iEvent, bool bForce=false)
 {
 	if (!IsValidEntity(iOwner)) return;
 	
-	new Handle:hArray = CloneArray(g_hEffects);
+	Handle hArray = CloneArray(g_hEffects);
 	
-	decl iEffect, iEffectOwner, EffectEvent:iEffectEvent;
-	for (new i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
+	int iEffect, iEffectOwner;
+	EffectEvent iEffectEvent;
+
+	for (int i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
 	{
 		iEffect = EntRefToEntIndex(GetArrayCell(hArray, i));
 		if (!iEffect || iEffect == INVALID_ENT_REFERENCE) continue;
 		
-		if (!bForce && bool:GetArrayCell(hArray, i, Effect_InKill)) continue;
+		if (!bForce && view_as<bool>(GetArrayCell(hArray, i, Effect_InKill))) continue;
 		
 		iEffectOwner = EntRefToEntIndex(GetArrayCell(hArray, i, Effect_Owner));
 		if (iEffectOwner != iOwner) continue;
 		
-		iEffectEvent = EffectEvent:GetArrayCell(hArray, i, Effect_Event);
+		iEffectEvent = view_as<EffectEvent>(GetArrayCell(hArray, i, Effect_Event));
 		if (iEvent == EffectEvent_All || iEffectEvent == iEvent)
 		{
 			RemoveEffect(iEffect, bForce);
@@ -211,18 +217,18 @@ stock RemoveEffectsFromEntityOfEvent(iOwner, EffectEvent:iEvent, bool:bForce=fal
 	CloseHandle(hArray);
 }
 
-public Action:Timer_EffectRemove(Handle:timer, any:entref)
+public Action Timer_EffectRemove(Handle timer, any entref)
 {
-	new iEffect = EntRefToEntIndex(entref);
+	int iEffect = EntRefToEntIndex(entref);
 	if (!iEffect || iEffect == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hEffects, entref);
+	int iIndex = FindValueInArray(g_hEffects, entref);
 	if (iIndex == -1) return;
 	
 	RemoveEffect(iEffect, true);
 }
 
-stock EffectType:GetEffectTypeFromName(const String:sName[])
+stock EffectType GetEffectTypeFromName(const char[] sName)
 {
 	if (StrEqual(sName, "sprite")) return EffectType_Sprite;
 	else if (StrEqual(sName, "smokestack")) return EffectType_Smokestack;
@@ -232,7 +238,7 @@ stock EffectType:GetEffectTypeFromName(const String:sName[])
 	return EffectType_Invalid;
 }
 
-stock EffectEvent:GetEffectEventFromName(const String:sName[])
+stock EffectEvent GetEffectEventFromName(const char[] sName)
 {
 	if (StrEqual(sName, "constant")) return EffectEvent_Constant;
 	
@@ -257,7 +263,7 @@ stock EffectEvent:GetEffectEventFromName(const String:sName[])
 	return EffectEvent_Invalid;
 }
 
-stock GetEffectEventName(EffectEvent:iEvent, String:sBuffer[], iBufferLen)
+stock void GetEffectEventName(EffectEvent iEvent, char[] sBuffer, int iBufferLen)
 {
 	switch (iEvent)
 	{

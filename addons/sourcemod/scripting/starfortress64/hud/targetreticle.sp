@@ -4,9 +4,9 @@
 #define _sf64_hud_targetreticle_included
 
 
-SpawnTargetReticle(const String:sMaterial[], const Float:flPos[3], const Float:flAng[3], const Float:flVelocity[3], iOwner, Float:flScale, bool:bIsLockOn=false, &iIndex=-1)
+int SpawnTargetReticle(const char[] sMaterial, const float flPos[3], const float flAng[3], const float flVelocity[3], int iOwner, float flScale, bool bIsLockOn=false, int &iIndex=-1)
 {
-	new iReticle = CreateEntityByName("env_sprite");
+	int iReticle = CreateEntityByName("env_sprite");
 	if (iReticle != -1)
 	{
 		SetEntityModel(iReticle, sMaterial);
@@ -20,7 +20,7 @@ SpawnTargetReticle(const String:sMaterial[], const Float:flPos[3], const Float:f
 		SetArrayCell(g_hTargetReticles, iIndex, IsValidEntity(iOwner) ? EntIndexToEntRef(iOwner) : INVALID_ENT_REFERENCE, TargetReticle_Owner);
 		SetArrayCell(g_hTargetReticles, iIndex, bIsLockOn, TargetReticle_IsLockOn);
 		
-		new iEdictFlags = GetEdictFlags(iReticle);
+		int iEdictFlags = GetEdictFlags(iReticle);
 		if (!(iEdictFlags & FL_EDICT_ALWAYS)) iEdictFlags |= FL_EDICT_ALWAYS;
 		if (!(iEdictFlags & FL_EDICT_FULLCHECK)) iEdictFlags |= FL_EDICT_FULLCHECK;
 		if (iEdictFlags & FL_EDICT_PVSCHECK) iEdictFlags &= ~FL_EDICT_PVSCHECK;
@@ -34,19 +34,19 @@ SpawnTargetReticle(const String:sMaterial[], const Float:flPos[3], const Float:f
 	return iReticle;
 }
 
-public Action:Hook_TargetReticleSetTransmit(iReticle, other)
+public Action Hook_TargetReticleSetTransmit(int iReticle, int other)
 {
-	new iIndex = FindValueInArray(g_hTargetReticles, EntIndexToEntRef(iReticle));
+	int iIndex = FindValueInArray(g_hTargetReticles, EntIndexToEntRef(iReticle));
 	if (iIndex == -1) return Plugin_Continue;
 	
-	new bool:bAppear = false;
+	bool bAppear = false;
 	
-	new iVehicle = EntRefToEntIndex(GetArrayCell(g_hTargetReticles, iIndex, TargetReticle_Owner));
+	int iVehicle = EntRefToEntIndex(GetArrayCell(g_hTargetReticles, iIndex, TargetReticle_Owner));
 	if (iVehicle && iVehicle != INVALID_ENT_REFERENCE && IsVehicle(iVehicle))
 	{
 		if (IsVehicleEnabled(iVehicle))
 		{
-			new iPilot = VehicleGetPilot(iVehicle);
+			int iPilot = VehicleGetPilot(iVehicle);
 			if (iPilot && iPilot != INVALID_ENT_REFERENCE && IsValidClient(iPilot))
 			{
 				if (iPilot == other)
@@ -54,12 +54,12 @@ public Action:Hook_TargetReticleSetTransmit(iReticle, other)
 					// This reticle is a normal reticle; appear always to its pilot.
 					bAppear = true;
 				}
-				else if (bool:GetArrayCell(g_hTargetReticles, iIndex, TargetReticle_IsLockOn))
+				else if (view_as<bool>(GetArrayCell(g_hTargetReticles, iIndex, TargetReticle_IsLockOn)))
 				{
-					new iTargetVehicle = VehicleGetTarget(iVehicle);
+					int iTargetVehicle = VehicleGetTarget(iVehicle);
 					if (IsVehicle(iTargetVehicle))
 					{
-						new iTargetPilot = VehicleGetPilot(iTargetVehicle);
+						int iTargetPilot = VehicleGetPilot(iTargetVehicle);
 						if (iTargetPilot && iTargetPilot != INVALID_ENT_REFERENCE && IsValidClient(iTargetPilot))
 						{
 							if (iTargetPilot == other)
@@ -78,15 +78,15 @@ public Action:Hook_TargetReticleSetTransmit(iReticle, other)
 	return Plugin_Continue;
 }
 
-stock RemoveAllTargetReticlesFromEntity(iEnt, bool:bLockOnOnly=false)
+stock void RemoveAllTargetReticlesFromEntity(int iEnt, bool bLockOnOnly=false)
 {
 	if (!IsValidEntity(iEnt)) return;
 	
-	new Handle:hArray = CloneArray(g_hTargetReticles);
+	Handle hArray = CloneArray(g_hTargetReticles);
 	
-	decl iReticle;
-	new iEntRef = EntIndexToEntRef(iEnt);
-	for (new i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
+	int iReticle;
+	int iEntRef = EntIndexToEntRef(iEnt);
+	for (int i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
 	{
 		iReticle = EntRefToEntIndex(GetArrayCell(hArray, i));
 		if (!iReticle || iReticle == INVALID_ENT_REFERENCE) continue;
@@ -95,7 +95,7 @@ stock RemoveAllTargetReticlesFromEntity(iEnt, bool:bLockOnOnly=false)
 		{
 			if (bLockOnOnly)
 			{
-				if (bool:GetArrayCell(hArray, i, TargetReticle_IsLockOn))
+				if (view_as<bool>(GetArrayCell(hArray, i, TargetReticle_IsLockOn)))
 				{
 					DeleteEntity(iReticle);
 				}

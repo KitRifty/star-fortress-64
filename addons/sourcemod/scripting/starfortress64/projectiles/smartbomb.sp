@@ -12,7 +12,7 @@
 #define ARWING_SMARTBOMB_TRAIL_STARTWIDTH 32.0
 #define ARWING_SMARTBOMB_TRAIL_ENDWIDTH 16.0
 
-PrecacheSmartBomb()
+void PrecacheSmartBomb()
 {
 	PrecacheModel2(ARWING_SMARTBOMB_MODEL);
 	AddFileToDownloadsTable("materials/models/tokens/bomb_texture.vtf");
@@ -22,20 +22,20 @@ PrecacheSmartBomb()
 	PrecacheSound2(ARWING_SMARTBOMB_DETONATE_SOUND);
 }
 
-SpawnSmartBomb(const Float:flPos[3],
-	const Float:flAng[3],
-	const Float:flVelocity[3],
-	iTeam,
-	iOwner,
-	iTarget,
-	Float:flDamage=150.0,
-	Float:flDamageRadius=512.0,
-	Float:flLifeTime=5.0,
-	Float:flMaxSpeed=2500.0,
-	Float:flTrackDuration=4.0,
-	&iIndex=-1)
+int SpawnSmartBomb(const float flPos[3],
+	const float flAng[3],
+	const float flVelocity[3],
+	int iTeam,
+	int iOwner,
+	int iTarget,
+	float flDamage=150.0,
+	float flDamageRadius=512.0,
+	float flLifeTime=5.0,
+	float flMaxSpeed=2500.0,
+	float flTrackDuration=4.0,
+	int &iIndex=-1)
 {
-	new iSmartBomb = CreateEntityByName("prop_dynamic_override");
+	int iSmartBomb = CreateEntityByName("prop_dynamic_override");
 	if (iSmartBomb != -1)
 	{
 		SetEntityModel(iSmartBomb, ARWING_SMARTBOMB_MODEL);
@@ -46,14 +46,14 @@ SpawnSmartBomb(const Float:flPos[3],
 		SetEntProp(iSmartBomb, Prop_Send, "m_usSolidFlags", FSOLID_NOT_SOLID | FSOLID_TRIGGER);
 		SetEntProp(iSmartBomb, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
 		
-		new iTrailEnt = CreateEntityByName("env_spritetrail");
+		int iTrailEnt = CreateEntityByName("env_spritetrail");
 		if (iTrailEnt != -1)
 		{
 			DispatchKeyValue(iTrailEnt, "spritename", ARWING_LASER_TRAIL_MATERIAL);
 			DispatchKeyValue(iTrailEnt, "renderamt", "255");
 			DispatchKeyValue(iTrailEnt, "rendermode", "5");
 			
-			if (iTeam == _:TFTeam_Red) 
+			if (iTeam == view_as<int>(TFTeam_Red)) 
 			{
 				DispatchKeyValue(iTrailEnt, "rendercolor", "255 0 0");
 			}
@@ -71,7 +71,7 @@ SpawnSmartBomb(const Float:flPos[3],
 			AcceptEntityInput(iTrailEnt, "SetParent", iSmartBomb);
 		}
 		
-		new iSmoke = CreateEntityByName("env_smokestack");
+		int iSmoke = CreateEntityByName("env_smokestack");
 		if (iSmoke != -1)
 		{
 			DispatchKeyValue(iSmoke, "SmokeMaterial", ARWING_SMARTBOMB_TRAIL_MATERIAL);
@@ -86,7 +86,7 @@ SpawnSmartBomb(const Float:flPos[3],
 			DispatchKeyValue(iSmoke, "renderamt", "255");
 			DispatchKeyValue(iSmoke, "rendermode", "5");
 			
-			if (iTeam == _:TFTeam_Red) 
+			if (iTeam == view_as<int>(TFTeam_Red)) 
 			{
 				DispatchKeyValue(iSmoke, "rendercolor", "255 150 150");
 			}
@@ -123,7 +123,7 @@ SpawnSmartBomb(const Float:flPos[3],
 		SetArrayCell(g_hSBombs, iIndex, true, SBomb_IsTracking);
 		SetArrayCell(g_hSBombs, iIndex, flTrackDuration, SBomb_TrackDuration);
 		
-		new Handle:hTimer = CreateTimer(flLifeTime, Timer_DetonateSmartBomb, EntIndexToEntRef(iSmartBomb), TIMER_FLAG_NO_MAPCHANGE);
+		Handle hTimer = CreateTimer(flLifeTime, Timer_DetonateSmartBomb, EntIndexToEntRef(iSmartBomb), TIMER_FLAG_NO_MAPCHANGE);
 		SetArrayCell(g_hSBombs, iIndex, hTimer, SBomb_DetonateTimer);
 		
 		TeleportEntity(iSmartBomb, flPos, flAng, flVelocity);
@@ -136,18 +136,18 @@ SpawnSmartBomb(const Float:flPos[3],
 	return iSmartBomb;
 }
 
-public Hook_SmartBombStartTouchPost(iSmartBomb, other)
+public void Hook_SmartBombStartTouchPost(int iSmartBomb, int other)
 {
-	new iIndex = FindValueInArray(g_hSBombs, EntIndexToEntRef(iSmartBomb));
+	int iIndex = FindValueInArray(g_hSBombs, EntIndexToEntRef(iSmartBomb));
 	if (iIndex == -1) return;
 	
-	new iOwner = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_Owner));
-	new bool:bHit = false;
+	int iOwner = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_Owner));
+	bool bHit = false;
 	
 	if (iOwner && iOwner != other)
 	{
-		new iOtherEntRef = EntIndexToEntRef(other);
-		new iOtherIndex = FindValueInArray(g_hArwings, iOtherEntRef);
+		int iOtherEntRef = EntIndexToEntRef(other);
+		int iOtherIndex = FindValueInArray(g_hArwings, iOtherEntRef);
 		if (iOtherIndex != -1)
 		{
 			if (EntRefToEntIndex(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot)) != iOwner)
@@ -167,27 +167,27 @@ public Hook_SmartBombStartTouchPost(iSmartBomb, other)
 	}
 }
 
-public Action:Timer_SmartBombThink(Handle:timer, any:entref)
+public Action Timer_SmartBombThink(Handle timer, any entref)
 {
-	new iSmartBomb = EntRefToEntIndex(entref);
+	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hSBombs, entref);
+	int iIndex = FindValueInArray(g_hSBombs, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (bool:GetArrayCell(g_hSBombs, iIndex, SBomb_Detonated)) return Plugin_Stop;
+	if (view_as<bool>(GetArrayCell(g_hSBombs, iIndex, SBomb_Detonated))) return Plugin_Stop;
 	
-	new iTarget = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_Target));
+	int iTarget = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_Target));
 	if (SmartBombCanTrackTarget(iSmartBomb, iTarget))
 	{
-		decl Float:flPos[3], Float:flVelocity[3];
+		float flPos[3], flVelocity[3];
 		GetEntPropVector(iSmartBomb, Prop_Data, "m_vecAbsOrigin", flPos);
 		GetEntPropVector(iSmartBomb, Prop_Data, "m_vecAbsVelocity", flVelocity);
 		
-		decl Float:flGoalVelocity[3];
+		float flGoalVelocity[3];
 		if (GetArrayCell(g_hSBombs, iIndex, SBomb_IsTracking))
 		{
-			decl Float:flTargetPos[3];
+			float flTargetPos[3];
 			GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", flTargetPos);
 			SubtractVectors(flTargetPos, flPos, flGoalVelocity);
 		}
@@ -197,9 +197,9 @@ public Action:Timer_SmartBombThink(Handle:timer, any:entref)
 		}
 		
 		NormalizeVector(flGoalVelocity, flGoalVelocity);
-		ScaleVector(flGoalVelocity, Float:GetArrayCell(g_hSBombs, iIndex, SBomb_MaxSpeed));
+		ScaleVector(flGoalVelocity, view_as<float>(GetArrayCell(g_hSBombs, iIndex, SBomb_MaxSpeed)));
 		
-		decl Float:flNewVelocity[3];
+		float flNewVelocity[3];
 		LerpVectors(flVelocity, flGoalVelocity, flNewVelocity, 0.25);
 		TeleportEntity(iSmartBomb, NULL_VECTOR, NULL_VECTOR, flNewVelocity);
 	}
@@ -211,27 +211,27 @@ public Action:Timer_SmartBombThink(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-bool:SmartBombCanTrackTarget(iSmartBomb, iTarget)
+bool SmartBombCanTrackTarget(int iSmartBomb, int iTarget)
 {
 	if (!IsValidEntity(iSmartBomb) || !IsValidEntity(iTarget)) return false;
 	
-	new iIndex = FindValueInArray(g_hSBombs, EntIndexToEntRef(iSmartBomb));
+	int iIndex = FindValueInArray(g_hSBombs, EntIndexToEntRef(iSmartBomb));
 	if (iIndex == -1) return false;
 	
-	new iTeam = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_Team));
+	int iTeam = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_Team));
 	
-	new iTargetIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iTarget));
+	int iTargetIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iTarget));
 	if (iTargetIndex != -1)
 	{
-		if (bool:GetArrayCell(g_hArwings, iTargetIndex, Arwing_Destroyed)) return false;
+		if (view_as<bool>(GetArrayCell(g_hArwings, iTargetIndex, Arwing_Destroyed))) return false;
 	
 		if (!g_bFriendlyFire && iTeam == GetArrayCell(g_hArwings, iTargetIndex, Arwing_Team))
 		{
 			return false;
 		}
 		
-		if (bool:GetArrayCell(g_hArwings, iTargetIndex, Arwing_InSomersault) ||
-			bool:GetArrayCell(g_hArwings, iTargetIndex, Arwing_InUTurn))
+		if (view_as<bool>(GetArrayCell(g_hArwings, iTargetIndex, Arwing_InSomersault)) ||
+			view_as<bool>(GetArrayCell(g_hArwings, iTargetIndex, Arwing_InUTurn)))
 		{
 			return false;
 		}
@@ -245,38 +245,38 @@ bool:SmartBombCanTrackTarget(iSmartBomb, iTarget)
 	return true;
 }
 
-public Action:Timer_DetonateSmartBomb(Handle:timer, any:entref)
+public Action Timer_DetonateSmartBomb(Handle timer, any entref)
 {
-	new iSmartBomb = EntRefToEntIndex(entref);
+	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hSBombs, entref);
+	int iIndex = FindValueInArray(g_hSBombs, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateTimer))) return;
 	
 	DetonateSmartBomb(iSmartBomb);
 }
 
-DetonateSmartBomb(iSmartBomb)
+void DetonateSmartBomb(int iSmartBomb)
 {
-	new iIndex = FindValueInArray(g_hSBombs, EntIndexToEntRef(iSmartBomb));
+	int iIndex = FindValueInArray(g_hSBombs, EntIndexToEntRef(iSmartBomb));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hSBombs, iIndex, SBomb_Detonated)) return;
+	if (view_as<bool>(GetArrayCell(g_hSBombs, iIndex, SBomb_Detonated))) return;
 	
 	SetArrayCell(g_hSBombs, iIndex, true, SBomb_Detonated);
 	SetArrayCell(g_hSBombs, iIndex, INVALID_HANDLE, SBomb_DetonateTimer);
 	
-	new iExplode = CreateEntityByName("env_explosion");
+	int iExplode = CreateEntityByName("env_explosion");
 	if (iExplode != -1)
 	{
-		decl Float:flPos[3];
+		float flPos[3];
 		GetEntPropVector(iSmartBomb, Prop_Data, "m_vecAbsOrigin", flPos);
 	
 		SetEntProp(iExplode, Prop_Data, "m_spawnflags", 2 + 4 + 8 + 16 + 32 + 64 + 256 + 512 + 1024);
-		SetEntProp(iExplode, Prop_Data, "m_iMagnitude", RoundToFloor(Float:GetArrayCell(g_hSBombs, iIndex, SBomb_Damage)));
-		SetEntProp(iExplode, Prop_Data, "m_iRadiusOverride", RoundToFloor(Float:GetArrayCell(g_hSBombs, iIndex, SBomb_DamageRadius)));
+		SetEntProp(iExplode, Prop_Data, "m_iMagnitude", RoundToFloor(view_as<float>(GetArrayCell(g_hSBombs, iIndex, SBomb_Damage))));
+		SetEntProp(iExplode, Prop_Data, "m_iRadiusOverride", RoundToFloor(view_as<float>(GetArrayCell(g_hSBombs, iIndex, SBomb_DamageRadius))));
 		DispatchSpawn(iExplode);
 		ActivateEntity(iExplode);
 		TeleportEntity(iExplode, flPos, NULL_VECTOR, NULL_VECTOR);
@@ -287,7 +287,7 @@ DetonateSmartBomb(iSmartBomb)
 		SetArrayCell(g_hSBombs, iIndex, EntIndexToEntRef(iExplode), SBomb_DetonateHurtEnt);
 	}
 	
-	new Handle:hTimer = CreateTimer(0.1, Timer_SmartBombDetonateHurt, EntIndexToEntRef(iSmartBomb), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	Handle hTimer = CreateTimer(0.1, Timer_SmartBombDetonateHurt, EntIndexToEntRef(iSmartBomb), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hSBombs, iIndex, hTimer, SBomb_DetonateHurtTimer);
 	TriggerTimer(hTimer, true);
 	
@@ -297,12 +297,12 @@ DetonateSmartBomb(iSmartBomb)
 	hTimer = CreateTimer(7.0, Timer_SmartBombDetonateKill, EntIndexToEntRef(iSmartBomb), TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hSBombs, iIndex, hTimer, SBomb_DetonateKillTimer);
 	
-	TeleportEntity(iSmartBomb, NULL_VECTOR, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
+	TeleportEntity(iSmartBomb, NULL_VECTOR, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 	SetEntityMoveType(iSmartBomb, MOVETYPE_NONE);
 	SetEntityRenderMode(iSmartBomb, RENDER_TRANSCOLOR);
 	SetEntityRenderColor(iSmartBomb, 0, 0, 0, 1);
 	
-	new iSmoke = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_TrailEnt));
+	int iSmoke = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_TrailEnt));
 	if (iSmoke && iSmoke != INVALID_ENT_REFERENCE)
 	{
 		TurnOffEntity(iSmoke);
@@ -312,7 +312,7 @@ DetonateSmartBomb(iSmartBomb)
 	StopSound(iSmartBomb, SNDCHAN_STATIC, ARWING_SMARTBOMB_FLY_SOUND);
 	EmitSoundToAll(ARWING_SMARTBOMB_DETONATE_SOUND, iSmartBomb, SNDCHAN_STATIC, SNDLEVEL_RAIDSIREN);
 	
-	new iEffect = CreateEntityByName("env_smokestack");
+	int iEffect = CreateEntityByName("env_smokestack");
 	if (iEffect != -1)
 	{
 		DispatchKeyValue(iEffect, "SmokeMaterial", ARWING_SMARTBOMB_EXPLOSION_MATERIAL);
@@ -327,9 +327,9 @@ DetonateSmartBomb(iSmartBomb)
 		DispatchKeyValue(iEffect, "renderamt", "255");
 		DispatchKeyValue(iEffect, "rendermode", "5");
 		
-		new iTeam = GetArrayCell(g_hSBombs, iIndex, SBomb_Team);
+		int iTeam = GetArrayCell(g_hSBombs, iIndex, SBomb_Team);
 		
-		if (iTeam == _:TFTeam_Red) 
+		if (iTeam == view_as<int>(TFTeam_Red)) 
 		{
 			DispatchKeyValue(iEffect, "rendercolor", "255 150 150");
 		}
@@ -341,7 +341,7 @@ DetonateSmartBomb(iSmartBomb)
 		DispatchSpawn(iEffect);
 		ActivateEntity(iEffect);
 		
-		decl Float:flPos[3];
+		float flPos[3];
 		GetEntPropVector(iSmartBomb, Prop_Data, "m_vecAbsOrigin", flPos);
 		TeleportEntity(iEffect, flPos, NULL_VECTOR, NULL_VECTOR);
 		AcceptEntityInput(iEffect, "TurnOn");
@@ -351,17 +351,17 @@ DetonateSmartBomb(iSmartBomb)
 	}
 }
 
-public Action:Timer_SmartBombDetonateHurt(Handle:timer, any:entref)
+public Action Timer_SmartBombDetonateHurt(Handle timer, any entref)
 {
-	new iSmartBomb = EntRefToEntIndex(entref);
+	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hSBombs, entref);
+	int iIndex = FindValueInArray(g_hSBombs, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (timer != Handle:GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateHurtTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateHurtTimer))) return Plugin_Stop;
 	
-	new iExplode = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateHurtEnt));
+	int iExplode = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateHurtEnt));
 	if (iExplode && iExplode != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(iExplode, "Explode");
@@ -370,17 +370,17 @@ public Action:Timer_SmartBombDetonateHurt(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-public Action:Timer_SmartBombDetonateStopHurt(Handle:timer, any:entref)
+public Action Timer_SmartBombDetonateStopHurt(Handle timer, any entref)
 {
-	new iSmartBomb = EntRefToEntIndex(entref);
+	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hSBombs, entref);
+	int iIndex = FindValueInArray(g_hSBombs, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateStopHurtTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateStopHurtTimer))) return;
 	
-	new iExplode = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateHurtEnt));
+	int iExplode = EntRefToEntIndex(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateHurtEnt));
 	if (iExplode && iExplode != INVALID_ENT_REFERENCE)
 	{
 		DeleteEntity(iExplode);
@@ -390,15 +390,15 @@ public Action:Timer_SmartBombDetonateStopHurt(Handle:timer, any:entref)
 	SetArrayCell(g_hSBombs, iIndex, INVALID_HANDLE, SBomb_DetonateStopHurtTimer);
 }
 
-public Action:Timer_SmartBombDetonateKill(Handle:timer, any:entref)
+public Action Timer_SmartBombDetonateKill(Handle timer, any entref)
 {
-	new iSmartBomb = EntRefToEntIndex(entref);
+	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hSBombs, entref);
+	int iIndex = FindValueInArray(g_hSBombs, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateKillTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hSBombs, iIndex, SBomb_DetonateKillTimer))) return;
 	
 	DeleteEntity(iSmartBomb);
 }

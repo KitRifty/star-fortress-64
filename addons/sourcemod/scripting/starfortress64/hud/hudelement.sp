@@ -4,14 +4,14 @@
 #define _sf64_hud_elements_included
 
 
-SetupHudElements()
+void SetupHudElements()
 {
 	g_hHudElements = CreateArray(HudElement_MaxStats);
 	
 	RegConsoleCmd("sm_sf64_spawnhudelement", Command_SpawnHudElement);
 }
 
-public Action:Command_SpawnHudElement(client, args)
+public Action Command_SpawnHudElement(int client, int args)
 {
 	if (args < 3)
 	{
@@ -19,21 +19,21 @@ public Action:Command_SpawnHudElement(client, args)
 		return Plugin_Handled;
 	}
 	
-	decl String:sType[64], String:sWidth[64], String:sHeight[64];
+	char sType[64], sWidth[64], sHeight[64];
 	GetCmdArg(1, sType, sizeof(sType));
 	GetCmdArg(2, sWidth, sizeof(sWidth));
 	GetCmdArg(3, sHeight, sizeof(sHeight));
 	
-	new iType = StringToInt(sType);
-	new Float:flWidth = StringToFloat(sWidth);
-	new Float:flHeight = StringToFloat(sHeight);
+	int iType = StringToInt(sType);
+	float flWidth = StringToFloat(sWidth);
+	float flHeight = StringToFloat(sHeight);
 	
-	decl Float:flEyePos[3], Float:flEyeAng[3];
+	float flEyePos[3], flEyeAng[3];
 	GetClientEyePosition(client, flEyePos);
 	GetClientEyeAngles(client, flEyeAng);
 	
-	decl Float:flHitPos[3];
-	new Handle:hTrace = TR_TraceRayFilterEx(flEyePos, flEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
+	float flHitPos[3];
+	Handle hTrace = TR_TraceRayFilterEx(flEyePos, flEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
 	TR_GetEndPosition(flHitPos, hTrace);
 	CloseHandle(hTrace);
 	
@@ -50,18 +50,18 @@ public Action:Command_SpawnHudElement(client, args)
 	return Plugin_Handled;
 }
 
-SpawnHudElement(const Float:flPos[3],
-	const Float:flAng[3],
-	iType,
-	iOwner,
-	Float:flMinWidth,
-	Float:flMaxWidth,
-	Float:flMinHeight,
-	Float:flMaxHeight,
-	iCustomIndex=-1,
-	&iIndex=-1)
+int SpawnHudElement(const float flPos[3],
+	const float flAng[3],
+	int iType,
+	int iOwner,
+	float flMinWidth,
+	float flMaxWidth,
+	float flMinHeight,
+	float flMaxHeight,
+	int iCustomIndex=-1,
+	int &iIndex=-1)
 {
-	new iHudElement = CreateEntityByName("vgui_screen");
+	int iHudElement = CreateEntityByName("vgui_screen");
 	if (iHudElement != -1)
 	{
 		DispatchKeyValue(iHudElement, "panelname", "pda_panel_spy");
@@ -87,13 +87,13 @@ SpawnHudElement(const Float:flPos[3],
 	return iHudElement;
 }
 
-public Action:Timer_HudElementInitialize(Handle:timer, any:entref)
+public Action Timer_HudElementInitialize(Handle timer, any entref)
 {
-	new iHudElement = EntRefToEntIndex(entref);
+	int iHudElement = EntRefToEntIndex(entref);
 	
 	if (!iHudElement || iHudElement == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hHudElements, entref);
+	int iIndex = FindValueInArray(g_hHudElements, entref);
 	if (iIndex == -1) return;
 	
 	SetArrayCell(g_hHudElements, iIndex, false, HudElement_Initializing);

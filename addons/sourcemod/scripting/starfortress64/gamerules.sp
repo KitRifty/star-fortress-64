@@ -4,51 +4,51 @@
 #define _sf64_gamerules_included
 
 // Round variables.
-static g_iGameRoundState = SF64RoundState_Unknown;	// Current state of the round.
-static Handle:g_hGameRoundTimer;							// The round timer.
-static g_iGameRoundTime;									// Current round time.
+static int g_iGameRoundState = SF64RoundState_Unknown;	// Current state of the round.
+static Handle g_hGameRoundTimer;							// The round timer.
+static int g_iGameRoundTime;									// Current round time.
 
-static g_iGameMinPlayers = 0;							// Minimum amount of players required for this gamemode.
-static g_iGameMaxPlayers = -2;							// -1 = limited to player spawns, -2 = all players, every other number is the limit of players.
+static int g_iGameMinPlayers = 0;							// Minimum amount of players required for this gamemode.
+static int g_iGameMaxPlayers = -2;							// -1 = limited to player spawns, -2 = all players, every other number is the limit of players.
 
 // Game option variables.
-static g_iGameType = SF64GameType_None;				// Current game type.
-static bool:g_bGameRestrictToVehicles = false;			// If true, this will force players to spawn in a vehicle of their choice, but their vehicle will automatically lock upon entering.
-static bool:g_bGameRestrictSuicideInVehicles = false;	// If true, this will prevent players from using suicide commands while piloting a vehicle.
-static bool:g_bGameUseQueue = false;						// If true, this will allow players to queue into the game by choice.
-static bool:g_bGameFreeForAll = false;					// If true, this game will be a free-for-all based gametype.
+static int g_iGameType = SF64GameType_None;				// Current game type.
+static bool g_bGameRestrictToVehicles = false;			// If true, this will force players to spawn in a vehicle of their choice, but their vehicle will automatically lock upon entering.
+static bool g_bGameRestrictSuicideInVehicles = false;	// If true, this will prevent players from using suicide commands while piloting a vehicle.
+static bool g_bGameUseQueue = false;						// If true, this will allow players to queue into the game by choice.
+static bool g_bGameFreeForAll = false;					// If true, this game will be a free-for-all based gametype.
 
-static Handle:g_hQueueList;
+static Handle g_hQueueList;
 
-static bool:g_bPlayerInGame[MAXPLAYERS + 1] = { false, ... };
-static bool:g_bPlayerEliminated[MAXPLAYERS + 1] = { false, ... };
-static bool:g_bPlayerInWarmup[MAXPLAYERS + 1] = { false, ... };
-static g_iPlayerVehicleSpawnType[MAXPLAYERS + 1] = { VehicleType_Unknown, ... };
-static String:g_strPlayerVehicleSpawnName[MAXPLAYERS + 1][64];
+static bool g_bPlayerInGame[MAXPLAYERS + 1] = { false, ... };
+static bool g_bPlayerEliminated[MAXPLAYERS + 1] = { false, ... };
+static bool g_bPlayerInWarmup[MAXPLAYERS + 1] = { false, ... };
+static int g_iPlayerVehicleSpawnType[MAXPLAYERS + 1] = { VehicleType_Unknown, ... };
+static char g_strPlayerVehicleSpawnName[MAXPLAYERS + 1][64];
 
-static Handle:g_hPlayerVehicles[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
-static Handle:g_hPlayerVehicleTypes[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+static Handle g_hPlayerVehicles[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+static Handle g_hPlayerVehicleTypes[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 
 // For g_hGameSpawnedVehicles, consists of two data thingies: 0 = entref to vehicle, 1 = reason for creation, 2 = some other stupid parameter thing.
 // Reasons for creation: 0 = created by map spawner, 1 = created through warmup mode, 2 = create for gameplay purposes.
 
-static Handle:g_hVehicleSpawnPoints;
-static Handle:g_hGameSpawnedVehicles;
-static Handle:g_hPlayerSpawnPoints;
+static Handle g_hVehicleSpawnPoints;
+static Handle g_hGameSpawnedVehicles;
+static Handle g_hPlayerSpawnPoints;
 
-static Handle:g_hBoundaryTriggers;
+static Handle g_hBoundaryTriggers;
 
-static Handle:g_hHudSyncTimer;
+static Handle g_hHudSyncTimer;
 
 // Forwards!
-static Handle:g_fGameOnRoundStateStart;
-static Handle:g_fGameOnRoundStateEnd;
-static Handle:g_fGameOnGetGameType;
-static Handle:g_hGameOnRequestVehiclesForPlayer;
-static Handle:g_hGameOnSaveVehiclesForPlayer;
+static Handle g_fGameOnRoundStateStart;
+static Handle g_fGameOnRoundStateEnd;
+static Handle g_fGameOnGetGameType;
+static Handle g_hGameOnRequestVehiclesForPlayer;
+static Handle g_hGameOnSaveVehiclesForPlayer;
 
 
-SetupGameRules()
+void SetupGameRules()
 {
 	g_hHudSyncTimer = CreateHudSynchronizer();
 	
@@ -71,7 +71,7 @@ SetupGameRules()
 	RegConsoleCmd("sm_queue", Command_Queue);
 }
 
-SetupGameRulesAPI()
+void SetupGameRulesAPI()
 {
 	g_fGameOnRoundStateStart = CreateGlobalForward("SF64_GameRulesOnRoundStateStart", ET_Ignore, Param_Cell);
 	g_fGameOnRoundStateEnd = CreateGlobalForward("SF64_GameRulesOnRoundStateEnd", ET_Ignore, Param_Cell);
@@ -114,7 +114,7 @@ SetupGameRulesAPI()
 	CreateNative("SF64_GameRulesSaveVehiclesForPlayer", Native_GameRulesSaveVehiclesForPlayer);
 }
 
-GameRulesSetGameType(iGameType)
+void GameRulesSetGameType(int iGameType)
 {
 	DebugMessage("START GameRulesSetGameType(%d)", iGameType);
 	
@@ -129,13 +129,13 @@ GameRulesSetGameType(iGameType)
 	DebugMessage("END GameRulesSetGameType(%d)", iGameType);
 }
 
-GameRulesSetRoundState(iRoundState)
+void GameRulesSetRoundState(int iRoundState)
 {
 	if (g_iGameRoundState == iRoundState) return;
 	
 	DebugMessage("START GameRulesSetRoundState(%d)", iRoundState);
 	
-	new iOldRoundState = g_iGameRoundState;
+	int iOldRoundState = g_iGameRoundState;
 	g_iGameRoundState = iRoundState;
 	
 	GameRulesOnRoundStateEnd(iOldRoundState);
@@ -144,7 +144,7 @@ GameRulesSetRoundState(iRoundState)
 	DebugMessage("END GameRulesSetRoundState(%d)", iRoundState);
 }
 
-public GameRulesOnRoundStateStart(iRoundState)
+public void GameRulesOnRoundStateStart(int iRoundState)
 {
 	DebugMessage("START GameRulesOnRoundStateStart(%d)", iRoundState);
 
@@ -154,13 +154,13 @@ public GameRulesOnRoundStateStart(iRoundState)
 		{
 			if (g_bGameUseQueue)
 			{
-				new iNumPlayers = g_iGameMaxPlayers;
+				int iNumPlayers = g_iGameMaxPlayers;
 				if (iNumPlayers == -1) iNumPlayers = GetArraySize(g_hPlayerSpawnPoints);
 				else if (iNumPlayers == -2) iNumPlayers = MaxClients;
 				
-				for (new i = 0, iSize = GetArraySize(g_hQueueList); i < iNumPlayers && i < iSize && GetArraySize(g_hQueueList); i++)
+				for (int i = 0, iSize = GetArraySize(g_hQueueList); i < iNumPlayers && i < iSize && GetArraySize(g_hQueueList); i++)
 				{
-					new client = GetArrayCell(g_hQueueList, 0);
+					int client = GetArrayCell(g_hQueueList, 0);
 					RemoveFromArray(g_hQueueList, 0);
 					
 					GameRulesSetInGameStateOfPlayer(client, true);
@@ -176,7 +176,7 @@ public GameRulesOnRoundStateStart(iRoundState)
 	DebugMessage("END GameRulesOnRoundStateStart(%d)", iRoundState);
 }
 
-public GameRulesOnRoundStateEnd(iRoundState)
+public void GameRulesOnRoundStateEnd(int iRoundState)
 {
 	DebugMessage("START GameRulesOnRoundStateEnd(%d)", iRoundState);
 
@@ -184,7 +184,7 @@ public GameRulesOnRoundStateEnd(iRoundState)
 	{
 		case SF64RoundState_Warmup:
 		{
-			for (new i = 1; i <= MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (!IsClientInGame(i)) continue;
 				
@@ -193,22 +193,22 @@ public GameRulesOnRoundStateEnd(iRoundState)
 		}
 		case SF64RoundState_Active:
 		{
-			for (new i = 1; i <= MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				g_bPlayerInGame[i] = false;
 				g_bPlayerEliminated[i] = false;
 			}
 			
-			new Handle:hSpawnedVehicles = CloneArray(g_hGameSpawnedVehicles);
+			Handle hSpawnedVehicles = CloneArray(g_hGameSpawnedVehicles);
 			
-			for (new i = 0, iSize = GetArraySize(hSpawnedVehicles); i < iSize; i++)
+			for (int i = 0, iSize = GetArraySize(hSpawnedVehicles); i < iSize; i++)
 			{
-				new iVehicle = EntRefToEntIndex(GetArrayCell(hSpawnedVehicles, i));
+				int iVehicle = EntRefToEntIndex(GetArrayCell(hSpawnedVehicles, i));
 				if (!iVehicle || iVehicle == INVALID_ENT_REFERENCE) continue;
 				
 				if (GetArrayCell(hSpawnedVehicles, i, 1) == 2)
 				{
-					new iPilot = VehicleGetPilot(iVehicle);
+					int iPilot = VehicleGetPilot(iVehicle);
 					if (iPilot && iPilot != INVALID_ENT_REFERENCE)
 					{
 						VehicleEjectPilot(iVehicle, true);
@@ -233,7 +233,7 @@ public GameRulesOnRoundStateEnd(iRoundState)
 	DebugMessage("END GameRulesOnRoundStateEnd(%d)", iRoundState);
 }
 
-public Action:Hook_GameRulesCommandSuicide(client, const String:command[], argc)
+public Action Hook_GameRulesCommandSuicide(int client, const char[] command, int argc)
 {
 	if (g_iGameRoundState == SF64RoundState_Active)
 	{
@@ -241,7 +241,7 @@ public Action:Hook_GameRulesCommandSuicide(client, const String:command[], argc)
 		{
 			if (g_bGameRestrictSuicideInVehicles)
 			{
-				new iVehicle = GetCurrentVehicle(client);
+				int iVehicle = GetCurrentVehicle(client);
 				if (iVehicle && iVehicle != INVALID_ENT_REFERENCE)
 				{
 					return Plugin_Handled;
@@ -253,7 +253,7 @@ public Action:Hook_GameRulesCommandSuicide(client, const String:command[], argc)
 	return Plugin_Continue;
 }
 
-public GameRulesOnConfigsExecuted()
+public void GameRulesOnConfigsExecuted()
 {
 	ClearArray(g_hQueueList);
 	ClearArray(g_hVehicleSpawnPoints);
@@ -263,13 +263,13 @@ public GameRulesOnConfigsExecuted()
 	GameRulesSetGameType(SF64GameType_None);
 	g_iGameRoundState = SF64RoundState_Unknown;
 	
-	new String:sGameType[64];
+	char sGameType[64];
 	
 	// Get the game type entity.
-	new ent = -1;
+	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 	{
-		decl String:sTargetName[64];
+		char sTargetName[64];
 		GetEntPropString(ent, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
 		
 		if (!StrContains(sTargetName, "sf64_gametype_", false))
@@ -283,34 +283,34 @@ public GameRulesOnConfigsExecuted()
 	OnGetGameRulesGameType(sGameType);
 }
 
-public GameRulesOnEntityDestroyed(entity)
+public void GameRulesOnEntityDestroyed(int entity)
 {
-	new entref = EntIndexToEntRef(entity);
+	int entref = EntIndexToEntRef(entity);
 	
-	new iIndex = FindValueInArray(g_hGameSpawnedVehicles, entref);
+	int iIndex = FindValueInArray(g_hGameSpawnedVehicles, entref);
 	if (iIndex != -1)
 	{
 		RemoveFromArray(g_hGameSpawnedVehicles, iIndex);
 	}
 }
 
-GameRulesGivePlayerVehicle(client, iVehicleType, const String:sVehicleName[])
+void GameRulesGivePlayerVehicle(int client, int iVehicleType, const char[] sVehicleName)
 {
-	new iIndex = FindStringInArray(g_hPlayerVehicles[client], sVehicleName);
+	int iIndex = FindStringInArray(g_hPlayerVehicles[client], sVehicleName);
 	if (iIndex != -1 && GetArrayCell(g_hPlayerVehicleTypes[client], iIndex) == iVehicleType) return; // Player already has this vehicle.
 
 	PushArrayString(g_hPlayerVehicles[client], sVehicleName);
 	PushArrayCell(g_hPlayerVehicleTypes[client], iVehicleType);
 }
 
-GameRulesRequestVehiclesForPlayer(client)
+void GameRulesRequestVehiclesForPlayer(int client)
 {
 	Call_StartForward(g_hGameOnRequestVehiclesForPlayer);
 	Call_PushCell(client);
 	Call_Finish();
 }
 
-public GameRulesOnClientPutInServer(client)
+public void GameRulesOnClientPutInServer(int client)
 {
 	g_iPlayerVehicleSpawnType[client] = VehicleType_Unknown;
 	strcopy(g_strPlayerVehicleSpawnName[client], sizeof(g_strPlayerVehicleSpawnName[]), "");
@@ -327,7 +327,7 @@ public GameRulesOnClientPutInServer(client)
 	GameRulesRequestVehiclesForPlayer(client);
 }
 
-GameRulesSaveVehiclesForPlayer(client)
+void GameRulesSaveVehiclesForPlayer(int client)
 {
 	Call_StartForward(g_hGameOnSaveVehiclesForPlayer);
 	Call_PushCell(client);
@@ -336,7 +336,7 @@ GameRulesSaveVehiclesForPlayer(client)
 	Call_Finish();
 }
 
-public GameRulesOnClientDisconnect(client)
+public void GameRulesOnClientDisconnect(int client)
 {
 	g_iPlayerVehicleSpawnType[client] = VehicleType_Unknown;
 	strcopy(g_strPlayerVehicleSpawnName[client], sizeof(g_strPlayerVehicleSpawnName[]), "");
@@ -348,7 +348,7 @@ public GameRulesOnClientDisconnect(client)
 	
 	// Delete from queue list.
 	{
-		new iIndex = FindValueInArray(g_hQueueList, client);
+		int iIndex = FindValueInArray(g_hQueueList, client);
 		if (iIndex != -1) RemoveFromArray(g_hQueueList, iIndex);
 	}
 	
@@ -367,7 +367,7 @@ public GameRulesOnClientDisconnect(client)
 	}
 }
 
-public GameRulesOnTeamplayRoundStart(Handle:event)
+public void GameRulesOnTeamplayRoundStart(Handle event)
 {
 	DebugMessage("START GameRulesOnTeamplayRoundStart(event)");
 
@@ -377,25 +377,25 @@ public GameRulesOnTeamplayRoundStart(Handle:event)
 	ClearArray(g_hBoundaryTriggers);
 	
 	// Gather up all valid player spawn points.
-	decl String:sTargetName[64];
-	new ent = -1;
+	char sTargetName[64];
+	int ent = -1;
 	while ((ent = FindEntityByClassname(ent, "info_target")) != -1)
 	{
 		GetEntPropString(ent, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
 		
 		if (!StrContains(sTargetName, "sf64_player_start", false))
 		{
-			new iIndex = PushArrayCell(g_hPlayerSpawnPoints, EntIndexToEntRef(ent));
+			int iIndex = PushArrayCell(g_hPlayerSpawnPoints, EntIndexToEntRef(ent));
 		
 			if (!StrContains(sTargetName, "sf64_player_start_", false))
 			{
 				if (StrEqual(sTargetName, "sf64_player_start_red", false))
 				{
-					SetArrayCell(g_hPlayerSpawnPoints, iIndex, _:TFTeam_Red, 1);
+					SetArrayCell(g_hPlayerSpawnPoints, iIndex, view_as<int>(TFTeam_Red), 1);
 				}
 				else if (StrEqual(sTargetName, "sf64_player_start_blue", false))
 				{
-					SetArrayCell(g_hPlayerSpawnPoints, iIndex, _:TFTeam_Blue, 1);
+					SetArrayCell(g_hPlayerSpawnPoints, iIndex, view_as<int>(TFTeam_Blue), 1);
 				}
 				else
 				{
@@ -422,21 +422,21 @@ public GameRulesOnTeamplayRoundStart(Handle:event)
 		
 		if (!StrContains(sTargetName, "sf64_vehicle_spawn_", false))
 		{
-			decl String:sParameterString[64];
-			new String:sParameters[16][64];
+			char sParameterString[64];
+			char sParameters[16][64];
 			
 			strcopy(sParameterString, sizeof(sParameterString), sTargetName);
 			ReplaceString(sParameterString, sizeof(sParameterString), "sf64_vehicle_spawn_", "", false);
-			new iParameterNum = ExplodeString(sParameterString, "_", sParameters, 16, 64);
+			int iParameterNum = ExplodeString(sParameterString, "_", sParameters, 16, 64);
 			
 			if (iParameterNum > 0)
 			{
 				// First parameter is the vehicle type to spawn.
-				new iVehicleType = GetVehicleTypeFromString(sParameters[0]);
+				int iVehicleType = GetVehicleTypeFromString(sParameters[0]);
 				if (iVehicleType != VehicleType_Unknown)
 				{
-					new iSpawnMax = 1;
-					new Float:flSpawnDelay = 15.0;
+					int iSpawnMax = 1;
+					float flSpawnDelay = 15.0;
 					
 					if (iParameterNum > 1)
 					{
@@ -450,7 +450,7 @@ public GameRulesOnTeamplayRoundStart(Handle:event)
 						}
 					}
 					
-					new iIndex = PushArrayCell(g_hVehicleSpawnPoints, EntIndexToEntRef(ent));
+					int iIndex = PushArrayCell(g_hVehicleSpawnPoints, EntIndexToEntRef(ent));
 					SetArrayCell(g_hVehicleSpawnPoints, iIndex, iVehicleType, 1);
 					SetArrayCell(g_hVehicleSpawnPoints, iIndex, iSpawnMax, 2);
 					SetArrayCell(g_hVehicleSpawnPoints, iIndex, flSpawnDelay, 3);
@@ -473,21 +473,21 @@ public GameRulesOnTeamplayRoundStart(Handle:event)
 		
 		if (!StrContains(sTargetName, "sf64_boundary", false))
 		{
-			decl String:sRefTargetName[64];
-			decl String:sTargetName2[64];
+			char sRefTargetName[64];
+			char sTargetName2[64];
 			
 			Format(sRefTargetName, sizeof(sRefTargetName), "%s_ref", sTargetName);
 			
-			new bool:bFoundRef = false;
+			bool bFoundRef = false;
 			
-			new iRef = -1;
+			int iRef = -1;
 			while ((iRef = FindEntityByClassname(iRef, "info_target")) != -1)
 			{
 				GetEntPropString(iRef, Prop_Data, "m_iName", sTargetName2, sizeof(sTargetName2));
 				if (StrEqual(sTargetName2, sRefTargetName, false))
 				{
 					bFoundRef = true;
-					new iIndex = PushArrayCell(g_hBoundaryTriggers, EntIndexToEntRef(ent));
+					int iIndex = PushArrayCell(g_hBoundaryTriggers, EntIndexToEntRef(ent));
 					SetArrayCell(g_hBoundaryTriggers, iIndex, EntIndexToEntRef(iRef), 1);
 					
 					SDKUnhook(ent, SDKHook_TouchPost, Hook_GameRulesBoundaryOnTouchPost);
@@ -508,12 +508,12 @@ public GameRulesOnTeamplayRoundStart(Handle:event)
 	DebugMessage("END GameRulesOnTeamplayRoundStart(event)");
 }
 
-public Hook_GameRulesBoundaryOnTouchPost(iBoundary, other)
+public void Hook_GameRulesBoundaryOnTouchPost(int iBoundary, int other)
 {
-	new iIndex = FindValueInArray(g_hBoundaryTriggers, EntIndexToEntRef(iBoundary));
+	int iIndex = FindValueInArray(g_hBoundaryTriggers, EntIndexToEntRef(iBoundary));
 	if (iIndex == -1) return;
 	
-	new iRef = EntRefToEntIndex(GetArrayCell(g_hBoundaryTriggers, iIndex, 1));
+	int iRef = EntRefToEntIndex(GetArrayCell(g_hBoundaryTriggers, iIndex, 1));
 	if (iRef && iRef != INVALID_ENT_REFERENCE)
 	{
 		if (IsVehicle(other))
@@ -523,7 +523,7 @@ public Hook_GameRulesBoundaryOnTouchPost(iBoundary, other)
 	}
 }
 
-public OnGetGameRulesGameType(const String:sType[64])
+public void OnGetGameRulesGameType(const char[] sType)
 {
 	DebugMessage("START OnGetGameRulesGameType(%s)", sType);
 	
@@ -534,30 +534,30 @@ public OnGetGameRulesGameType(const String:sType[64])
 	DebugMessage("END OnGetGameRulesGameType(%s)", sType);
 }
 
-public GameRulesOnTeamplayRoundEnd(Handle:event)
+public void GameRulesOnTeamplayRoundEnd(Handle event)
 {
 	GameRulesStopRoundTimer();
 }
 
-Handle:GameRulesGetValidPlayerSpawnPoints(client, bool:bCheckCollision=false, const Float:flMins[3]=NULL_VECTOR, const Float:flMaxs[3]=NULL_VECTOR)
+Handle GameRulesGetValidPlayerSpawnPoints(int client, bool bCheckCollision=false, const float flMins[3]=NULL_VECTOR, const float flMaxs[3]=NULL_VECTOR)
 {
 	// Get a list of spawn points we can spawn at.
-	new Handle:hSpawnPoints = CreateArray();
-	for (new i = 0, iSize = GetArraySize(g_hPlayerSpawnPoints); i < iSize; i++)
+	Handle hSpawnPoints = CreateArray();
+	for (int i = 0, iSize = GetArraySize(g_hPlayerSpawnPoints); i < iSize; i++)
 	{
-		new iEnt = EntRefToEntIndex(GetArrayCell(g_hPlayerSpawnPoints, i));
+		int iEnt = EntRefToEntIndex(GetArrayCell(g_hPlayerSpawnPoints, i));
 		if (!iEnt || iEnt == INVALID_ENT_REFERENCE) continue;
 		
-		new iTeam = GetArrayCell(g_hPlayerSpawnPoints, i, 1);
+		int iTeam = GetArrayCell(g_hPlayerSpawnPoints, i, 1);
 		if (g_bGameFreeForAll || iTeam == GetClientTeam(client) || iTeam == 0)
 		{
 			if (bCheckCollision)
 			{
-				decl Float:flPos[3];
+				float flPos[3];
 				GetEntPropVector(iEnt, Prop_Data, "m_vecAbsOrigin", flPos);
 				
-				new Handle:hTrace = TR_TraceHullEx(flPos, flPos, flMins, flMaxs, MASK_NPCSOLID);
-				new bool:bHit = TR_DidHit(hTrace);
+				Handle hTrace = TR_TraceHullEx(flPos, flPos, flMins, flMaxs, MASK_NPCSOLID);
+				bool bHit = TR_DidHit(hTrace);
 				CloseHandle(hTrace);
 				
 				if (bHit) continue; // space is occupied!
@@ -570,9 +570,9 @@ Handle:GameRulesGetValidPlayerSpawnPoints(client, bool:bCheckCollision=false, co
 	return hSpawnPoints;
 }
 
-public GameRulesOnPlayerSpawn(Handle:event)
+public void GameRulesOnPlayerSpawn(Handle event)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	
 	if (!IsPlayerAlive(client)) return;
 	
@@ -594,7 +594,7 @@ public GameRulesOnPlayerSpawn(Handle:event)
 				else
 				{
 					// Get a list of spawn points we can spawn at.
-					new Handle:hSpawnPoints = GameRulesGetValidPlayerSpawnPoints(client, true, Float:{ -256.0, -256.0, 0.0 }, Float:{ 256.0, 256.0, 512.0 });
+					Handle hSpawnPoints = GameRulesGetValidPlayerSpawnPoints(client, true, view_as<float>({ -256.0, -256.0, 0.0 }), view_as<float>({ 256.0, 256.0, 512.0 }));
 					if (GetArraySize(hSpawnPoints) == 0)
 					{
 						CloseHandle(hSpawnPoints);
@@ -608,13 +608,13 @@ public GameRulesOnPlayerSpawn(Handle:event)
 						{
 							if (GetConfigFromVehicleName(g_iPlayerVehicleSpawnType[client], g_strPlayerVehicleSpawnName[client]) != INVALID_HANDLE)
 							{
-								new iSpawnPoint = GetArrayCell(hSpawnPoints, GetRandomInt(0, GetArraySize(hSpawnPoints) - 1));
+								int iSpawnPoint = GetArrayCell(hSpawnPoints, GetRandomInt(0, GetArraySize(hSpawnPoints) - 1));
 							
-								decl Float:flPos[3], Float:flAng[3];
+								float flPos[3], flAng[3];
 								GetEntPropVector(iSpawnPoint, Prop_Data, "m_vecAbsOrigin", flPos);
 								GetEntPropVector(iSpawnPoint, Prop_Data, "m_angAbsRotation", flAng);
 								
-								new iVehicle = SpawnVehicle(g_iPlayerVehicleSpawnType[client], g_strPlayerVehicleSpawnName[client], flPos, flAng, NULL_VECTOR);
+								int iVehicle = SpawnVehicle(g_iPlayerVehicleSpawnType[client], g_strPlayerVehicleSpawnName[client], flPos, flAng, NULL_VECTOR);
 								if (iVehicle && iVehicle != INVALID_ENT_REFERENCE)
 								{
 									TeleportEntity(client, flPos, flAng, NULL_VECTOR);
@@ -622,7 +622,7 @@ public GameRulesOnPlayerSpawn(Handle:event)
 									VehicleLock(iVehicle);
 									InsertPilotIntoVehicle(iVehicle, client, true);
 									
-									new iIndex = PushArrayCell(g_hGameSpawnedVehicles, EntIndexToEntRef(iVehicle));
+									int iIndex = PushArrayCell(g_hGameSpawnedVehicles, EntIndexToEntRef(iVehicle));
 									
 									if (g_iGameRoundState == SF64RoundState_Active)
 									{
@@ -660,11 +660,7 @@ public GameRulesOnPlayerSpawn(Handle:event)
 	}
 }
 
-public GameRulesOnPlayerDeath(Handle:event)
-{
-}
-
-GameRulesSetInGameStateOfPlayer(client, bool:bState)
+void GameRulesSetInGameStateOfPlayer(int client, bool bState)
 {
 	if (!IsValidClient(client)) return;
 	
@@ -682,7 +678,7 @@ GameRulesSetInGameStateOfPlayer(client, bool:bState)
 	}
 }
 
-GameRulesSetWarmupStateOfPlayer(client, bool:bState)
+void GameRulesSetWarmupStateOfPlayer(int client, bool bState)
 {
 	if (!IsValidClient(client)) return;
 	
@@ -692,7 +688,7 @@ GameRulesSetWarmupStateOfPlayer(client, bool:bState)
 	{
 		if (g_bGameRestrictToVehicles)
 		{
-			new Handle:hSpawnPoints = GameRulesGetValidPlayerSpawnPoints(client);
+			Handle hSpawnPoints = GameRulesGetValidPlayerSpawnPoints(client);
 			if (GetArraySize(hSpawnPoints) > 0)
 			{
 				// Warmup mode is only available when vehicles are in restriction mode, since we don't want players getting out of them anyway.
@@ -707,13 +703,13 @@ GameRulesSetWarmupStateOfPlayer(client, bool:bState)
 	{
 		g_bPlayerInWarmup[client] = false;
 		
-		new iVehicle = GetCurrentVehicle(client);
+		int iVehicle = GetCurrentVehicle(client);
 		if (iVehicle && iVehicle != INVALID_ENT_REFERENCE)
 		{
 			VehicleEjectPilot(iVehicle, true);
 			TF2_RespawnPlayer(client);
 			
-			new iIndex = FindValueInArray(g_hGameSpawnedVehicles, EntIndexToEntRef(iVehicle));
+			int iIndex = FindValueInArray(g_hGameSpawnedVehicles, EntIndexToEntRef(iVehicle));
 			if (iIndex != -1)
 			{
 				if (GetArrayCell(g_hGameSpawnedVehicles, iIndex, 1) == 1)
@@ -726,12 +722,12 @@ GameRulesSetWarmupStateOfPlayer(client, bool:bState)
 	}
 }
 
-GameRulesInitializeRoundTimer(iRoundTime, Handle:hCallbackPlugin=INVALID_HANDLE, Function:fCallback=INVALID_FUNCTION)
+void GameRulesInitializeRoundTimer(int iRoundTime, Handle hCallbackPlugin=INVALID_HANDLE, Function fCallback=INVALID_FUNCTION)
 {
 	DebugMessage("START GameRulesInitializeRoundTimer(%d, %d)", iRoundTime, hCallbackPlugin);
 
 	g_iGameRoundTime = iRoundTime;
-	new Handle:hPack;
+	Handle hPack;
 	g_hGameRoundTimer = CreateDataTimer(1.0, Timer_GameRound, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	WritePackCell(hPack, hCallbackPlugin);
 	WritePackFunction(hPack, fCallback);
@@ -741,18 +737,18 @@ GameRulesInitializeRoundTimer(iRoundTime, Handle:hCallbackPlugin=INVALID_HANDLE,
 	DebugMessage("END GameRulesInitializeRoundTimer(%d, %d)", iRoundTime, hCallbackPlugin);
 }
 
-GameRulesStopRoundTimer()
+void GameRulesStopRoundTimer()
 {
 	g_hGameRoundTimer = INVALID_HANDLE;
 }
 
-public Action:Timer_GameRound(Handle:timer, Handle:hPack)
+public Action Timer_GameRound(Handle timer, Handle hPack)
 {
 	if (timer != g_hGameRoundTimer) return Plugin_Stop;
 	
 	if (g_iGameRoundTime > 0)
 	{
-		new hours, minutes, seconds;
+		int hours, minutes, seconds;
 		FloatToTimeHMS(float(g_iGameRoundTime), hours, minutes, seconds);
 	
 		SetHudTextParams(-1.0, 0.1, 
@@ -762,7 +758,7 @@ public Action:Timer_GameRound(Handle:timer, Handle:hPack)
 			_,
 			1.5, 1.5);
 		
-		for (new i = 1; i <= MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (!IsClientInGame(i) || IsFakeClient(i)) continue;
 			
@@ -774,8 +770,8 @@ public Action:Timer_GameRound(Handle:timer, Handle:hPack)
 		g_hGameRoundTimer = INVALID_HANDLE;
 	
 		ResetPack(hPack);
-		new Handle:hCallbackPlugin = ReadPackCell(hPack);
-		new Function:fCallback = ReadPackFunction(hPack);
+		Handle hCallbackPlugin = ReadPackCell(hPack);
+		Function fCallback = ReadPackFunction(hPack);
 		
 		Call_StartFunction(hCallbackPlugin, fCallback);
 		Call_Finish();
@@ -788,14 +784,14 @@ public Action:Timer_GameRound(Handle:timer, Handle:hPack)
 	return Plugin_Continue;
 }
 
-public Action:Command_Queue(client, args)
+public Action Command_Queue(int client, int args)
 {
 	if (!g_bGameUseQueue) return Plugin_Continue;
 	GameRulesSendQueueMenu(client);
 	return Plugin_Handled;
 }
 
-public Action:Command_SetQueueState(client, args)
+public Action Command_SetQueueState(int client, int args)
 {
 	if (!g_bGameUseQueue) return Plugin_Continue;
 	
@@ -805,12 +801,13 @@ public Action:Command_SetQueueState(client, args)
 		return Plugin_Handled;
 	}
 	
-	decl String:arg1[32], String:arg2[32];
+	char arg1[32], arg2[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
 	GetCmdArg(2, arg2, sizeof(arg2));
 	
-	decl String:target_name[MAX_TARGET_LENGTH];
-	decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
@@ -826,11 +823,11 @@ public Action:Command_SetQueueState(client, args)
 		return Plugin_Handled;
 	}
 	
-	new bool:bState = bool:StringToInt(arg2);
+	bool bState = view_as<bool>(StringToInt(arg2));
 	
-	for (new i = 0; i < target_count; i++)
+	for (int i = 0; i < target_count; i++)
 	{
-		new target = target_list[i];
+		int target = target_list[i];
 		
 		if (bState)
 		{
@@ -843,7 +840,7 @@ public Action:Command_SetQueueState(client, args)
 		}
 		else
 		{
-			new iIndex = FindValueInArray(g_hQueueList, target);
+			int iIndex = FindValueInArray(g_hQueueList, target);
 			if (iIndex != -1)
 			{
 				RemoveFromArray(g_hQueueList, iIndex);
@@ -856,18 +853,18 @@ public Action:Command_SetQueueState(client, args)
 	return Plugin_Handled;
 }
 
-GameRulesSendQueueMenu(client)
+void GameRulesSendQueueMenu(int client)
 {
 	if (!g_bGameUseQueue) return;
 	
-	new Handle:hMenu = CreateMenu(Menu_Queue);
+	Menu hMenu = CreateMenu(Menu_Queue);
 	SetMenuTitle(hMenu, "Queue for next round?");
 	AddMenuItem(hMenu, "0", "Put me in!");
 	AddMenuItem(hMenu, "1", "Take me out!");
 	DisplayMenu(hMenu, client, 30);
 }
 
-public Menu_Queue(Handle:menu, MenuAction:action, param1, param2)
+public int Menu_Queue(Handle menu, MenuAction action, int param1, int param2)
 {
 	switch (action)
 	{
@@ -891,7 +888,7 @@ public Menu_Queue(Handle:menu, MenuAction:action, param1, param2)
 					}
 					case 1:
 					{
-						new iIndex = FindValueInArray(g_hQueueList, param1);
+						int iIndex = FindValueInArray(g_hQueueList, param1);
 						if (iIndex != -1)
 						{
 							RemoveFromArray(g_hQueueList, iIndex);
@@ -917,102 +914,102 @@ public Menu_Queue(Handle:menu, MenuAction:action, param1, param2)
 
 
 
-public Native_GameRulesGetGameType(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetGameType(Handle hPlugin, int iNumParams)
 {
 	return g_iGameType;
 }
 
-public Native_GameRulesSetGameType(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetGameType(Handle hPlugin, int iNumParams)
 {
 	GameRulesSetGameType(GetNativeCell(1));
 }
 
-public Native_GameRulesGetMinPlayers(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetMinPlayers(Handle hPlugin, int iNumParams)
 {
 	return g_iGameMinPlayers;
 }
 
-public Native_GameRulesSetMinPlayers(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetMinPlayers(Handle hPlugin, int iNumParams)
 {
 	g_iGameMinPlayers = GetNativeCell(1);
 }
 
-public Native_GameRulesGetMaxPlayers(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetMaxPlayers(Handle hPlugin, int iNumParams)
 {
 	return g_iGameMaxPlayers;
 }
 
-public Native_GameRulesSetMaxPlayers(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetMaxPlayers(Handle hPlugin, int iNumParams)
 {
 	g_iGameMaxPlayers = GetNativeCell(1);
 }
 
-public Native_GameRulesGetRestrictToVehicles(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetRestrictToVehicles(Handle hPlugin, int iNumParams)
 {
 	return g_bGameRestrictToVehicles;
 }
 
-public Native_GameRulesSetRestrictToVehicles(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetRestrictToVehicles(Handle hPlugin, int iNumParams)
 {
-	g_bGameRestrictToVehicles = bool:GetNativeCell(1);
+	g_bGameRestrictToVehicles = view_as<bool>(GetNativeCell(1));
 }
 
-public Native_GameRulesGetRestrictSuicideInVehicles(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetRestrictSuicideInVehicles(Handle hPlugin, int iNumParams)
 {
 	return g_bGameRestrictSuicideInVehicles;
 }
 
-public Native_GameRulesSetRestrictSuicideInVehicles(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetRestrictSuicideInVehicles(Handle hPlugin, int iNumParams)
 {
-	g_bGameRestrictSuicideInVehicles = bool:GetNativeCell(1);
+	g_bGameRestrictSuicideInVehicles = view_as<bool>(GetNativeCell(1));
 }
 
-public Native_GameRulesGetUseQueue(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetUseQueue(Handle hPlugin, int iNumParams)
 {
 	return g_bGameUseQueue;
 }
 
-public Native_GameRulesSetUseQueue(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetUseQueue(Handle hPlugin, int iNumParams)
 {
-	g_bGameUseQueue = bool:GetNativeCell(1);
+	g_bGameUseQueue = view_as<bool>(GetNativeCell(1));
 }
 
-public Native_GameRulesGetQueueList(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetQueueList(Handle hPlugin, int iNumParams)
 {
-	new Handle:hDestArray = Handle:GetNativeCell(1);
+	Handle hDestArray = view_as<Handle>(GetNativeCell(1));
 	
-	for (new i = 0, iSize = GetArraySize(g_hQueueList); i < iSize; i++)
+	for (int i = 0, iSize = GetArraySize(g_hQueueList); i < iSize; i++)
 	{
 		PushArrayCell(hDestArray, GetArrayCell(g_hQueueList, i));
 	}
 }
 
-public Native_GameRulesGetFreeForAll(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetFreeForAll(Handle hPlugin, int iNumParams)
 {
 	return g_bGameUseQueue;
 }
 
-public Native_GameRulesSetFreeForAll(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetFreeForAll(Handle hPlugin, int iNumParams)
 {
-	g_bGameFreeForAll = bool:GetNativeCell(1);
+	g_bGameFreeForAll = view_as<bool>(GetNativeCell(1));
 }
 
-public Native_GameRulesGetRoundState(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetRoundState(Handle hPlugin, int iNumParams)
 {
 	return g_iGameRoundState;
 }
 
-public Native_GameRulesSetRoundState(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetRoundState(Handle hPlugin, int iNumParams)
 {
 	GameRulesSetRoundState(GetNativeCell(1));
 }
 
-public Native_GameRulesGetValidPlayerSpawnPoints(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetValidPlayerSpawnPoints(Handle hPlugin, int iNumParams)
 {
-	new Handle:hSpawnPoints = GameRulesGetValidPlayerSpawnPoints(GetNativeCell(1));
-	new Handle:hDestArray = Handle:GetNativeCell(2);
+	Handle hSpawnPoints = GameRulesGetValidPlayerSpawnPoints(GetNativeCell(1));
+	Handle hDestArray = view_as<Handle>(GetNativeCell(2));
 	
-	for (new i = 0, iSize = GetArraySize(hSpawnPoints); i < iSize; i++)
+	for (int i = 0, iSize = GetArraySize(hSpawnPoints); i < iSize; i++)
 	{
 		PushArrayCell(hDestArray, GetArrayCell(hSpawnPoints, i));
 	}
@@ -1020,74 +1017,74 @@ public Native_GameRulesGetValidPlayerSpawnPoints(Handle:hPlugin, iNumParams)
 	CloseHandle(hSpawnPoints);
 }
 
-public Native_GameRulesIsPlayerInGame(Handle:hPlugin, iNumParams)
+public int Native_GameRulesIsPlayerInGame(Handle hPlugin, int iNumParams)
 {
 	return g_bPlayerInGame[GetNativeCell(1)];
 }
 
-public Native_GameRulesSetInGameStateOfPlayer(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetInGameStateOfPlayer(Handle hPlugin, int iNumParams)
 {
-	GameRulesSetInGameStateOfPlayer(GetNativeCell(1), bool:GetNativeCell(2));
+	GameRulesSetInGameStateOfPlayer(GetNativeCell(1), view_as<bool>(GetNativeCell(2)));
 }
 
-public Native_GameRulesIsPlayerEliminated(Handle:hPlugin, iNumParams)
+public int Native_GameRulesIsPlayerEliminated(Handle hPlugin, int iNumParams)
 {
 	return g_bPlayerEliminated[GetNativeCell(1)];
 }
 
-public Native_GameRulesSetEliminatedStateOfPlayer(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetEliminatedStateOfPlayer(Handle hPlugin, int iNumParams)
 {
-	g_bPlayerEliminated[GetNativeCell(1)] = bool:GetNativeCell(2);
+	g_bPlayerEliminated[GetNativeCell(1)] = view_as<bool>(GetNativeCell(2));
 }
 
-public Native_GameRulesIsPlayerInWarmup(Handle:hPlugin, iNumParams)
+public int Native_GameRulesIsPlayerInWarmup(Handle hPlugin, int iNumParams)
 {
 	return g_bPlayerInWarmup[GetNativeCell(1)];
 }
 
-public Native_GameRulesSetWarmupStateOfPlayer(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetWarmupStateOfPlayer(Handle hPlugin, int iNumParams)
 {
-	GameRulesSetWarmupStateOfPlayer(GetNativeCell(1), bool:GetNativeCell(2));
+	GameRulesSetWarmupStateOfPlayer(GetNativeCell(1), view_as<bool>(GetNativeCell(2)));
 }
 
-public Native_GameRulesGetRoundTime(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGetRoundTime(Handle hPlugin, int iNumParams)
 {
 	return g_iGameRoundTime;
 }
 
-public Native_GameRulesInitializeRoundTimer(Handle:hPlugin, iNumParams)
+public int Native_GameRulesInitializeRoundTimer(Handle hPlugin, int iNumParams)
 {
-	GameRulesInitializeRoundTimer(GetNativeCell(1), Handle:GetNativeCell(2), GetNativeFunction(3));
+	GameRulesInitializeRoundTimer(GetNativeCell(1), view_as<Handle>(GetNativeCell(2)), GetNativeFunction(3));
 }
 
-public Native_GameRulesStopRoundTimer(Handle:hPlugin, iNumParams)
+public int Native_GameRulesStopRoundTimer(Handle hPlugin, int iNumParams)
 {
 	GameRulesStopRoundTimer();
 }
 
-public Native_GameRulesGivePlayerVehicle(Handle:hPlugin, iNumParams)
+public int Native_GameRulesGivePlayerVehicle(Handle hPlugin, int iNumParams)
 {
-	decl String:sVehicleName[64];
+	char sVehicleName[64];
 	GetNativeString(3, sVehicleName, sizeof(sVehicleName));
 	
 	GameRulesGivePlayerVehicle(GetNativeCell(1), GetNativeCell(2), sVehicleName);
 }
 
-public Native_GameRulesSetPlayerVehicle(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSetPlayerVehicle(Handle hPlugin, int iNumParams)
 {
-	decl String:sVehicleName[64];
+	char sVehicleName[64];
 	GetNativeString(3, sVehicleName, sizeof(sVehicleName));
 	
 	g_iPlayerVehicleSpawnType[GetNativeCell(1)] = GetNativeCell(2);
 	strcopy(g_strPlayerVehicleSpawnName[GetNativeCell(1)], sizeof(g_strPlayerVehicleSpawnName[]), sVehicleName);
 }
 
-public Native_GameRulesRequestVehiclesForPlayer(Handle:hPlugin, iNumParams)
+public int Native_GameRulesRequestVehiclesForPlayer(Handle hPlugin, int iNumParams)
 {
 	GameRulesRequestVehiclesForPlayer(GetNativeCell(1));
 }
 
-public Native_GameRulesSaveVehiclesForPlayer(Handle:hPlugin, iNumParams)
+public int Native_GameRulesSaveVehiclesForPlayer(Handle hPlugin, int iNumParams)
 {
 	GameRulesSaveVehiclesForPlayer(GetNativeCell(1));
 }

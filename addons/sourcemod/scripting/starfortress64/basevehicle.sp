@@ -6,13 +6,13 @@
 #define _sf64_basevehicle_included
 
 
-stock GetCurrentVehicle(ent, &iVehicleType=VehicleType_Unknown, &iIndex=-1)
+stock int GetCurrentVehicle(int ent, int &iVehicleType=VehicleType_Unknown, int &iIndex=-1)
 {
 	iVehicleType = VehicleType_Unknown;
 	iIndex = -1;
 	
 	// Check Arwings first.
-	new iIndex2 = -1, iVehicle = GetArwing(ent, iIndex2);
+	int iIndex2 = -1, iVehicle = GetArwing(ent, iIndex2);
 	if (iIndex2 != -1)
 	{
 		iVehicleType = VehicleType_Arwing;
@@ -25,7 +25,7 @@ stock GetCurrentVehicle(ent, &iVehicleType=VehicleType_Unknown, &iIndex=-1)
 	return INVALID_ENT_REFERENCE;
 }
 
-stock SpawnVehicle(iVehicleType, const String:sName[], const Float:flPos[3], const Float:flAng[3], const Float:flVelocity[3], &iIndex=-1)
+stock int SpawnVehicle(int iVehicleType, const char[] sName, const float flPos[3], const float flAng[3], const float flVelocity[3], int &iIndex=-1)
 {
 	switch (iVehicleType)
 	{
@@ -35,14 +35,14 @@ stock SpawnVehicle(iVehicleType, const String:sName[], const Float:flPos[3], con
 	return INVALID_ENT_REFERENCE;
 }
 
-stock VehicleGetType(vehicle, &iIndex=-1)
+stock int VehicleGetType(int vehicle, int &iIndex=-1)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	IsVehicle(vehicle, iVehicleType, iIndex);
 	return iVehicleType;
 }
 
-stock GetVehicleTypeFromString(const String:sType[])
+stock int GetVehicleTypeFromString(const char[] sType)
 {
 	if (StrEqual(sType, "arwing", false)) return VehicleType_Arwing;
 	if (StrEqual(sType, "landmaster", false)) return VehicleType_Landmaster;
@@ -50,7 +50,7 @@ stock GetVehicleTypeFromString(const String:sType[])
 	return VehicleType_Unknown;
 }
 
-stock Handle:GetConfigFromVehicleName(iVehicleType, const String:sName[])
+stock Handle GetConfigFromVehicleName(int iVehicleType, const char[] sName)
 {
 	switch (iVehicleType)
 	{
@@ -60,9 +60,9 @@ stock Handle:GetConfigFromVehicleName(iVehicleType, const String:sName[])
 	return INVALID_HANDLE;
 }
 
-stock VehicleGetTeam(vehicle)
+stock int VehicleGetTeam(int vehicle)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return -1;
 
 	switch (iVehicleType)
@@ -73,22 +73,22 @@ stock VehicleGetTeam(vehicle)
 	return -1;
 }
 
-stock bool:IsVehicleEnabled(vehicle)
+stock bool IsVehicleEnabled(int vehicle)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return false;
 	
 	switch (iVehicleType)
 	{
-		case VehicleType_Arwing: return bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled);
+		case VehicleType_Arwing: return view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled));
 	}
 	
 	return false;
 }
 
-stock VehicleLock(vehicle, bool:bLock=true)
+stock void VehicleLock(int vehicle, bool bLock=true)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return;
 	
 	switch (iVehicleType)
@@ -99,22 +99,22 @@ stock VehicleLock(vehicle, bool:bLock=true)
 	return;
 }
 
-stock bool:IsVehicleLocked(vehicle)
+stock bool IsVehicleLocked(int vehicle)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return false;
 	
 	switch (iVehicleType)
 	{
-		case VehicleType_Arwing: return bool:GetArrayCell(g_hArwings, iIndex, Arwing_Locked);
+		case VehicleType_Arwing: return view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Locked));
 	}
 	
 	return false;
 }
 
-stock VehicleGetTarget(vehicle)
+stock int VehicleGetTarget(int vehicle)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return INVALID_ENT_REFERENCE;
 	
 	switch (iVehicleType)
@@ -125,9 +125,9 @@ stock VehicleGetTarget(vehicle)
 	return INVALID_ENT_REFERENCE;
 }
 
-stock VehicleGetPilot(vehicle)
+stock int VehicleGetPilot(int vehicle)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return INVALID_ENT_REFERENCE;
 	
 	switch (iVehicleType)
@@ -138,9 +138,9 @@ stock VehicleGetPilot(vehicle)
 	return INVALID_ENT_REFERENCE;
 }
 
-stock bool:InsertPilotIntoVehicle(vehicle, iPilot, bool:bImmediate=false)
+stock void InsertPilotIntoVehicle(int vehicle, int iPilot, bool bImmediate=false)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)
@@ -149,9 +149,9 @@ stock bool:InsertPilotIntoVehicle(vehicle, iPilot, bool:bImmediate=false)
 	}
 }
 
-stock VehicleEjectPilot(vehicle, bool:bImmediate=false)
+stock void VehicleEjectPilot(int vehicle, bool bImmediate=false)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)
@@ -160,9 +160,9 @@ stock VehicleEjectPilot(vehicle, bool:bImmediate=false)
 	}
 }
 
-stock VehicleSetIgnorePilotControls(vehicle, bool:bIgnore)
+stock void VehicleSetIgnorePilotControls(int vehicle, bool bIgnore)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return;
 	
 	switch (iVehicleType)
@@ -171,21 +171,21 @@ stock VehicleSetIgnorePilotControls(vehicle, bool:bIgnore)
 	}
 }
 
-stock bool:VehicleCanTarget(vehicle, target)
+stock bool VehicleCanTarget(int vehicle, int target)
 {
 	if (!IsVehicle(vehicle) || !IsVehicle(target)) return false;
 	
-	new iTeam = VehicleGetTeam(vehicle);
-	new iTargetTeam = VehicleGetTeam(target);
+	int iTeam = VehicleGetTeam(vehicle);
+	int iTargetTeam = VehicleGetTeam(target);
 	
 	if (!g_bFriendlyFire && iTeam == iTargetTeam) return false;
 	
 	return true;
 }
 
-stock VehiclePressButton(vehicle, iButton)
+stock void VehiclePressButton(int vehicle, int iButton)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)
@@ -194,9 +194,9 @@ stock VehiclePressButton(vehicle, iButton)
 	}
 }
 
-stock VehicleReleaseButton(vehicle, iButton)
+stock void VehicleReleaseButton(int vehicle, int iButton)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)
@@ -205,9 +205,9 @@ stock VehicleReleaseButton(vehicle, iButton)
 	}
 }
 
-public VehicleOnSleep(vehicle)
+public void VehicleOnSleep(int vehicle)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)
@@ -216,19 +216,19 @@ public VehicleOnSleep(vehicle)
 	}
 }
 
-public VehicleOnTouchingBoundary(vehicle, iBoundaryTrigger, iBoundaryTriggerRef)
+public void VehicleOnTouchingBoundary(int vehicle, int iBoundaryTrigger, int iBoundaryTriggerRef)
 {
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return;
 	
 	switch (iVehicleType)
 	{
 		case VehicleType_Arwing:
 		{
-			decl Float:flVehicleAng[3];
+			float flVehicleAng[3];
 			VehicleGetAbsAngles(vehicle, flVehicleAng);
 			
-			decl Float:flRefAng[3];
+			float flRefAng[3];
 			GetEntPropVector(iBoundaryTriggerRef, Prop_Data, "m_angAbsRotation", flRefAng);
 			
 			if (FloatAbs(AngleDiff(flRefAng[1], flVehicleAng[1])) > 90.0)
@@ -240,16 +240,16 @@ public VehicleOnTouchingBoundary(vehicle, iBoundaryTrigger, iBoundaryTriggerRef)
 	}
 }
 
-stock bool:IsVehicle(ent, &iVehicleType=VehicleType_Unknown, &iIndex=-1)
+stock bool IsVehicle(int ent, int &iVehicleType=VehicleType_Unknown, int &iIndex=-1)
 {
 	if (!IsValidEntity(ent)) return false;
 	
 	iVehicleType = VehicleType_Unknown;
 	iIndex = -1;
 	
-	new entref = EntIndexToEntRef(ent);
+	int entref = EntIndexToEntRef(ent);
 	
-	for (new i = 0, iSize = GetArraySize(g_hArwings); i < iSize; i++)
+	for (int i = 0, iSize = GetArraySize(g_hArwings); i < iSize; i++)
 	{
 		if (GetArrayCell(g_hArwings, i) != entref) continue;
 		iVehicleType = VehicleType_Arwing;
@@ -262,10 +262,10 @@ stock bool:IsVehicle(ent, &iVehicleType=VehicleType_Unknown, &iIndex=-1)
 	return false;
 }
 
-stock VehicleGetAbsOrigin(vehicle, Float:flBuffer[3])
+stock void VehicleGetAbsOrigin(int vehicle, float flBuffer[3])
 {
-	new iVehicleType = VehicleType_Unknown;
-	new iIndex = -1;
+	int iVehicleType = VehicleType_Unknown;
+	int iIndex = -1;
 
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return;
 	
@@ -279,10 +279,10 @@ stock VehicleGetAbsOrigin(vehicle, Float:flBuffer[3])
 	}
 }
 
-stock VehicleGetAbsAngles(vehicle, Float:flBuffer[3])
+stock void VehicleGetAbsAngles(int vehicle, float flBuffer[3])
 {
-	new iVehicleType = VehicleType_Unknown;
-	new iIndex = -1;
+	int iVehicleType = VehicleType_Unknown;
+	int iIndex = -1;
 
 	if (!IsVehicle(vehicle, iVehicleType, iIndex)) return;
 	
@@ -296,26 +296,26 @@ stock VehicleGetAbsAngles(vehicle, Float:flBuffer[3])
 	}
 }
 
-stock VehicleGetOBBCenter(vehicle, Float:flBuffer[3])
+stock void VehicleGetOBBCenter(int vehicle, float flBuffer[3])
 {
-	decl Float:flPos[3];
+	float flPos[3];
 	VehicleGetAbsOrigin(vehicle, flPos);
 
-	decl Float:flMins[3], Float:flMaxs[3];
+	float flMins[3], flMaxs[3];
 	GetEntPropVector(vehicle, Prop_Send, "m_vecMins", flMins);
 	GetEntPropVector(vehicle, Prop_Send, "m_vecMaxs", flMaxs);
 	
-	decl Float:flOBBCenter[3];
-	for (new i = 0; i < 3; i++) flOBBCenter[i] = (flMins[i] + flMaxs[i]) / 2.0;
+	float flOBBCenter[3];
+	for (int i = 0; i < 3; i++) flOBBCenter[i] = (flMins[i] + flMaxs[i]) / 2.0;
 	
 	AddVectors(flOBBCenter, flPos, flBuffer);
 }
 
 // Effects
 
-stock VehicleSpawnEffects(vehicle, EffectEvent:iEvent, bool:bStartOn=false, bool:bOverridePos=false, const Float:flOverridePos[3]=NULL_VECTOR, const Float:flOverrideAng[3]=NULL_VECTOR)
+stock void VehicleSpawnEffects(int vehicle, EffectEvent iEvent, bool bStartOn=false, bool bOverridePos=false, const float flOverridePos[3]=NULL_VECTOR, const float flOverrideAng[3]=NULL_VECTOR)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)
@@ -327,17 +327,17 @@ stock VehicleSpawnEffects(vehicle, EffectEvent:iEvent, bool:bStartOn=false, bool
 // This function is specifically used in special cases where instead of parenting the effect to the vehicle,
 // we want it to be parented to a "fake" model of the vehicle instead. One good example of these "special cases"
 // include the Arwing's classic barrel roll.
-stock VehicleParentMyEffectToSelf(iVehicle, iEffectIndex, bool:bOverridePos=false, const Float:flOverridePos[3]=NULL_VECTOR, const Float:flOverrideAng[3]=NULL_VECTOR)
+stock void VehicleParentMyEffectToSelf(int iVehicle, int iEffectIndex, bool bOverridePos=false, const float flOverridePos[3]=NULL_VECTOR, const float flOverrideAng[3]=NULL_VECTOR)
 {
 	if (iEffectIndex < 0 || iEffectIndex >= GetArraySize(g_hEffects)) return;
 	
-	new iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex));
+	int iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex));
 	if (!iEffect || iEffect == INVALID_ENT_REFERENCE) return;
 	
-	decl iVehicleType, iIndex;
+	int iVehicleType, iIndex;
 	if (!IsVehicle(iVehicle, iVehicleType, iIndex)) return;
 	
-	new iOwner = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex, Effect_Owner));
+	int iOwner = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex, Effect_Owner));
 	if (!iOwner || iOwner == INVALID_ENT_REFERENCE || iOwner != iVehicle) return;
 	
 	switch (iVehicleType)
@@ -347,9 +347,9 @@ stock VehicleParentMyEffectToSelf(iVehicle, iEffectIndex, bool:bOverridePos=fals
 }
 
 // This function is mostly used to update an entity's parent.
-stock VehicleParentMyEffectsToSelfOfEvent(vehicle, EffectEvent:iEvent, bool:bIgnoreKill=false)
+stock void VehicleParentMyEffectsToSelfOfEvent(int vehicle, EffectEvent iEvent, bool bIgnoreKill=false)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)
@@ -358,9 +358,9 @@ stock VehicleParentMyEffectsToSelfOfEvent(vehicle, EffectEvent:iEvent, bool:bIgn
 	}
 }
 
-stock VehicleSetTeamColorOfEffects(vehicle)
+stock void VehicleSetTeamColorOfEffects(int vehicle)
 {
-	decl iVehicleType;
+	int iVehicleType;
 	if (!IsVehicle(vehicle, iVehicleType)) return;
 	
 	switch (iVehicleType)

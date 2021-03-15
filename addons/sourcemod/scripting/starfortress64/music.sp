@@ -6,22 +6,22 @@
 #define MUSIC_FADEIN_RATE 0.05
 #define MUSIC_FADEOUT_RATE 0.05
 
-static g_iMusicGlobalId = 0;
+static int g_iMusicGlobalId = 0;
 
-static Handle:g_hActiveMusic;
+static Handle g_hActiveMusic;
 
-static g_iPlayerActiveMusicId[MAXPLAYERS + 1] = { -1, ... };
-static Float:g_flPlayerActiveMusicVolume[MAXPLAYERS + 1];
-static Handle:g_hPlayerActiveMusic[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
-static Handle:g_hPlayerFadingActiveMusic[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
-static Handle:g_hPlayerFadingActiveMusicPaths[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+static int g_iPlayerActiveMusicId[MAXPLAYERS + 1] = { -1, ... };
+static float g_flPlayerActiveMusicVolume[MAXPLAYERS + 1];
+static Handle g_hPlayerActiveMusic[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+static Handle g_hPlayerFadingActiveMusic[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+static Handle g_hPlayerFadingActiveMusicPaths[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 
-static Handle:g_hMusicIndexes;
-static Handle:g_hMusicIndexNames;
-static Handle:g_hMusicIndexPaths;
+static Handle g_hMusicIndexes;
+static Handle g_hMusicIndexNames;
+static Handle g_hMusicIndexPaths;
 
 
-SetupMusicAPI()
+void SetupMusicAPI()
 {
 	CreateNative("SF64_MusicCreateActiveMusic", Native_MusicCreateActiveMusic);
 	CreateNative("SF64_MusicActiveMusicIdExists", Native_MusicActiveMusicIdExists);
@@ -31,7 +31,7 @@ SetupMusicAPI()
 	CreateNative("SF64_MusicRemoveAllActiveMusicIdsFromPlayer", Native_MusicRemoveAllActiveMusicIdsFromPlayer);
 }
 
-SetupMusic()
+void SetupMusic()
 {
 	g_hActiveMusic = CreateArray(ActiveMusic_MaxStats);
 	g_hMusicIndexes = CreateArray(Music_MaxStats);
@@ -39,7 +39,7 @@ SetupMusic()
 	g_hMusicIndexPaths = CreateArray(PLATFORM_MAX_PATH);
 }
 
-public MusicOnConfigsExecuted()
+public void MusicOnConfigsExecuted()
 {
 	ClearArray(g_hActiveMusic);
 	g_iMusicGlobalId = 0;
@@ -48,13 +48,13 @@ public MusicOnConfigsExecuted()
 	ClearArray(g_hMusicIndexNames);
 	ClearArray(g_hMusicIndexPaths);
 	
-	new Handle:hConfig = INVALID_HANDLE;
+	Handle hConfig = INVALID_HANDLE;
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sPath, PLATFORM_MAX_PATH, "configs/starfortress64/music.cfg");
 	if (FileExists(sPath))
 	{
-		new Handle:kv = CreateKeyValues("root");
+		Handle kv = CreateKeyValues("root");
 	
 		if (FileToKeyValues(kv, sPath))
 		{
@@ -78,15 +78,15 @@ public MusicOnConfigsExecuted()
 		{
 			do
 			{
-				decl String:sSectionName[64];
+				char sSectionName[64];
 				KvGetSectionName(hConfig, sSectionName, sizeof(sSectionName));
 				
-				new iChannel = KvGetNum(hConfig, "channel");
-				new Float:flVolume = KvGetFloat(hConfig, "volume", 1.0);
-				new iPitch = KvGetNum(hConfig, "pitch", 100);
-				new iFlags = 0; // TODO: Parse music flags!
+				int iChannel = KvGetNum(hConfig, "channel");
+				float flVolume = KvGetFloat(hConfig, "volume", 1.0);
+				int iPitch = KvGetNum(hConfig, "pitch", 100);
+				int iFlags = 0; // TODO: Parse music flags!
 				
-				new iIndex = PushArrayCell(g_hMusicIndexes, 9001337);
+				int iIndex = PushArrayCell(g_hMusicIndexes, 9001337);
 				SetArrayCell(g_hMusicIndexes, iIndex, iChannel, Music_Channel);
 				SetArrayCell(g_hMusicIndexes, iIndex, flVolume, Music_Volume);
 				SetArrayCell(g_hMusicIndexes, iIndex, iPitch, Music_Pitch);
@@ -107,7 +107,7 @@ public MusicOnConfigsExecuted()
 				
 				PushArrayString(g_hMusicIndexPaths, sPath);
 				
-				decl String:sFinalPath[PLATFORM_MAX_PATH];
+				char sFinalPath[PLATFORM_MAX_PATH];
 				Format(sFinalPath, sizeof(sFinalPath), "#%s", sPath);
 				
 				PrecacheSound(sFinalPath);
@@ -121,11 +121,7 @@ public MusicOnConfigsExecuted()
 	}
 }
 
-public MusicOnEntityDestroyed(entity)
-{
-}
-
-public MusicOnClientPutInServer(client)
+public void MusicOnClientPutInServer(int client)
 {
 	g_iPlayerActiveMusicId[client] = -1;
 	g_flPlayerActiveMusicVolume[client] = 0.0;
@@ -134,7 +130,7 @@ public MusicOnClientPutInServer(client)
 	g_hPlayerFadingActiveMusic[client] = CreateArray(FadingPlayerActiveMusic_MaxStats);
 }
 
-public MusicOnClientDisconnect(client)
+public void MusicOnClientDisconnect(int client)
 {
 	MusicRemoveAllActiveMusicIdsFromPlayer(client);
 
@@ -160,27 +156,27 @@ public MusicOnClientDisconnect(client)
 	}
 }
 
-MusicCreateActiveMusic(const String:sMusicName[])
+int MusicCreateActiveMusic(const char[] sMusicName)
 {
-	new iMusicIndex = FindStringInArray(g_hMusicIndexNames, sMusicName);
+	int iMusicIndex = FindStringInArray(g_hMusicIndexNames, sMusicName);
 	if (iMusicIndex == -1) return -1; // music does not exist.
 	
-	new iId = g_iMusicGlobalId;
+	int iId = g_iMusicGlobalId;
 	g_iMusicGlobalId++;
 	
-	new iIndex = PushArrayCell(g_hActiveMusic, iId);
+	int iIndex = PushArrayCell(g_hActiveMusic, iId);
 	SetArrayCell(g_hActiveMusic, iIndex, iMusicIndex, ActiveMusic_MusicIndex);
 	
 	return iId;
 }
 
-MusicRemoveActiveMusicById(iActiveMusicId)
+void MusicRemoveActiveMusicById(int iActiveMusicId)
 {
-	decl iIndex;
+	int iIndex;
 	if (!MusicActiveMusicIdExists(iActiveMusicId, iIndex)) return;
 	
 	// Stop the music first before removing the active music.
-	for (new client = 1; client <= MaxClients; client++)
+	for (int client = 1; client <= MaxClients; client++)
 	{
 		if (!IsClientInGame(client)) continue;
 		MusicRemoveActiveMusicIdFromPlayer(client, iActiveMusicId);
@@ -189,17 +185,17 @@ MusicRemoveActiveMusicById(iActiveMusicId)
 	RemoveFromArray(g_hActiveMusic, iIndex);
 }
 
-static bool:MusicActiveMusicIdExists(iActiveMusicId, &iIndex=-1)
+static bool MusicActiveMusicIdExists(int iActiveMusicId, int &iIndex=-1)
 {
 	iIndex = FindValueInArray(g_hActiveMusic, iActiveMusicId);
 	if (iIndex == -1) return false;
 	return true;
 }
 
-MusicPlayActiveMusicIdToPlayer(client, iActiveMusicId)
+void MusicPlayActiveMusicIdToPlayer(int client, int iActiveMusicId)
 {
 	if (!MusicActiveMusicIdExists(iActiveMusicId)) return;
-	new iIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
+	int iIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
 	if (iIndex != -1) return; // already playing.
 	
 	iIndex = PushArrayCell(g_hPlayerActiveMusic[client], iActiveMusicId);
@@ -210,29 +206,29 @@ MusicPlayActiveMusicIdToPlayer(client, iActiveMusicId)
 	MusicUpdateForPlayer(client);
 }
 
-MusicRemoveActiveMusicIdFromPlayer(client, iActiveMusicId)
+void MusicRemoveActiveMusicIdFromPlayer(int client, int iActiveMusicId)
 {
-	new iIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
+	int iIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
 	if (iIndex == -1) return;
 	
 	RemoveFromArray(g_hPlayerActiveMusic[client], iIndex);
 	MusicUpdateForPlayer(client);
 }
 
-MusicRemoveAllActiveMusicIdsFromPlayer(client)
+void MusicRemoveAllActiveMusicIdsFromPlayer(int client)
 {
 	ClearArray(g_hPlayerActiveMusic[client]);
 	MusicUpdateForPlayer(client);
 }
 
 // Called every time the music changes for the player. This is where all the magic happens, boys (and girls).
-public MusicUpdateForPlayer(client)
+public void MusicUpdateForPlayer(int client)
 {
 	DebugMessage("START MusicUpdateForPlayer(%d)", client);
 
-	new iOldActiveMusicId = g_iPlayerActiveMusicId[client];
-	new Float:flOldActiveMusicVolume = g_flPlayerActiveMusicVolume[client];
-	new iActiveMusicId = -1;
+	int iOldActiveMusicId = g_iPlayerActiveMusicId[client];
+	float flOldActiveMusicVolume = g_flPlayerActiveMusicVolume[client];
+	int iActiveMusicId = -1;
 	if (GetArraySize(g_hPlayerActiveMusic[client]) > 0) iActiveMusicId = GetArrayCell(g_hPlayerActiveMusic[client], GetArraySize(g_hPlayerActiveMusic[client]) - 1, PlayerActiveMusic_ActiveMusicId);
 	
 	if (iActiveMusicId != iOldActiveMusicId)
@@ -242,24 +238,24 @@ public MusicUpdateForPlayer(client)
 		// Change detected.
 		g_iPlayerActiveMusicId[client] = iActiveMusicId;
 		
-		decl iOldActiveMusicIndex;
+		int iOldActiveMusicIndex;
 		if (MusicActiveMusicIdExists(iOldActiveMusicId, iOldActiveMusicIndex))
 		{
-			new iMusicIndex = GetArrayCell(g_hActiveMusic, iOldActiveMusicIndex, ActiveMusic_MusicIndex);
-			new iChannel = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Channel);
-			new iPitch = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Pitch);
+			int iMusicIndex = GetArrayCell(g_hActiveMusic, iOldActiveMusicIndex, ActiveMusic_MusicIndex);
+			int iChannel = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Channel);
+			int iPitch = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Pitch);
 			
-			new iFadeIndex = PushArrayCell(g_hPlayerFadingActiveMusic[client], 1337);
+			int iFadeIndex = PushArrayCell(g_hPlayerFadingActiveMusic[client], 1337);
 			SetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, iChannel, FadingPlayerActiveMusic_Channel);
 			SetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, iPitch, FadingPlayerActiveMusic_Pitch);
 			SetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, flOldActiveMusicVolume, FadingPlayerActiveMusic_Volume);
 			
-			decl String:sPath[PLATFORM_MAX_PATH];
+			char sPath[PLATFORM_MAX_PATH];
 			GetArrayString(g_hMusicIndexPaths, iMusicIndex, sPath, sizeof(sPath));
 			PushArrayString(g_hPlayerFadingActiveMusicPaths[client], sPath);
 			
-			new Handle:hPack;
-			new Handle:hTimer = CreateDataTimer(0.0, Timer_PlayerActiveMusicFadeOut, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			Handle hPack;
+			Handle hTimer = CreateDataTimer(0.0, Timer_PlayerActiveMusicFadeOut, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 			WritePackCell(hPack, GetClientUserId(client));
 			WritePackString(hPack, sPath);
 			SetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, hTimer, FadingPlayerActiveMusic_FadeTimer);
@@ -274,34 +270,34 @@ public MusicUpdateForPlayer(client)
 		
 		g_flPlayerActiveMusicVolume[client] = 0.0;
 		
-		decl iActiveMusicIndex;
+		int iActiveMusicIndex;
 		if (MusicActiveMusicIdExists(iActiveMusicId, iActiveMusicIndex))
 		{
-			new iMusicIndex = GetArrayCell(g_hActiveMusic, iActiveMusicIndex, ActiveMusic_MusicIndex);
-			new iChannel = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Channel);
+			int iMusicIndex = GetArrayCell(g_hActiveMusic, iActiveMusicIndex, ActiveMusic_MusicIndex);
+			int iChannel = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Channel);
 			
-			decl String:sPath[PLATFORM_MAX_PATH];
+			char sPath[PLATFORM_MAX_PATH];
 			GetArrayString(g_hMusicIndexPaths, iMusicIndex, sPath, sizeof(sPath));
 			
 			// First check if this specific sound is already fading.
 			// The sound has to match the channel and sound path to be considered already fading.
 			
-			new Float:flStartVolume = 0.0;
+			float flStartVolume = 0.0;
 			
-			for (new i = 0, iSize = GetArraySize(g_hPlayerFadingActiveMusic[client]); i < iSize; i++)
+			for (int i = 0, iSize = GetArraySize(g_hPlayerFadingActiveMusic[client]); i < iSize; i++)
 			{
-				new iFadingChannel = GetArrayCell(g_hPlayerFadingActiveMusic[client], i, FadingPlayerActiveMusic_Channel);
+				int iFadingChannel = GetArrayCell(g_hPlayerFadingActiveMusic[client], i, FadingPlayerActiveMusic_Channel);
 				if (iFadingChannel == iChannel)
 				{
-					decl String:sFadingPath[PLATFORM_MAX_PATH];
+					char sFadingPath[PLATFORM_MAX_PATH];
 					GetArrayString(g_hPlayerFadingActiveMusicPaths[client], i, sFadingPath, sizeof(sFadingPath));
 					
 					if (StrEqual(sFadingPath, sPath))
 					{
-						flStartVolume = Float:GetArrayCell(g_hPlayerFadingActiveMusic[client], i, FadingPlayerActiveMusic_Volume);
+						flStartVolume = view_as<float>(GetArrayCell(g_hPlayerFadingActiveMusic[client], i, FadingPlayerActiveMusic_Volume));
 						
 						// Stop the sound from fading.
-						CloseHandle(Handle:GetArrayCell(g_hPlayerFadingActiveMusic[client], i, FadingPlayerActiveMusic_FadeTimer));
+						CloseHandle(view_as<Handle>(GetArrayCell(g_hPlayerFadingActiveMusic[client], i, FadingPlayerActiveMusic_FadeTimer)));
 						RemoveFromArray(g_hPlayerFadingActiveMusic[client], i);
 						RemoveFromArray(g_hPlayerFadingActiveMusicPaths[client], i);
 						break;
@@ -309,21 +305,21 @@ public MusicUpdateForPlayer(client)
 				}
 			}
 			
-			new iPlayerActiveMusicIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
-			if (!bool:GetArrayCell(g_hPlayerActiveMusic[client], iPlayerActiveMusicIndex, PlayerActiveMusic_Played))
+			int iPlayerActiveMusicIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
+			if (!view_as<bool>(GetArrayCell(g_hPlayerActiveMusic[client], iPlayerActiveMusicIndex, PlayerActiveMusic_Played)))
 			{
 				if (iOldActiveMusicIndex == -1) // no previous song was played.
 				{
-					flStartVolume = Float:GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Volume);
+					flStartVolume = view_as<float>(GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Volume));
 				}
 				
-				SetArrayCell(g_hPlayerActiveMusic[client], iPlayerActiveMusicIndex, true, PlayerActiveMusic_Played)
+				SetArrayCell(g_hPlayerActiveMusic[client], iPlayerActiveMusicIndex, true, PlayerActiveMusic_Played);
 			}
 			
 			// Finally, play the damn song.
 			g_flPlayerActiveMusicVolume[client] = flStartVolume;
-			new Handle:hPack;
-			new Handle:hTimer = CreateDataTimer(0.0, Timer_PlayerActiveMusicFadeIn, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			Handle hPack;
+			Handle hTimer = CreateDataTimer(0.0, Timer_PlayerActiveMusicFadeIn, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 			WritePackCell(hPack, GetClientUserId(client));
 			WritePackCell(hPack, iActiveMusicId);
 			SetArrayCell(g_hPlayerActiveMusic[client], iPlayerActiveMusicIndex, hTimer, PlayerActiveMusic_FadeTimer);
@@ -340,37 +336,37 @@ public MusicUpdateForPlayer(client)
 	DebugMessage("END MusicUpdateForPlayer(%d)", client);
 }
 
-public Action:Timer_PlayerActiveMusicFadeIn(Handle:timer, Handle:hPack)
+public Action Timer_PlayerActiveMusicFadeIn(Handle timer, Handle hPack)
 {
 	ResetPack(hPack);
 	
-	new client = GetClientOfUserId(ReadPackCell(hPack));
+	int client = GetClientOfUserId(ReadPackCell(hPack));
 	if (client <= 0) return Plugin_Stop;
 	
-	new iActiveMusicId = ReadPackCell(hPack);
-	new iPlayerActiveMusicIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
+	int iActiveMusicId = ReadPackCell(hPack);
+	int iPlayerActiveMusicIndex = FindValueInArray(g_hPlayerActiveMusic[client], iActiveMusicId);
 	if (iPlayerActiveMusicIndex == -1) return Plugin_Stop;
 	
-	decl iActiveMusicIndex;
+	int iActiveMusicIndex;
 	if (!MusicActiveMusicIdExists(iActiveMusicId, iActiveMusicIndex)) return Plugin_Stop; // this should almost never happen.
 	
-	if (timer != Handle:GetArrayCell(g_hPlayerActiveMusic[client], iPlayerActiveMusicIndex, PlayerActiveMusic_FadeTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hPlayerActiveMusic[client], iPlayerActiveMusicIndex, PlayerActiveMusic_FadeTimer))) return Plugin_Stop;
 	
-	new iMusicIndex = GetArrayCell(g_hActiveMusic, iActiveMusicIndex, ActiveMusic_MusicIndex);
+	int iMusicIndex = GetArrayCell(g_hActiveMusic, iActiveMusicIndex, ActiveMusic_MusicIndex);
 	
 	
-	new Float:flCurrentVolume = g_flPlayerActiveMusicVolume[client];
-	new Float:flTargetVolume = Float:GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Volume);
-	new iChannel = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Channel);
-	new iPitch = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Pitch);
+	float flCurrentVolume = g_flPlayerActiveMusicVolume[client];
+	float flTargetVolume = view_as<float>(GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Volume));
+	int iChannel = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Channel);
+	int iPitch = GetArrayCell(g_hMusicIndexes, iMusicIndex, Music_Pitch);
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	GetArrayString(g_hMusicIndexPaths, iMusicIndex, sPath, sizeof(sPath));
 	
-	decl String:sFinalPath[PLATFORM_MAX_PATH];
+	char sFinalPath[PLATFORM_MAX_PATH];
 	Format(sFinalPath, sizeof(sFinalPath), "#%s", sPath);
 	
-	new bool:bFinished = false;
+	bool bFinished = false;
 	
 	if (flCurrentVolume > flTargetVolume)
 	{
@@ -413,29 +409,29 @@ public Action:Timer_PlayerActiveMusicFadeIn(Handle:timer, Handle:hPack)
 	return Plugin_Continue;
 }
 
-public Action:Timer_PlayerActiveMusicFadeOut(Handle:timer, Handle:hPack)
+public Action Timer_PlayerActiveMusicFadeOut(Handle timer, Handle hPack)
 {
 	ResetPack(hPack);
 	
-	new client = GetClientOfUserId(ReadPackCell(hPack));
+	int client = GetClientOfUserId(ReadPackCell(hPack));
 	if (client <= 0) return Plugin_Stop;
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	ReadPackString(hPack, sPath, sizeof(sPath));
 	
-	new iFadeIndex = FindStringInArray(g_hPlayerFadingActiveMusicPaths[client], sPath);
+	int iFadeIndex = FindStringInArray(g_hPlayerFadingActiveMusicPaths[client], sPath);
 	if (iFadeIndex == -1) return Plugin_Stop;
 	
-	if (timer != Handle:GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_FadeTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_FadeTimer))) return Plugin_Stop;
 	
-	new iChannel = GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_Channel);
-	new iPitch = GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_Pitch);
-	new Float:flCurrentVolume = Float:GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_Volume);
+	int iChannel = GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_Channel);
+	int iPitch = GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_Pitch);
+	float flCurrentVolume = view_as<float>(GetArrayCell(g_hPlayerFadingActiveMusic[client], iFadeIndex, FadingPlayerActiveMusic_Volume));
 	
-	decl String:sFinalPath[PLATFORM_MAX_PATH];
+	char sFinalPath[PLATFORM_MAX_PATH];
 	Format(sFinalPath, sizeof(sFinalPath), "#%s", sPath);
 	
-	new bool:bFinished = false;
+	bool bFinished = false;
 	
 	if (flCurrentVolume > 0.0)
 	{
@@ -474,34 +470,34 @@ public Action:Timer_PlayerActiveMusicFadeOut(Handle:timer, Handle:hPack)
 
 // API
 
-public Native_MusicCreateActiveMusic(Handle:hPlugin, iNumParams)
+public int Native_MusicCreateActiveMusic(Handle hPlugin, int iNumParams)
 {
-	decl String:sMusicName[64];
+	char sMusicName[64];
 	GetNativeString(1, sMusicName, sizeof(sMusicName));
 	return MusicCreateActiveMusic(sMusicName);
 }
 
-public Native_MusicActiveMusicIdExists(Handle:hPlugin, iNumParams)
+public int Native_MusicActiveMusicIdExists(Handle hPlugin, int iNumParams)
 {
 	return MusicActiveMusicIdExists(GetNativeCell(1));
 }
 
-public Native_MusicRemoveActiveMusicById(Handle:hPlugin, iNumParams)
+public int Native_MusicRemoveActiveMusicById(Handle hPlugin, int iNumParams)
 {
 	MusicRemoveActiveMusicById(GetNativeCell(1));
 }
 
-public Native_MusicPlayActiveMusicIdToPlayer(Handle:hPlugin, iNumParams)
+public int Native_MusicPlayActiveMusicIdToPlayer(Handle hPlugin, int iNumParams)
 {
 	MusicPlayActiveMusicIdToPlayer(GetNativeCell(1), GetNativeCell(2));
 }
 
-public Native_MusicRemoveActiveMusicIdFromPlayer(Handle:hPlugin, iNumParams)
+public int Native_MusicRemoveActiveMusicIdFromPlayer(Handle hPlugin, int iNumParams)
 {
 	MusicRemoveActiveMusicIdFromPlayer(GetNativeCell(1), GetNativeCell(2));
 }
 
-public Native_MusicRemoveAllActiveMusicIdsFromPlayer(Handle:hPlugin, iNumParams)
+public int Native_MusicRemoveAllActiveMusicIdsFromPlayer(Handle hPlugin, int iNumParams)
 {
 	MusicRemoveAllActiveMusicIdsFromPlayer(GetNativeCell(1));
 }
