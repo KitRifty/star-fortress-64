@@ -6,6 +6,8 @@ on:
     paths:
       - "**.sp"
       - "**.inc"
+    tags:
+        - v*
   pull_request:
     branches: [master]
     paths:
@@ -40,13 +42,14 @@ jobs:
           ./spcomp starfortress64.sp -o starfortress64.smx
           ./spcomp starfortress64-deathmatch.sp -o starfortress64-deathmatch.smx
           
-      - uses: marvinpinto/action-automatic-releases@latest
-        if: github.ref == 'refs/heads/master'
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v0.1.5
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          draft: true
-          prerelease: false
-          automatic_release_tag: "latest"
           files: |
-            ./addons/sourcemod/scripting/starfortress64.smx
-            ./addons/sourcemod/scripting/starfortress64-deathmatch.smx
+              ./addons/sourcemod/scripting/starfortress64.smx
+              ./addons/sourcemod/scripting/starfortress64-deathmatch.smx
+              ./addons/sourcemod/scripting/include/starfortress64.inc
+              ./addons/sourcemod/gamedata/starfortress64.txt
