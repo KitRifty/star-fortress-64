@@ -41,6 +41,9 @@ https://www.youtube.com/watch?v=A24JMjyenpI
 [Pickup Models, Sounds, Materials, Test Map, Woonwing](https://drive.google.com/file/d/1auuQE4MMv8O-_sLSpEzukK9l5_EUv3p6/view?usp=sharing)
 > :warning: The Woonwing model is missing its material and is unfortunately lost to time.
 
+# Configuration
+- **`sv_maxvelocity`** - Laser projectiles move extremely fast, so you must set this hidden cvar via `sm_cvar` to a value higher than any of the projectiles' speeds. If a projectile exceeds this limit, the projectile's velocity will be clamped down and the projectile will fly off in a random direction. For reference, the Arwing laser projectile's default speed is `18500`, so set `sv_maxvelocity` higher than this.
+
 # Controls
 To enter an Arwing, walk up and point at it then call MEDIC (default is 'E').
 
