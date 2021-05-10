@@ -43,14 +43,14 @@ enum
 #define SF64_NODE_EDIT_FLAG_SHOW_LINKS (1 << 1)
 
 
-new Handle:g_hAINodes;
+Handle g_hAINodes;
 
-new g_iPlayerNodeEditorFlags[MAXPLAYERS + 1];
-new g_iPlayerCurrentNode[MAXPLAYERS + 1] = { -1, ... };
+int g_iPlayerNodeEditorFlags[MAXPLAYERS + 1];
+int g_iPlayerCurrentNode[MAXPLAYERS + 1] = { -1, ... };
 
-static g_iNodeLaserModelIndex = -1;
+static int g_iNodeLaserModelIndex = -1;
 
-SetupAINodeGraph()
+void SetupAINodeGraph()
 {
 	g_hAINodes = CreateArray(AINode_MaxStats);
 	
@@ -66,20 +66,20 @@ SetupAINodeGraph()
 	RegConsoleCmd("sm_sf64_save_nodes", Command_SaveAINodegraph);
 }
 
-AINodeGraphOnMapStart()
+void AINodeGraphOnMapStart()
 {
 	g_iNodeLaserModelIndex = PrecacheModel("materials/sprites/laserbeam.vmt");
 	GetAINodeGraphOfMap();
 	CreateTimer(0.2, Timer_NodeGraphAppear, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 
-AINodeGraphOnClientPutInServer(client)
+void AINodeGraphOnClientPutInServer(int client)
 {
 	g_iPlayerNodeEditorFlags[client] = 0;
 	g_iPlayerCurrentNode[client] = -1;
 }
 
-public Action:Timer_NodeGraphAppear(Handle:timer)
+public Action Timer_NodeGraphAppear(Handle timer)
 {
 	static iNodeParticleSystem = -1;
 	static iLinkParticleSystemActive = -1;
@@ -89,9 +89,9 @@ public Action:Timer_NodeGraphAppear(Handle:timer)
 	if (iLinkParticleSystemActive == -1) iLinkParticleSystemActive = PrecacheParticleSystem("bullet_tracer02_red");
 	if (iLinkParticleSystemInactive == -1) iLinkParticleSystemInactive = PrecacheParticleSystem("bullet_tracer01_crit");
 	
-	decl Float:flClientPos[3];
+	float flClientPos[3];
 	
-	for (new iClient = 1; iClient <= MaxClients; iClient++)
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		if (!IsClientInGame(iClient)) continue;
 		if (g_iPlayerNodeEditorFlags[iClient] & SF64_NODE_EDIT_FLAG_SHOW_NODES ||
@@ -99,13 +99,13 @@ public Action:Timer_NodeGraphAppear(Handle:timer)
 		{
 			GetClientAbsOrigin(iClient, flClientPos);
 			
-			new iBestNodeID = GetClientAimNode(iClient);
+			int iBestNodeID = GetClientAimNode(iClient);
 			
-			for (new iSmallestNode = 0, iSize = GetArraySize(g_hAINodes); iSmallestNode < iSize; iSmallestNode++)
+			for (int iSmallestNode = 0, iSize = GetArraySize(g_hAINodes); iSmallestNode < iSize; iSmallestNode++)
 			{
-				new iSmallestNodeID = GetArrayCell(g_hAINodes, iSmallestNode);
+				int iSmallestNodeID = GetArrayCell(g_hAINodes, iSmallestNode);
 				
-				decl Float:flSmallestNodePos[3];
+				float flSmallestNodePos[3];
 				GetAINodePosition(iSmallestNodeID, flSmallestNodePos);
 				
 				if (g_iPlayerCurrentNode[iClient] != iSmallestNodeID && GetVectorDistance(flClientPos, flSmallestNodePos) > 3500.0) continue;
@@ -125,14 +125,14 @@ public Action:Timer_NodeGraphAppear(Handle:timer)
 				{
 					if (iSmallestNodeID == iBestNodeID || iBestNodeID == g_iPlayerCurrentNode[iClient])
 					{
-						new Handle:hSmallestNodeLinks = GetAINodeLinks(iSmallestNodeID); // pSmallestNode->GetNodeLinks();
-						for (new iLinkedNode = 0, iLinkSize = GetArraySize(hSmallestNodeLinks); iLinkedNode < iLinkSize; iLinkedNode++)
+						Handle hSmallestNodeLinks = GetAINodeLinks(iSmallestNodeID); // pSmallestNode->GetNodeLinks();
+						for (int iLinkedNode = 0, iLinkSize = GetArraySize(hSmallestNodeLinks); iLinkedNode < iLinkSize; iLinkedNode++)
 						{
-							decl Float:flLinkedNodePos[3];
-							new iLinkedNodeID = GetArrayCell(hSmallestNodeLinks, iLinkedNode);
+							float flLinkedNodePos[3];
+							int iLinkedNodeID = GetArrayCell(hSmallestNodeLinks, iLinkedNode);
 							GetAINodePosition(iLinkedNodeID, flLinkedNodePos);
 							
-							if (bool:GetArrayCell(hSmallestNodeLinks, iLinkedNode, AINodeLink_Enabled))
+							if (view_as<bool>(GetArrayCell(hSmallestNodeLinks, iLinkedNode, AINodeLink_Enabled)))
 							{
 								TE_SetupTFParticleEffect(iLinkParticleSystemActive,
 									flSmallestNodePos,
@@ -166,12 +166,12 @@ public Action:Timer_NodeGraphAppear(Handle:timer)
 	}
 }
 
-public Action:Command_CreateAIAirNode(client, args)
+public Action Command_CreateAIAirNode(int client, int args)
 {
-	decl Float:flNodePos[3];
+	float flNodePos[3];
 	GetClientAbsOrigin(client, flNodePos);
 	
-	new iNodeID = 0;
+	int iNodeID = 0;
 	while (FindValueInArray(g_hAINodes, iNodeID) != -1) iNodeID++;
 	CreateAINode(AINodeType_Air, iNodeID, flNodePos);
 	
@@ -180,12 +180,12 @@ public Action:Command_CreateAIAirNode(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_CreateAIGroundNode(client, args)
+public Action Command_CreateAIGroundNode(int client, int args)
 {
-	decl Float:flNodePos[3];
+	float flNodePos[3];
 	GetClientAbsOrigin(client, flNodePos);
 	
-	new iNodeID = 0;
+	int iNodeID = 0;
 	while (FindValueInArray(g_hAINodes, iNodeID) != -1) iNodeID++;
 	CreateAINode(AINodeType_Ground, iNodeID, flNodePos);
 	
@@ -194,7 +194,7 @@ public Action:Command_CreateAIGroundNode(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_LinkAINodes(client, args)
+public Action Command_LinkAINodes(int client, int args)
 {
 	if (args < 2)
 	{
@@ -202,7 +202,7 @@ public Action:Command_LinkAINodes(client, args)
 		return Plugin_Handled;
 	}
 	
-	decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH], String:sTargetNodeID[SF64_NODE_MAX_ID_LENGTH];
+	char sNodeID[SF64_NODE_MAX_ID_LENGTH], sTargetNodeID[SF64_NODE_MAX_ID_LENGTH];
 	GetCmdArg(1, sNodeID, sizeof(sNodeID));
 	GetCmdArg(2, sTargetNodeID, sizeof(sTargetNodeID));
 	
@@ -211,7 +211,7 @@ public Action:Command_LinkAINodes(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_EnableAINodeLink(client, args)
+public Action Command_EnableAINodeLink(int client, int args)
 {
 	if (args < 3)
 	{
@@ -219,17 +219,17 @@ public Action:Command_EnableAINodeLink(client, args)
 		return Plugin_Handled;
 	}
 	
-	decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH], String:sTargetNodeID[SF64_NODE_MAX_ID_LENGTH], String:sEnable[64];
+	char sNodeID[SF64_NODE_MAX_ID_LENGTH], sTargetNodeID[SF64_NODE_MAX_ID_LENGTH], sEnable[64];
 	GetCmdArg(1, sNodeID, sizeof(sNodeID));
 	GetCmdArg(2, sTargetNodeID, sizeof(sTargetNodeID));
 	GetCmdArg(3, sEnable, sizeof(sEnable));
 	
-	EnableAINodeLink(StringToInt(sNodeID), StringToInt(sTargetNodeID), bool:StringToInt(sEnable));
+	EnableAINodeLink(StringToInt(sNodeID), StringToInt(sTargetNodeID), bool StringToInt(sEnable));
 	
 	return Plugin_Handled;
 }
 
-public Action:Command_UnlinkAINodes(client, args)
+public Action Command_UnlinkAINodes(int client, int args)
 {
 	if (args < 2)
 	{
@@ -237,7 +237,7 @@ public Action:Command_UnlinkAINodes(client, args)
 		return Plugin_Handled;
 	}
 	
-	decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH], String:sTargetNodeID[SF64_NODE_MAX_ID_LENGTH];
+	char sNodeID[SF64_NODE_MAX_ID_LENGTH], sTargetNodeID[SF64_NODE_MAX_ID_LENGTH];
 	GetCmdArg(1, sNodeID, sizeof(sNodeID));
 	GetCmdArg(2, sTargetNodeID, sizeof(sTargetNodeID));
 	
@@ -246,7 +246,7 @@ public Action:Command_UnlinkAINodes(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_ShowAINodes(client, args)
+public Action Command_ShowAINodes(int client, int args)
 {
 	if (!(g_iPlayerNodeEditorFlags[client] & SF64_NODE_EDIT_FLAG_SHOW_NODES))
 	{
@@ -262,7 +262,7 @@ public Action:Command_ShowAINodes(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_ShowAINodeLinks(client, args)
+public Action Command_ShowAINodeLinks(int client, int args)
 {
 	if (!(g_iPlayerNodeEditorFlags[client] & SF64_NODE_EDIT_FLAG_SHOW_LINKS))
 	{
@@ -278,7 +278,7 @@ public Action:Command_ShowAINodeLinks(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_FindPathBetweenAINodes(client, args)
+public Action Command_FindPathBetweenAINodes(int client, int args)
 {
 	if (args < 2)
 	{
@@ -286,12 +286,12 @@ public Action:Command_FindPathBetweenAINodes(client, args)
 		return Plugin_Handled;
 	}
 	
-	decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH], String:sTargetNodeID[SF64_NODE_MAX_ID_LENGTH];
+	char sNodeID[SF64_NODE_MAX_ID_LENGTH], sTargetNodeID[SF64_NODE_MAX_ID_LENGTH];
 	GetCmdArg(1, sNodeID, sizeof(sNodeID));
 	GetCmdArg(2, sTargetNodeID, sizeof(sTargetNodeID));
 	
-	new iNodeID = StringToInt(sNodeID);
-	new iTargetNodeID = StringToInt(sTargetNodeID);
+	int iNodeID = StringToInt(sNodeID);
+	int iTargetNodeID = StringToInt(sTargetNodeID);
 	
 	if (FindValueInArray(g_hAINodes, iNodeID) == -1)
 	{
@@ -305,10 +305,10 @@ public Action:Command_FindPathBetweenAINodes(client, args)
 		return Plugin_Handled;
 	}
 	
-	new bool:bPathSuccess = false;
-	new Handle:hNodes = AINodeFindBestPath(iNodeID, iTargetNodeID, bPathSuccess);
+	bool bPathSuccess = false;
+	Handle hNodes = AINodeFindBestPath(iNodeID, iTargetNodeID, bPathSuccess);
 	
-	new iColor[4] = { 0, 255, 0, 255 };
+	int iColor[4] = { 0, 255, 0, 255 };
 	if (!bPathSuccess)
 	{
 		iColor[0] = 255;
@@ -317,14 +317,14 @@ public Action:Command_FindPathBetweenAINodes(client, args)
 		iColor[3] = 255;
 	}
 	
-	new iPrevNodeID = -1, iCurrentNodeID = -1;
-	for (new i = 0, iSize = GetArraySize(hNodes); i < iSize; i++)
+	int iPrevNodeID = -1, iCurrentNodeID = -1;
+	for (int i = 0, iSize = GetArraySize(hNodes); i < iSize; i++)
 	{
 		iCurrentNodeID = GetArrayCell(hNodes, i);
 	
 		if (iPrevNodeID != -1)
 		{
-			decl Float:flPrevNodePos[3], Float:flCurrentNodePos[3];
+			float flPrevNodePos[3], flCurrentNodePos[3];
 			GetAINodePosition(iPrevNodeID, flPrevNodePos);
 			GetAINodePosition(iCurrentNodeID, flCurrentNodePos);
 			
@@ -352,15 +352,15 @@ public Action:Command_FindPathBetweenAINodes(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_GetAINodeID(client, args)
+public Action Command_GetAINodeID(int client, int args)
 {
-	new iNodeID = GetClientAimNode(client);
+	int iNodeID = GetClientAimNode(client);
 	PrintToChat(client, "iNodeID: %d", iNodeID);
 	
 	return Plugin_Handled;
 }
 
-public Action:Command_SaveAINodegraph(client, args)
+public Action Command_SaveAINodegraph(int client, int args)
 {
 	if (SaveAINodeGraphOfMap()) PrintToChat(client, "Nodegraph saved successfully!");
 	else PrintToChat(client, "Failed to save the nodegraph!");
@@ -368,42 +368,43 @@ public Action:Command_SaveAINodegraph(client, args)
 	return Plugin_Handled;
 }
 
-stock GetClientAimNode(client)
+stock int GetClientAimNode(int client)
 {
 	if (!IsValidClient(client)) return -1;
 	
-	decl Float:flEyePos[3], Float:flEyeAng[3];
+	float flEyePos[3], flEyeAng[3];
 	GetClientEyePosition(client, flEyePos);
 	GetClientEyeAngles(client, flEyeAng);
 	
-	new iBestNodeID = -1;
-	new bool:bBestNodeDistance = false;
-	new bool:bBestNodeAngDistance = false;
-	new Float:flBestNodeDistance = -1.0;
-	new Float:flBestNodeAngDistance = -1.0;
-	new iTempNodeID = -1;
-	decl Float:flTempNodePos[3], Float:flDirection[3], Handle:hTrace;
+	int iBestNodeID = -1;
+	bool bBestNodeDistance = false;
+	bool bBestNodeAngDistance = false;
+	float flBestNodeDistance = -1.0;
+	float flBestNodeAngDistance = -1.0;
+	int iTempNodeID = -1;
+	float flTempNodePos[3], flDirection[3];
+	Handle hTrace;
 	
-	for (new iTempNode = 0, iSize = GetArraySize(g_hAINodes); iTempNode < iSize; iTempNode++)
+	for (int iTempNode = 0, iSize = GetArraySize(g_hAINodes); iTempNode < iSize; iTempNode++)
 	{
 		iTempNodeID = GetArrayCell(g_hAINodes, iTempNode);
 		GetAINodePosition(iTempNodeID, flTempNodePos);
 		
 		// Check for visibility first.
 		hTrace = TR_TraceRayFilterEx(flEyePos, flTempNodePos, MASK_PLAYERSOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitEntity, client);
-		new bool:bHit = TR_DidHit(hTrace);
+		bool bHit = TR_DidHit(hTrace);
 		CloseHandle(hTrace);
 		
 		if (bHit) continue;
 		
 		// Check distance.
-		new Float:flDist = GetVectorDistance(flEyePos, flTempNodePos);
+		float flDist = GetVectorDistance(flEyePos, flTempNodePos);
 		if (!bBestNodeDistance || flDist < flBestNodeDistance)
 		{
 			// Check angle distance.
 			SubtractVectors(flTempNodePos, flEyePos, flDirection);
 			GetVectorAngles(flDirection, flDirection);
-			new Float:flAngDist = FloatAbs(AngleDiff(flDirection[0], flEyeAng[0])) + FloatAbs(AngleDiff(flDirection[1], flEyeAng[1]));
+			float flAngDist = FloatAbs(AngleDiff(flDirection[0], flEyeAng[0])) + FloatAbs(AngleDiff(flDirection[1], flEyeAng[1]));
 			
 			if (flAngDist <= 30.0 && (!bBestNodeAngDistance || flAngDist < flBestNodeAngDistance))
 			{
@@ -419,15 +420,15 @@ stock GetClientAimNode(client)
 	return iBestNodeID;
 }
 
-bool:GetAINodeGraphOfMap()
+bool GetAINodeGraphOfMap()
 {
-	decl String:sMapName[64];
+	char sMapName[64];
 	GetCurrentMap(sMapName, sizeof(sMapName));
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sPath, PLATFORM_MAX_PATH, "configs/arwing/nodegraphs/%s.cfg", sMapName);
 	
-	new Handle:hConfig = CreateKeyValues("root");
+	Handle hConfig = CreateKeyValues("root");
 	if (!FileToKeyValues(hConfig, sPath))
 	{
 		LogError("Nodegraph for %s could not be found!", sMapName);
@@ -443,7 +444,9 @@ bool:GetAINodeGraphOfMap()
 		KvRewind(hConfig);
 		if (KvGotoFirstSubKey(hConfig))
 		{
-			decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH], String:sNodeType[64], iNodeID, iNodeType, Float:flNodePos[3];
+			char sNodeID[SF64_NODE_MAX_ID_LENGTH], sNodeType[64];
+			int iNodeID, iNodeType;
+			float flNodePos[3];
 			
 			do
 			{
@@ -471,13 +474,13 @@ bool:GetAINodeGraphOfMap()
 		
 		LogMessage("Linking nodes...");
 		
-		new Handle:hNodeArray = CreateArray(SF64_NODE_MAX_ID_LENGTH);
+		Handle hNodeArray = CreateArray(SF64_NODE_MAX_ID_LENGTH);
 		
 		// Get the IDs of all the nodes and store them for future iteration.
 		KvRewind(hConfig);
 		if (KvGotoFirstSubKey(hConfig))
 		{
-			decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH];
+			char sNodeID[SF64_NODE_MAX_ID_LENGTH];
 			
 			do
 			{
@@ -489,9 +492,9 @@ bool:GetAINodeGraphOfMap()
 		
 		if (GetArraySize(hNodeArray) > 0)
 		{
-			decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH], String:sTargetNodeID[SF64_NODE_MAX_ID_LENGTH], iNodeID, iTargetNodeID;
+			char sNodeID[SF64_NODE_MAX_ID_LENGTH], sTargetNodeID[SF64_NODE_MAX_ID_LENGTH], iNodeID, iTargetNodeID;
 			
-			for (new i = 0, iSize = GetArraySize(hNodeArray); i < iSize; i++)
+			for (int i = 0, iSize = GetArraySize(hNodeArray); i < iSize; i++)
 			{
 				GetArrayString(hNodeArray, i, sNodeID, sizeof(sNodeID));
 				iNodeID = StringToInt(sNodeID);
@@ -504,7 +507,7 @@ bool:GetAINodeGraphOfMap()
 						KvGetSectionName(hConfig, sTargetNodeID, sizeof(sTargetNodeID));
 						iTargetNodeID = StringToInt(sTargetNodeID);
 						
-						LinkAINodeToAINode(iNodeID, iTargetNodeID, bool:KvGetNum(hConfig, "enabled", 1));
+						LinkAINodeToAINode(iNodeID, iTargetNodeID, bool KvGetNum(hConfig, "enabled", 1));
 					}
 					while (KvGotoNextKey(hConfig));
 				}
@@ -521,31 +524,33 @@ bool:GetAINodeGraphOfMap()
 	return true;
 }
 
-bool:SaveAINodeGraphOfMap()
+bool SaveAINodeGraphOfMap()
 {
-	decl String:sMapName[64];
+	char sMapName[64];
 	GetCurrentMap(sMapName, sizeof(sMapName));
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sPath, PLATFORM_MAX_PATH, "configs/arwing/nodegraphs/%s.cfg", sMapName);
 	
 	LogMessage("Saving nodegraph for map %s...", sMapName);
 	
-	new Handle:hConfig = CreateKeyValues("Nodegraph");
+	Handle hConfig = CreateKeyValues("Nodegraph");
 	
 	if (GetArraySize(g_hAINodes) > 0)
 	{
-		decl String:sNodeID[SF64_NODE_MAX_ID_LENGTH], iNodeID, iNodeType, String:sNodeType[64], Float:flNodePos[3], Handle:hNodeLinks;
-		decl String:sTargetNodeID[SF64_NODE_MAX_ID_LENGTH], iTargetNodeID;
+		char sNodeID[SF64_NODE_MAX_ID_LENGTH], sTargetNodeID[SF64_NODE_MAX_ID_LENGTH], sNodeType[64];
+		int iNodeID, iNodeType, iTargetNodeID;
+		float flNodePos[3];
+		Handle hNodeLinks;
 		
-		for (new i = 0, iSize = GetArraySize(g_hAINodes); i < iSize; i++)
+		for (int i = 0, iSize = GetArraySize(g_hAINodes); i < iSize; i++)
 		{
 			iNodeID = GetArrayCell(g_hAINodes, i);
 			iNodeType = GetArrayCell(g_hAINodes, i, AINode_Type);
-			hNodeLinks = Handle:GetArrayCell(g_hAINodes, i, AINode_Links);
-			flNodePos[0] = Float:GetArrayCell(g_hAINodes, i, AINode_PositionX);
-			flNodePos[1] = Float:GetArrayCell(g_hAINodes, i, AINode_PositionY);
-			flNodePos[2] = Float:GetArrayCell(g_hAINodes, i, AINode_PositionZ);
+			hNodeLinks = view_as<Handle>(GetArrayCell(g_hAINodes, i, AINode_Links));
+			flNodePos[0] = view_as<float>(GetArrayCell(g_hAINodes, i, AINode_PositionX));
+			flNodePos[1] = view_as<float>(GetArrayCell(g_hAINodes, i, AINode_PositionY));
+			flNodePos[2] = view_as<float>(GetArrayCell(g_hAINodes, i, AINode_PositionZ));
 			IntToString(iNodeID, sNodeID, sizeof(sNodeID));
 			
 			switch (iNodeType)
@@ -565,7 +570,7 @@ bool:SaveAINodeGraphOfMap()
 				{
 					if (KvJumpToKey(hConfig, "links", true))
 					{
-						for (new iNodeLink = 0, iNumLinks = GetArraySize(hNodeLinks); iNodeLink < iNumLinks; iNodeLink++)
+						for (int iNodeLink = 0, iNumLinks = GetArraySize(hNodeLinks); iNodeLink < iNumLinks; iNodeLink++)
 						{
 							iTargetNodeID = GetArrayCell(hNodeLinks, iNodeLink);
 							IntToString(iTargetNodeID, sTargetNodeID, sizeof(sTargetNodeID));
@@ -582,7 +587,7 @@ bool:SaveAINodeGraphOfMap()
 		}
 	}
 	
-	new bool:bSuccess = false;
+	bool bSuccess = false;
 	
 	KvRewind(hConfig);
 	if (KeyValuesToFile(hConfig, sPath))
@@ -600,12 +605,12 @@ bool:SaveAINodeGraphOfMap()
 	return bSuccess;
 }
 
-ClearAINodeGraph()
+void ClearAINodeGraph()
 {
 	if (GetArraySize(g_hAINodes) <= 0) return;
 	
-	new Handle:hArray = CloneArray(g_hAINodes);
-	for (new i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
+	Handle hArray = CloneArray(g_hAINodes);
+	for (int i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
 	{
 		RemoveAINode(GetArrayCell(hArray, i));
 	}
@@ -613,7 +618,7 @@ ClearAINodeGraph()
 	CloseHandle(hArray);
 }
 
-CreateAINode(iNodeType, iNodeID, const Float:flPos[3])
+int CreateAINode(int iNodeType, int iNodeID, const float flPos[3])
 {
 	if (iNodeID < 0)
 	{
@@ -627,7 +632,7 @@ CreateAINode(iNodeType, iNodeID, const Float:flPos[3])
 		return -1;
 	}
 	
-	new iIndex = PushArrayCell(g_hAINodes, iNodeID);
+	int iIndex = PushArrayCell(g_hAINodes, iNodeID);
 	SetArrayCell(g_hAINodes, iIndex, iNodeType, AINode_Type);
 	SetArrayCell(g_hAINodes, iIndex, CreateArray(AINodeLink_MaxStats), AINode_Links);
 	SetArrayCell(g_hAINodes, iIndex, flPos[0], AINode_PositionX);
@@ -637,23 +642,23 @@ CreateAINode(iNodeType, iNodeID, const Float:flPos[3])
 	return iIndex;
 }
 
-RemoveAINode(iNodeID)
+void RemoveAINode(int iNodeID)
 {
-	new iIndex = FindValueInArray(g_hAINodes, iNodeID);
+	int iIndex = FindValueInArray(g_hAINodes, iNodeID);
 	if (iIndex == -1) return;
 	
-	new Handle:hLinks = Handle:GetArrayCell(g_hAINodes, iIndex, AINode_Links);
+	Handle hLinks = view_as<Handle>(GetArrayCell(g_hAINodes, iIndex, AINode_Links));
 	CloseHandle(hLinks);
 	SetArrayCell(g_hAINodes, iIndex, INVALID_HANDLE, AINode_Links);
 	
 	// Iterate through all nodes in the graph to make sure that they unlink from this node.
-	decl iNodeID2, iNodeLinkIndex;
-	for (new i = 0, iSize = GetArraySize(g_hAINodes); i < iSize; i++)
+	int iNodeID2, iNodeLinkIndex;
+	for (int i = 0, iSize = GetArraySize(g_hAINodes); i < iSize; i++)
 	{
 		iNodeID2 = GetArrayCell(g_hAINodes, i, AINode_ID);
 		if (iNodeID2 == iNodeID) continue;
 		
-		hLinks = Handle:GetArrayCell(g_hAINodes, i, AINode_Links);
+		hLinks = view_as<Handle>(GetArrayCell(g_hAINodes, i, AINode_Links));
 		iNodeLinkIndex = FindValueInArray(hLinks, iNodeID);
 		if (iNodeLinkIndex != -1)
 		{
@@ -664,9 +669,9 @@ RemoveAINode(iNodeID)
 	RemoveFromArray(g_hAINodes, iIndex);
 }
 
-bool:LinkAINodeToAINode(iNodeID, iTargetNodeID, bool:bEnable)
+bool LinkAINodeToAINode(int iNodeID, int iTargetNodeID, bool bEnable)
 {
-	new iIndex = FindValueInArray(g_hAINodes, iNodeID);
+	int iIndex = FindValueInArray(g_hAINodes, iNodeID);
 	if (iIndex == -1) 
 	{
 		LogError("Could not link starting node (ID: %d) to target node (ID: %d): starting node does not exist!", iNodeID, iTargetNodeID);
@@ -679,7 +684,7 @@ bool:LinkAINodeToAINode(iNodeID, iTargetNodeID, bool:bEnable)
 		return false;
 	}
 	
-	new iTargetIndex = FindValueInArray(g_hAINodes, iTargetNodeID);
+	int iTargetIndex = FindValueInArray(g_hAINodes, iTargetNodeID);
 	if (iTargetIndex == -1)
 	{
 		LogError("Could not link starting node (ID: %d) to target node (ID: %d): target node does not exist!", iNodeID, iTargetNodeID);
@@ -694,8 +699,8 @@ bool:LinkAINodeToAINode(iNodeID, iTargetNodeID, bool:bEnable)
 	
 	if (!IsAINodeLinkedToAINode(iNodeID, iTargetNodeID))
 	{
-		new Handle:hLinks = Handle:GetArrayCell(g_hAINodes, iIndex, AINode_Links);
-		new iNodeLinkIndex = PushArrayCell(hLinks, iTargetNodeID);
+		Handle hLinks = view_as<Handle>(GetArrayCell(g_hAINodes, iIndex, AINode_Links));
+		int iNodeLinkIndex = PushArrayCell(hLinks, iTargetNodeID);
 		SetArrayCell(hLinks, iNodeLinkIndex, bEnable, AINodeLink_Enabled);
 		
 		return true;
@@ -708,9 +713,9 @@ bool:LinkAINodeToAINode(iNodeID, iTargetNodeID, bool:bEnable)
 	return false;
 }
 
-UnlinkAINodeFromAINode(iNodeID, iTargetNodeID)
+void UnlinkAINodeFromAINode(int iNodeID, int iTargetNodeID)
 {
-	new iIndex = FindValueInArray(g_hAINodes, iNodeID);
+	int iIndex = FindValueInArray(g_hAINodes, iNodeID);
 	if (iIndex == -1)
 	{
 		LogError("Could not unlink starting node (ID: %d) from target node (ID: %d): starting node does not exist!", iNodeID, iTargetNodeID);
@@ -719,7 +724,7 @@ UnlinkAINodeFromAINode(iNodeID, iTargetNodeID)
 	
 	if (IsAINodeLinkedToAINode(iNodeID, iTargetNodeID))
 	{
-		new Handle:hLinks = Handle:GetArrayCell(g_hAINodes, iIndex, AINode_Links);
+		Handle hLinks = view_as<Handle>(GetArrayCell(g_hAINodes, iIndex, AINode_Links));
 		RemoveFromArray(hLinks, FindValueInArray(hLinks, iTargetNodeID));
 	}
 	else
@@ -728,40 +733,40 @@ UnlinkAINodeFromAINode(iNodeID, iTargetNodeID)
 	}
 }
 
-EnableAINodeLink(iNodeID, iTargetNodeID, bool:bEnable)
+void EnableAINodeLink(int iNodeID, int iTargetNodeID, bool bEnable)
 {
-	new iIndex = FindValueInArray(g_hAINodes, iNodeID);
+	int iIndex = FindValueInArray(g_hAINodes, iNodeID);
 	if (iIndex == -1) return;
 	
-	new iTargetIndex = FindValueInArray(g_hAINodes, iTargetNodeID);
+	int iTargetIndex = FindValueInArray(g_hAINodes, iTargetNodeID);
 	if (iTargetIndex == -1) return;
 	
-	new Handle:hLinks = Handle:GetArrayCell(g_hAINodes, iIndex, AINode_Links);
-	new iNodeLinkIndex = FindValueInArray(hLinks, iTargetNodeID);
+	Handle hLinks = view_as<Handle>(GetArrayCell(g_hAINodes, iIndex, AINode_Links));
+	int iNodeLinkIndex = FindValueInArray(hLinks, iTargetNodeID);
 	if (iNodeLinkIndex != -1)
 	{
 		SetArrayCell(hLinks, iNodeLinkIndex, bEnable, AINodeLink_Enabled);
 	}
 }
 
-bool:IsAINodeLinkedToAINode(iNodeID, iTargetNodeID)
+bool IsAINodeLinkedToAINode(int iNodeID, int iTargetNodeID)
 {
-	new iIndex = FindValueInArray(g_hAINodes, iNodeID);
+	int iIndex = FindValueInArray(g_hAINodes, iNodeID);
 	if (iIndex == -1) return false;
 	
-	new Handle:hLinks = GetAINodeLinks(iNodeID); // pNode->GetNodeLinks();
-	return bool:(FindValueInArray(hLinks, iTargetNodeID) != -1);
+	Handle hLinks = GetAINodeLinks(iNodeID); // pNode->GetNodeLinks();
+	return bool (FindValueInArray(hLinks, iTargetNodeID) != -1);
 }
 
-bool:IsAINodeLinkEnabled(iNodeID, iTargetNodeID)
+bool IsAINodeLinkEnabled(int iNodeID, int iTargetNodeID)
 {
 	if (!IsAINodeLinkedToAINode(iNodeID, iTargetNodeID)) return false;
 	
-	new Handle:hLinks = GetAINodeLinks(iNodeID); // pNode->GetNodeLinks();
-	return bool:GetArrayCell(hLinks, FindValueInArray(hLinks, iTargetNodeID), AINodeLink_Enabled);
+	Handle hLinks = GetAINodeLinks(iNodeID); // pNode->GetNodeLinks();
+	return view_as<bool>(GetArrayCell(hLinks, FindValueInArray(hLinks, iTargetNodeID), AINodeLink_Enabled));
 }
 
-Handle:AINodeFindBestPath(iNodeID, iTargetNodeID, &bool:bSuccess=false)
+Handle AINodeFindBestPath(int iNodeID, int iTargetNodeID, bool &bSuccess=false)
 {
 	if (!GetArraySize(g_hAINodes)) 
 	{
@@ -769,17 +774,19 @@ Handle:AINodeFindBestPath(iNodeID, iTargetNodeID, &bool:bSuccess=false)
 		return CreateArray();
 	}
 	
-	new Handle:hTraversedNodes = CreateArray();
+	Handle hTraversedNodes = CreateArray();
 	
-	new Handle:hOpenSet = CreateArray(AINodeSet_MaxStats);
-	new iOpenSetIndex = PushArrayCell(hOpenSet, iNodeID);
+	Handle hOpenSet = CreateArray(AINodeSet_MaxStats);
+	int iOpenSetIndex = PushArrayCell(hOpenSet, iNodeID);
 	SetArrayCell(hOpenSet, iOpenSetIndex, 0.0, AINodeSet_GScore);
 	SetArrayCell(hOpenSet, iOpenSetIndex, 0.0 + GetAINodeHeuristicCost(iNodeID, iTargetNodeID), AINodeSet_FScore); // F score.
 	
-	new Handle:hClosedSet = CreateArray(AINodeSet_MaxStats);
+	Handle hClosedSet = CreateArray(AINodeSet_MaxStats);
 	
-	decl iCurrentNodeID, iCurrentNodeIDOpenSetIndex, Handle:hCurrentNodeLinks, iTempNodeID, Float:flTempFScore, Float:flBestFScore, bool:bHasBestFScore;
-	decl Float:flCurrentNodeGScore;
+	int iCurrentNodeID, iCurrentNodeIDOpenSetIndex, iTempNodeID;
+	Handle hCurrentNodeLinks;
+	float flTempFScore, flBestFScore, flCurrentNodeGScore;
+	bool bHasBestFScore;
 	
 	bSuccess = false;
 	
@@ -790,10 +797,10 @@ Handle:AINodeFindBestPath(iNodeID, iTargetNodeID, &bool:bSuccess=false)
 		iCurrentNodeIDOpenSetIndex = -1;
 		bHasBestFScore = false;
 		
-		for (new i = 0, iSize = GetArraySize(hOpenSet); i < iSize; i++)
+		for (int i = 0, iSize = GetArraySize(hOpenSet); i < iSize; i++)
 		{
 			iTempNodeID = GetArrayCell(hOpenSet, i);
-			flTempFScore = Float:GetArrayCell(hOpenSet, i, AINodeSet_FScore);
+			flTempFScore = view_as<float>(GetArrayCell(hOpenSet, i, AINodeSet_FScore));
 			if (!bHasBestFScore || flTempFScore < flBestFScore)
 			{
 				iCurrentNodeID = iTempNodeID;
@@ -810,27 +817,27 @@ Handle:AINodeFindBestPath(iNodeID, iTargetNodeID, &bool:bSuccess=false)
 			break;
 		}
 		
-		flCurrentNodeGScore = Float:GetArrayCell(hOpenSet, iCurrentNodeIDOpenSetIndex, AINodeSet_GScore);
+		flCurrentNodeGScore = view_as<float>(GetArrayCell(hOpenSet, iCurrentNodeIDOpenSetIndex, AINodeSet_GScore));
 		
 		RemoveFromArray(hOpenSet, iCurrentNodeIDOpenSetIndex);
 		PushArrayCell(hClosedSet, iCurrentNodeID);
 		
 		hCurrentNodeLinks = GetAINodeLinks(iCurrentNodeID);
-		for (new i = 0, iSize = GetArraySize(hCurrentNodeLinks); i < iSize; i++)
+		for (int i = 0, iSize = GetArraySize(hCurrentNodeLinks); i < iSize; i++)
 		{
-			new iNeighborNodeID = GetArrayCell(hCurrentNodeLinks, i);
+			int iNeighborNodeID = GetArrayCell(hCurrentNodeLinks, i);
 			if (!IsAINodeLinkEnabled(iCurrentNodeID, iNeighborNodeID)) continue;
 			
-			new Float:flTentativeGScore = flCurrentNodeGScore + GetAINodeHeuristicCost(iCurrentNodeID, iNeighborNodeID);
+			float flTentativeGScore = flCurrentNodeGScore + GetAINodeHeuristicCost(iCurrentNodeID, iNeighborNodeID);
 			
-			new iNeighborNodeIDClosedSetIndex = FindValueInArray(hClosedSet, iNeighborNodeID);
-			if (iNeighborNodeIDClosedSetIndex != -1 && flTentativeGScore >= Float:GetArrayCell(hClosedSet, iNeighborNodeIDClosedSetIndex, AINodeSet_GScore))
+			int iNeighborNodeIDClosedSetIndex = FindValueInArray(hClosedSet, iNeighborNodeID);
+			if (iNeighborNodeIDClosedSetIndex != -1 && flTentativeGScore >= view_as<float>(GetArrayCell(hClosedSet, iNeighborNodeIDClosedSetIndex, AINodeSet_GScore)))
 			{
 				continue;
 			}
 			
-			new iNeighborNodeIDOpenSetIndex = FindValueInArray(hOpenSet, iNeighborNodeID);
-			if (iNeighborNodeIDOpenSetIndex == -1 || flTentativeGScore < Float:GetArrayCell(hOpenSet, iNeighborNodeIDOpenSetIndex, AINodeSet_GScore))
+			int iNeighborNodeIDOpenSetIndex = FindValueInArray(hOpenSet, iNeighborNodeID);
+			if (iNeighborNodeIDOpenSetIndex == -1 || flTentativeGScore < view_as<float>(GetArrayCell(hOpenSet, iNeighborNodeIDOpenSetIndex, AINodeSet_GScore)))
 			{
 				PushArrayCell(hTraversedNodes, iCurrentNodeID);
 				
@@ -848,49 +855,49 @@ Handle:AINodeFindBestPath(iNodeID, iTargetNodeID, &bool:bSuccess=false)
 	return hTraversedNodes;
 }
 
-static Float:GetAINodeHeuristicCost(iNodeID, iTargetNodeID)
+static float GetAINodeHeuristicCost(int iNodeID, int iTargetNodeID)
 {
-	decl Float:flNodePos[3], Float:flTargetNodePos[3];
+	float flNodePos[3], flTargetNodePos[3];
 	GetAINodePosition(iNodeID, flNodePos);
 	GetAINodePosition(iTargetNodeID, flTargetNodePos);
 	
 	return GetVectorDistance(flNodePos, flTargetNodePos);
 }
 
-stock bool:GetAINodePosition(iNodeID, Float:flBuffer[3])
+stock bool GetAINodePosition(int iNodeID, float flBuffer[3])
 {
-	new iIndex = FindValueInArray(g_hAINodes, iNodeID);
+	int iIndex = FindValueInArray(g_hAINodes, iNodeID);
 	if (iIndex == -1) return false;
 	
-	flBuffer[0] = Float:GetArrayCell(g_hAINodes, iIndex, AINode_PositionX);
-	flBuffer[1] = Float:GetArrayCell(g_hAINodes, iIndex, AINode_PositionY);
-	flBuffer[2] = Float:GetArrayCell(g_hAINodes, iIndex, AINode_PositionZ);
+	flBuffer[0] = view_as<float>(GetArrayCell(g_hAINodes, iIndex, AINode_PositionX));
+	flBuffer[1] = view_as<float>(GetArrayCell(g_hAINodes, iIndex, AINode_PositionY));
+	flBuffer[2] = view_as<float>(GetArrayCell(g_hAINodes, iIndex, AINode_PositionZ));
 	
 	return true;
 }
 
-stock Handle:GetAINodeLinks(iNodeID)
+stock Handle GetAINodeLinks(int iNodeID)
 {
-	new iIndex = FindValueInArray(g_hAINodes, iNodeID);
+	int iIndex = FindValueInArray(g_hAINodes, iNodeID);
 	if (iIndex == -1) 
 	{
 		LogError("Could not retrieve links of node (ID: %d): node does not exist!", iNodeID);
 		return INVALID_HANDLE;
 	}
 	
-	return Handle:GetArrayCell(g_hAINodes, iIndex, AINode_Links);
+	return view_as<Handle>(GetArrayCell(g_hAINodes, iIndex, AINode_Links));
 }
 
-stock GetNearestAINodeToPoint(const Float:flPos[3], Float:flTolerance=512.0)
+stock int GetNearestAINodeToPoint(const float flPos[3], float flTolerance=512.0)
 {
-	decl Float:flNodePos[3];
-	new iBestNodeID = -1;
-	new Float:flBestDistance = flTolerance;
+	float flNodePos[3];
+	int iBestNodeID = -1;
+	float flBestDistance = flTolerance;
 	if (flTolerance < 0.0) flBestDistance = 16384.0;
 	
-	decl Float:flDist;
+	float flDist;
 	
-	for (new i = 0, iSize = GetArraySize(g_hAINodes); i < iSize; i++)
+	for (int i = 0, iSize = GetArraySize(g_hAINodes); i < iSize; i++)
 	{
 		GetAINodePosition(GetArrayCell(g_hAINodes, i), flNodePos);
 		
@@ -905,4 +912,4 @@ stock GetNearestAINodeToPoint(const Float:flPos[3], Float:flTolerance=512.0)
 	return iBestNodeID;
 }
 
-stock FindAINodeByID(iNodeID) return FindValueInArray(g_hAINodes, iNodeID);
+stock int FindAINodeByID(int iNodeID) return FindValueInArray(g_hAINodes, iNodeID);

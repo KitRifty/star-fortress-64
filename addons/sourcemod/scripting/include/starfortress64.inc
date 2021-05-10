@@ -24,74 +24,74 @@ enum
 	VehicleType_Landmaster
 };
 
-forward SF64_GameRulesOnRoundStateStart(iRoundState);
-forward SF64_GameRulesOnRoundStateEnd(iRoundState);
+forward int SF64_GameRulesOnRoundStateStart(int iRoundState);
+forward int SF64_GameRulesOnRoundStateEnd(int iRoundState);
 
-forward SF64_GameRulesOnGetGameType(const String:sType[64]);
+forward int SF64_GameRulesOnGetGameType(const char[] sType);
 
-forward SF64_GameRulesOnRequestVehiclesForPlayer(client);
-forward SF64_GameRulesOnSaveVehiclesForPlayer(client, Handle:hVehicles, Handle:hVehicleTypes);
-
-
-native SF64_GameRulesGetGameType();
-native SF64_GameRulesSetGameType(iGameType);
-
-native SF64_GameRulesGetMinPlayers();
-native SF64_GameRulesSetMinPlayers(iNumPlayers);
-
-native SF64_GameRulesGetMaxPlayers();
-native SF64_GameRulesSetMaxPlayers(iNumPlayers);
-
-native bool:SF64_GameRulesGetRestrictToVehicles();
-native SF64_GameRulesSetRestrictToVehicles(bool:bRestrict);
-
-native bool:SF64_GameRulesGetRestrictSuicideInVehicles();
-native SF64_GameRulesSetRestrictSuicideInVehicles(bool:bRestrict);
-
-native bool:SF64_GameRulesGetUseQueue();
-native SF64_GameRulesSetUseQueue(bool:bUseQueue);
-native SF64_GameRulesGetQueueList(Handle:hDestArray);
-
-native bool:SF64_GameRulesGetFreeForAll();
-native SF64_GameRulesSetFreeForAll(bool:bFreeForAll);
-
-native SF64_GameRulesGetRoundState();
-native SF64_GameRulesSetRoundState(iRoundState);
-
-native SF64_GameRulesGetValidPlayerSpawnPoints(client, Handle:hDestArray);
-
-native bool:SF64_GameRulesIsPlayerInGame(client);
-native SF64_GameRulesSetInGameStateOfPlayer(client, bool:bState);
-
-native bool:SF64_GameRulesIsPlayerEliminated(client);
-native SF64_GameRulesSetEliminatedStateOfPlayer(client, bool:bState);
-
-native bool:SF64_GameRulesIsPlayerInWarmup(client);
-native SF64_GameRulesSetWarmupStateOfPlayer(client, bool:bState);
-
-native SF64_GameRulesGetRoundTime();
-native SF64_GameRulesInitializeRoundTimer(iRoundTime, Handle:hCallbackPlugin, Function:fCallback);
-native SF64_GameRulesStopRoundTimer();
-
-native SF64_GameRulesGivePlayerVehicle(client, iVehicleType, const String:sVehicleName[]);
-native SF64_GameRulesSetPlayerVehicle(client, iVehicleType, const String:sVehicleName[]);
-
-native SF64_GameRulesRequestVehiclesForPlayer(client);
-native SF64_GameRulesSaveVehiclesForPlayer(client);
+forward int SF64_GameRulesOnRequestVehiclesForPlayer(int client);
+forward int SF64_GameRulesOnSaveVehiclesForPlayer(int client, Handle hVehicles, Handle hVehicleTypes);
 
 
-native SF64_MusicCreateActiveMusic(const String:sMusicName[]);
+native int SF64_GameRulesGetGameType();
+native int SF64_GameRulesSetGameType(int iGameType);
 
-native bool:SF64_MusicActiveMusicIdExists(iActiveMusicId);
+native int SF64_GameRulesGetMinPlayers();
+native int SF64_GameRulesSetMinPlayers(int iNumPlayers);
 
-native SF64_MusicRemoveActiveMusicById(iActiveMusicId);
+native int SF64_GameRulesGetMaxPlayers();
+native int SF64_GameRulesSetMaxPlayers(int iNumPlayers);
 
-native SF64_MusicPlayActiveMusicIdToPlayer(client, iActiveMusicId);
-native SF64_MusicRemoveActiveMusicIdFromPlayer(client, iActiveMusicId);
-native SF64_MusicRemoveAllActiveMusicIdsFromPlayer(client);
+native bool SF64_GameRulesGetRestrictToVehicles();
+native int SF64_GameRulesSetRestrictToVehicles(bool bRestrict);
+
+native bool SF64_GameRulesGetRestrictSuicideInVehicles();
+native int SF64_GameRulesSetRestrictSuicideInVehicles(bool bRestrict);
+
+native bool SF64_GameRulesGetUseQueue();
+native int SF64_GameRulesSetUseQueue(bool bUseQueue);
+native int SF64_GameRulesGetQueueList(Handle hDestArray);
+
+native bool SF64_GameRulesGetFreeForAll();
+native int SF64_GameRulesSetFreeForAll(bool bFreeForAll);
+
+native int SF64_GameRulesGetRoundState();
+native int SF64_GameRulesSetRoundState(int iRoundState);
+
+native int SF64_GameRulesGetValidPlayerSpawnPoints(int client, Handle hDestArray);
+
+native bool SF64_GameRulesIsPlayerInGame(int client);
+native int SF64_GameRulesSetInGameStateOfPlayer(int client, bool bState);
+
+native bool SF64_GameRulesIsPlayerEliminated(int client);
+native int SF64_GameRulesSetEliminatedStateOfPlayer(int client, bool bState);
+
+native bool SF64_GameRulesIsPlayerInWarmup(int client);
+native int SF64_GameRulesSetWarmupStateOfPlayer(int client, bool bState);
+
+native int SF64_GameRulesGetRoundTime();
+native int SF64_GameRulesInitializeRoundTimer(int iRoundTime, Handle hCallbackPlugin, Function fCallback);
+native int SF64_GameRulesStopRoundTimer();
+
+native int SF64_GameRulesGivePlayerVehicle(int client, int iVehicleType, const char[] sVehicleName);
+native int SF64_GameRulesSetPlayerVehicle(int client, int iVehicleType, const char[] sVehicleName);
+
+native int SF64_GameRulesRequestVehiclesForPlayer(int client);
+native int SF64_GameRulesSaveVehiclesForPlayer(int client);
 
 
-public SharedPlugin:__pl_starfortress64 =
+native int SF64_MusicCreateActiveMusic(const char[] sMusicName);
+
+native bool SF64_MusicActiveMusicIdExists(int iActiveMusicId);
+
+native int SF64_MusicRemoveActiveMusicById(int iActiveMusicId);
+
+native int SF64_MusicPlayActiveMusicIdToPlayer(int client, int iActiveMusicId);
+native int SF64_MusicRemoveActiveMusicIdFromPlayer(int client, int iActiveMusicId);
+native int SF64_MusicRemoveAllActiveMusicIdsFromPlayer(int client);
+
+
+public SharedPlugin __pl_starfortress64 =
 {
 	name = "starfortress64",
 	file = "starfortress64.smx",

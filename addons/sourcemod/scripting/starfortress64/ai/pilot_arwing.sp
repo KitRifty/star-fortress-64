@@ -49,11 +49,11 @@ enum
 	ArwingPilotConfig_MaxStats
 };
 
-static Handle:g_hPilotConfigs = INVALID_HANDLE;
-static Handle:g_hPilotConfigNames = INVALID_HANDLE;
-static Handle:g_hPilots = INVALID_HANDLE;
+static Handle g_hPilotConfigs = INVALID_HANDLE;
+static Handle g_hPilotConfigNames = INVALID_HANDLE;
+static Handle g_hPilots = INVALID_HANDLE;
 
-InitializeArwingPilots()
+void InitializeArwingPilots()
 {
 	g_hPilotConfigs = CreateArray(ArwingPilotConfig_MaxStats);
 	g_hPilotConfigNames = CreateArray(SF64_MAX_PILOT_NAME_LENGTH);
@@ -63,19 +63,20 @@ InitializeArwingPilots()
 /*
 *	Loads all pilot configs found in the pilot configs directory.
 */
-LoadAllArwingPilotConfigs()
+void LoadAllArwingPilotConfigs()
 {
-	decl String:sPath[PLATFORM_MAX_PATH], String:sName[64];
+	char sPath[PLATFORM_MAX_PATH], sName[64];
 	BuildPath(Path_SM, sPath, PLATFORM_MAX_PATH, SF64_PILOT_ARWING_CONFIG_DIRECTORY);
 	
-	new Handle:hDirectory = OpenDirectory(sPath);
+	Handle hDirectory = OpenDirectory(sPath);
 	if (hDirectory == INVALID_HANDLE)
 	{
 		LogError("The arwing ai pilot configs directory does not exist!");
 		return;
 	}
 	
-	decl String:sFileName[PLATFORM_MAX_PATH], FileType:iFiletype;
+	char sFileName[PLATFORM_MAX_PATH];
+	FileType iFiletype;
 	
 	while (ReadDirEntry(hDirectory, sFileName, sizeof(sFileName), iFiletype))
 	{
@@ -93,11 +94,11 @@ LoadAllArwingPilotConfigs()
 /*
 *	Clears all values and memory stored in configs.
 */
-ClearArwingPilotConfigs()
+void ClearArwingPilotConfigs()
 {
-	for (new i = 0, iSize = GetArraySize(g_hPilotConfigs); i < iSize; i++)
+	for (int i = 0, iSize = GetArraySize(g_hPilotConfigs); i < iSize; i++)
 	{
-		CloseHandle(Handle:GetArrayCell(g_hPilotConfigs, i, ArwingPilotConfig_KeyValues));
+		CloseHandle(view_as<Handle>(GetArrayCell(g_hPilotConfigs, i, ArwingPilotConfig_KeyValues)));
 	}
 	
 	ClearArray(g_hPilotConfigs);
@@ -108,9 +109,9 @@ ClearArwingPilotConfigs()
 /*
 *	Loads a pilot config from the config directory and returns the index in g_hPilotConfigs where the data of the config is stored.
 */
-static LoadArwingPilotConfig(const String:sName[])
+static void LoadArwingPilotConfig(const char[] sName)
 {
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sPath, PLATFORM_MAX_PATH, "%s%s.cfg", SF64_PILOT_ARWING_CONFIG_DIRECTORY, sName);
 	if (!FileExists(sPath))
 	{
@@ -118,7 +119,7 @@ static LoadArwingPilotConfig(const String:sName[])
 		return;
 	}
 	
-	new Handle:hConfig = CreateKeyValues("root");
+	Handle hConfig = CreateKeyValues("root");
 	if (!FileToKeyValues(hConfig, sPath))
 	{
 		CloseHandle(hConfig);
@@ -129,7 +130,7 @@ static LoadArwingPilotConfig(const String:sName[])
 	KvRewind(hConfig);
 	if (KvGotoFirstSubKey(hConfig))
 	{
-		decl String:sSectionName[64], String:sIndex[32], String:sValue[PLATFORM_MAX_PATH], String:sDownload[PLATFORM_MAX_PATH];
+		char sSectionName[64], sIndex[32], sValue[PLATFORM_MAX_PATH], sDownload[PLATFORM_MAX_PATH];
 		
 		do
 		{
@@ -137,7 +138,7 @@ static LoadArwingPilotConfig(const String:sName[])
 			
 			if (!StrContains(sSectionName, "sound_"))
 			{
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -148,7 +149,7 @@ static LoadArwingPilotConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "download"))
 			{
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -159,7 +160,7 @@ static LoadArwingPilotConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "mod_precache"))
 			{
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -170,7 +171,7 @@ static LoadArwingPilotConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "mat_download"))
 			{	
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -184,15 +185,15 @@ static LoadArwingPilotConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "mod_download"))
 			{
-				new String:sExtensions[][] = { ".mdl", ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
+				char sExtensions[][] = { ".mdl", ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
 				
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
 					if (!sValue[0]) break;
 					
-					for (new i2 = 0; i2 < sizeof(sExtensions); i2++)
+					for (int i2 = 0; i2 < sizeof(sExtensions); i2++)
 					{
 						Format(sDownload, sizeof(sDownload), "%s%s", sValue, sExtensions[i2]);
 						AddFileToDownloadsTable(sDownload);
@@ -204,13 +205,13 @@ static LoadArwingPilotConfig(const String:sName[])
 	}
 	
 	PushArrayString(g_hPilotConfigNames, sName);
-	new iIndex = PushArrayCell(g_hPilotConfigs, hConfig);
+	int iIndex = PushArrayCell(g_hPilotConfigs, hConfig);
 	if (iIndex != -1)
 	{
 		KvRewind(hConfig);
-		new iSkill = clamp(KvGetInt(hConfig, "skill", 1), 1, 10);
-		new iAggression = clamp(KvGetInt(hConfig, "aggression", 1), 1, 10);
-		new iCaution = clamp(KvGetInt(hConfig, "caution", 1), 1, 10);
+		int iSkill = clamp(KvGetInt(hConfig, "skill", 1), 1, 10);
+		int iAggression = clamp(KvGetInt(hConfig, "aggression", 1), 1, 10);
+		int iCaution = clamp(KvGetInt(hConfig, "caution", 1), 1, 10);
 		
 		SetArrayCell(g_hPilotConfigs, iIndex, hConfig, ArwingPilotConfig_KeyValues);
 		SetArrayCell(g_hPilotConfigs, iIndex, iSkill, ArwingPilotConfig_Skill);
@@ -222,38 +223,29 @@ static LoadArwingPilotConfig(const String:sName[])
 }
 
 /*
-*	Spawns an Arwing pilot entity and returns the entity index which it is associated with.
-*/
-SpawnArwingPilot(const String:sName[], const Float:flPos[3], const Float:flAng[3], iTeam, &iIndex=-1)
-{
-}
-
-/*
 *	Handle overall movement commands of the pilot.
 */
-ProcessArwingPilotMoveCmds(iPilot)
+void ProcessArwingPilotMoveCmds(int iPilot)
 {
-	decl iVehicleType, iArwingIndex;
-	new iArwing = GetCurrentVehicle(iPilot, iVehicleType, iArwingIndex);
+	int iVehicleType, iArwingIndex;
+	int iArwing = GetCurrentVehicle(iPilot, iVehicleType, iArwingIndex);
 	if (iVehicleType != VehicleType_Arwing)
 	{
 		return; // No vehicle: don't do anything.
 	}
-	
-	
 }
 
 /*
 *	Checks sections of space ahead of the pilot's vehicle. Returns a set of flags indicating which spaces are clear.
 */
-static CheckForObstaclesAhead(iPilot, iVehicle, Float:flDist)
+static void CheckForObstaclesAhead(int iPilot, int iVehicle, float flDist)
 {
-	decl Float:flAng[3];
+	float flAng[3];
 	GetEntitySmoothedVelocity(iVehicle, flAng);
 	NormalizeVector(flAng, flAng);
 	GetVectorAngles(flAng, flAng);
 	
-	decl Float:flFwd[3], Float:flRight[3], Float:flUp[3];
+	float flFwd[3], flRight[3], flUp[3];
 	GetAngleVectors(flAng, flFwd, flRight, flUp);
 	NormalizeVector(flFwd, flFwd);
 	NormalizeVector(flRight, flRight);
@@ -262,28 +254,18 @@ static CheckForObstaclesAhead(iPilot, iVehicle, Float:flDist)
 	flAng[0] = flAng[2] = 0.0;
 	flAng[1] = AngleNormalize(flAng[1]);
 	
-	decl Float:flMins[3], Float:flMaxs[3];
+	float flMins[3], flMaxs[3];
 	GetEntityBoundingBoxScaled(iVehicle, flMins, flMaxs, GetEntPropFloat(iVehicle, Prop_Send, "m_flModelScale"));
-	
 }
 
-static CheckForObstaclesAheadPartial(iPilot, iVehicle, iPartial, Float:flDist, const Float:flMins[3], const Float:flMaxs[3], const Float:flFwd[3], const Float:flRight[3], const Float:flUp[3])
-{
-	
-}
-
-public Action:Timer_ArwingPilotThink(Handle:timer, any:entref)
-{
-}
-
-public bool:ArwingPilotTraceRayVisibility(entity, contentsMask, any:iAIPilot)
+public bool ArwingPilotTraceRayVisibility(int entity, int contentsMask, any iAIPilot)
 {
 	if (entity == data) return false;
 	
-	new iIndex = FindValueInArray(g_hAIArwingPilots, EntIndexToEntRef(iAIPilot));
+	int iIndex = FindValueInArray(g_hAIArwingPilots, EntIndexToEntRef(iAIPilot));
 	if (iIndex != -1)
 	{
-		new iArwingIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
+		int iArwingIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
 		if (iArwingIndex != -1)
 		{
 			if (GetArrayCell(g_hArwings, iArwingIndex, Arwing_Team) == GetArrayCell(g_hAIArwingPilots, iIndex, AIArwingPilot_Team)) return false;

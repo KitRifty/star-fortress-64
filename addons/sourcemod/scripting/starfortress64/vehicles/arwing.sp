@@ -8,18 +8,19 @@
 
 #define ARWING_BARRELROLL_ROTATE_ENT_MODEL "models/Effects/teleporttrail.mdl"
 
-new Handle:g_hArwingConfigs;
+Handle g_hArwingConfigs;
 
-new Handle:g_hArwings;
-new Handle:g_hArwingNames;
+Handle g_hArwings;
+Handle g_hArwingNames;
 
 
-LoadAllArwingConfigs()
+void LoadAllArwingConfigs()
 {
-	decl String:sPath[PLATFORM_MAX_PATH], String:sFileName[PLATFORM_MAX_PATH], String:sName[64], FileType:iFiletype;
+	char sPath[PLATFORM_MAX_PATH], sFileName[PLATFORM_MAX_PATH], sName[64];
+	FileType iFiletype;
 	BuildPath(Path_SM, sPath, PLATFORM_MAX_PATH, "configs/starfortress64/vehicles/arwing/");
 	
-	new Handle:hDirectory = OpenDirectory(sPath);
+	Handle hDirectory = OpenDirectory(sPath);
 	if (hDirectory == INVALID_HANDLE)
 	{
 		LogError("The arwing vehicle configs directory does not exist!");
@@ -39,11 +40,11 @@ LoadAllArwingConfigs()
 	CloseHandle(hDirectory);
 }
 
-LoadArwingConfig(const String:sName[])
+void LoadArwingConfig(const char[] sName)
 {
 	RemoveArwingConfig(sName);
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	BuildPath(Path_SM, sPath, PLATFORM_MAX_PATH, "configs/starfortress64/vehicles/arwing/%s.cfg", sName);
 	if (!FileExists(sPath))
 	{
@@ -51,7 +52,7 @@ LoadArwingConfig(const String:sName[])
 		return;
 	}
 	
-	new Handle:hConfig = CreateKeyValues("root");
+	Handle hConfig = CreateKeyValues("root");
 	if (!FileToKeyValues(hConfig, sPath))
 	{
 		CloseHandle(hConfig);
@@ -62,7 +63,7 @@ LoadArwingConfig(const String:sName[])
 	KvRewind(hConfig);
 	if (KvGotoFirstSubKey(hConfig))
 	{
-		decl String:sSectionName[64], String:sIndex[32], String:sValue[PLATFORM_MAX_PATH], String:sDownload[PLATFORM_MAX_PATH];
+		char sSectionName[64], sIndex[32], sValue[PLATFORM_MAX_PATH], sDownload[PLATFORM_MAX_PATH];
 		
 		do
 		{
@@ -70,7 +71,7 @@ LoadArwingConfig(const String:sName[])
 			
 			if (!StrContains(sSectionName, "sound_"))
 			{
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -81,7 +82,7 @@ LoadArwingConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "download"))
 			{
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -92,7 +93,7 @@ LoadArwingConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "mod_precache"))
 			{
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -103,7 +104,7 @@ LoadArwingConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "mat_download"))
 			{	
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -117,7 +118,7 @@ LoadArwingConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "mat_precache"))
 			{
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
@@ -128,15 +129,15 @@ LoadArwingConfig(const String:sName[])
 			}
 			else if (StrEqual(sSectionName, "mod_download"))
 			{
-				new String:sExtensions[][] = { ".mdl", ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
+				char sExtensions[][] = { ".mdl", ".phy", ".dx80.vtx", ".dx90.vtx", ".sw.vtx", ".vvd" };
 				
-				for (new i = 1;; i++)
+				for (int i = 1;; i++)
 				{
 					IntToString(i, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sValue, sizeof(sValue));
 					if (!sValue[0]) break;
 					
-					for (new i2 = 0; i2 < sizeof(sExtensions); i2++)
+					for (int i2 = 0; i2 < sizeof(sExtensions); i2++)
 					{
 						Format(sDownload, sizeof(sDownload), "%s%s", sValue, sExtensions[i2]);
 						AddFileToDownloadsTable(sDownload);
@@ -150,9 +151,9 @@ LoadArwingConfig(const String:sName[])
 	SetTrieValue(g_hArwingConfigs, sName, hConfig);
 }
 
-RemoveArwingConfig(const String:sName[])
+void RemoveArwingConfig(const char[] sName)
 {
-	new Handle:hConfig = INVALID_HANDLE;
+	Handle hConfig = INVALID_HANDLE;
 	if (GetTrieValue(g_hArwingConfigs, sName, hConfig) && hConfig != INVALID_HANDLE)
 	{
 		CloseHandle(hConfig);
@@ -161,7 +162,7 @@ RemoveArwingConfig(const String:sName[])
 }
 
 // Code originally from FF2. Credits to the original authors Rainbolt Dash and FlaminSarge.
-stock bool:GetRandomStringFromArwingConfig(Handle:hConfig, const String:strKeyValue[], String:buffer[], bufferlen, index=-1)
+stock bool GetRandomStringFromArwingConfig(Handle hConfig, const char[] strKeyValue, char[] buffer, int bufferlen, int index=-1)
 {
 	strcopy(buffer, bufferlen, "");
 	
@@ -170,9 +171,9 @@ stock bool:GetRandomStringFromArwingConfig(Handle:hConfig, const String:strKeyVa
 	KvRewind(hConfig);
 	if (!KvJumpToKey(hConfig, strKeyValue)) return false;
 	
-	decl String:s[32], String:s2[PLATFORM_MAX_PATH];
+	char s[32], s2[PLATFORM_MAX_PATH];
 	
-	new i = 1;
+	int i = 1;
 	for (;;)
 	{
 		IntToString(i, s, sizeof(s));
@@ -189,44 +190,44 @@ stock bool:GetRandomStringFromArwingConfig(Handle:hConfig, const String:strKeyVa
 	return true;
 }
 
-stock Handle:GetArwingConfig(const String:sName[])
+stock Handle GetArwingConfig(const char[] sName)
 {
-	new Handle:hConfig = INVALID_HANDLE;
+	Handle hConfig = INVALID_HANDLE;
 	GetTrieValue(g_hArwingConfigs, sName, hConfig);
 	return hConfig;
 }
 
-stock Handle:GetConfigOfArwing(iArwing)
+stock Handle GetConfigOfArwing(int iArwing)
 {
 	if (!IsValidEntity(iArwing)) return INVALID_HANDLE;
 	
-	new entref = EntIndexToEntRef(iArwing);
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int entref = EntIndexToEntRef(iArwing);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return INVALID_HANDLE;
 	
-	decl String:sEntRef[256];
+	char sEntRef[256];
 	IntToString(entref, sEntRef, sizeof(sEntRef));
 	
-	new String:sName[64];
+	char sName[64];
 	GetTrieString(g_hArwingNames, sEntRef, sName, sizeof(sName));
 	if (!sName[0]) return INVALID_HANDLE;
 	
 	return GetArwingConfig(sName);
 }
 
-stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[3], const Float:flVelocity[3], &iIndex=-1)
+stock int SpawnArwing(const char[] sName, const float flPos[3], const float flAng[3], const float flVelocity[3], int &iIndex=-1)
 {
-	new Handle:hConfig = GetArwingConfig(sName);
+	Handle hConfig = GetArwingConfig(sName);
 	if (hConfig == INVALID_HANDLE)
 	{
 		LogError("Could not spawn arwing %s because the config is invalid!", sName);
 		return -1;
 	}
 
-	new iArwing = CreateEntityByName("prop_physics_override");
+	int iArwing = CreateEntityByName("prop_physics_override");
 	if (iArwing != -1)
 	{
-		decl String:sBuffer[PLATFORM_MAX_PATH];
+		char sBuffer[PLATFORM_MAX_PATH];
 		KvRewind(hConfig);
 		KvGetString(hConfig, "model", sBuffer, sizeof(sBuffer));
 		SetEntityModel(iArwing, sBuffer);
@@ -234,13 +235,13 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 		DispatchSpawn(iArwing);
 		ActivateEntity(iArwing);
 		Phys_SetMass(iArwing, KvGetFloat(hConfig, "mass", 100.0));
-		DispatchKeyValueFloat(iArwing, "physdamagescale", KvGetFloat(hConfig, "physdamagescale", 1.0))
+		DispatchKeyValueFloat(iArwing, "physdamagescale", KvGetFloat(hConfig, "physdamagescale", 1.0));
 		
 		DispatchKeyValue(iArwing, "classname", "sf64_vehicle_arwing");
 		
 		iIndex = PushArrayCell(g_hArwings, EntIndexToEntRef(iArwing));
 		
-		decl String:sEntRef[256];
+		char sEntRef[256];
 		IntToString(EntIndexToEntRef(iArwing), sEntRef, sizeof(sEntRef));
 		SetTrieString(g_hArwingNames, sEntRef, sName);
 		
@@ -257,12 +258,10 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 		SetArrayCell(g_hArwings, iIndex, -1, Arwing_PilotSequence);
 		SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_PilotSequenceStartTime);
 		SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_PilotSequenceEndTime);
+		SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_PilotHudLastTime);
 		SetArrayCell(g_hArwings, iIndex, 0, Arwing_Buttons);
+		SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_CrouchStartTime);
 		SetArrayCell(g_hArwings, iIndex, false, Arwing_IgnorePilotControls);
-		
-		SetArrayCell(g_hArwings, iIndex, false, Arwing_Intro);
-		SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_IntroStartTime);
-		SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_IntroEndTime);
 		
 		SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_Target);
 		
@@ -489,7 +488,7 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 				
 				SetArrayCell(g_hArwings, iIndex, KvGetNum(hConfig, "rolls", 1), Arwing_BarrelRollNum);
 				
-				decl Float:flOffset[3];
+				float flOffset[3];
 				KvGetVector(hConfig, "rotate_pos_offset", flOffset);
 				
 				SetArrayCell(g_hArwings, iIndex, flOffset[0], Arwing_BarrelRollRotatePosX);
@@ -511,10 +510,10 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 		KvRewind(hConfig);
 		if (KvJumpToKey(hConfig, "reticles") && KvGotoFirstSubKey(hConfig))
 		{
-			decl String:sType[64];
-			decl String:sMaterial[PLATFORM_MAX_PATH];
-			decl iReticle, iColor[4];
-			decl Float:flOffsetPos[3];
+			char sType[64];
+			char sMaterial[PLATFORM_MAX_PATH];
+			int iReticle, iColor[4];
+			float flOffsetPos[3];
 			
 			do
 			{
@@ -539,7 +538,7 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 							SetVariantInt(iColor[2]);
 							AcceptEntityInput(iReticle, "ColorBlueValue");
 							
-							decl String:sValue[64];
+							char sValue[64];
 							IntToString(KvGetNum(hConfig, "renderamt", 255), sValue, sizeof(sValue));
 							DispatchKeyValue(iReticle, "renderamt", sValue);
 							IntToString(KvGetNum(hConfig, "rendermode", 5), sValue, sizeof(sValue));
@@ -568,13 +567,13 @@ stock SpawnArwing(const String:sName[], const Float:flPos[3], const Float:flAng[
 	return iArwing;
 }
 
-EnableArwing(iArwing, bool:bForce=false)
+void EnableArwing(int iArwing, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed)) return;
-	if (!bForce && bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled)) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed))) return;
+	if (!bForce && view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_Enabled);
 	ResetArwingMove(iArwing);
@@ -591,26 +590,26 @@ EnableArwing(iArwing, bool:bForce=false)
 	ArwingSetEnergy(iArwing, GetArrayCell(g_hArwings, iIndex, Arwing_Energy), false);
 }
 
-ArwingSetHealth(iArwing, iAmount, bool:bCheckOldValue=true)
+void ArwingSetHealth(int iArwing, int iAmount, bool bCheckOldValue=true)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	new iOldAmount = GetArrayCell(g_hArwings, iIndex, Arwing_Health);
+	int iOldAmount = GetArrayCell(g_hArwings, iIndex, Arwing_Health);
 	if (bCheckOldValue && iAmount == iOldAmount) return;
 	
 	SetArrayCell(g_hArwings, iIndex, iAmount, Arwing_Health);
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return;
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	
-	new iMaxHealth = GetArrayCell(g_hArwings, iIndex, Arwing_MaxHealth);
-	new Float:flOldHealthPercent = float(iOldAmount) / float(iMaxHealth);
-	new Float:flHealthPercent = float(iAmount) / float(iMaxHealth);
+	int iMaxHealth = GetArrayCell(g_hArwings, iIndex, Arwing_MaxHealth);
+	float flOldHealthPercent = float(iOldAmount) / float(iMaxHealth);
+	float flHealthPercent = float(iAmount) / float(iMaxHealth);
 	
-	new iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
+	int iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
 	
 	if (flHealthPercent <= 0.75 && flOldHealthPercent > 0.75)
 	{
@@ -675,21 +674,21 @@ ArwingSetHealth(iArwing, iAmount, bool:bCheckOldValue=true)
 	ArwingUpdateHealthBar(iArwing);
 }
 
-ArwingSetEnergy(iArwing, iAmount, bool:bCheckOldValue=true)
+void ArwingSetEnergy(int iArwing, int iAmount, bool bCheckOldValue=true)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	new iOldEnergyAmount = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
+	int iOldEnergyAmount = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
 	if (bCheckOldValue && iAmount == iOldEnergyAmount) return;
 	
 	SetArrayCell(g_hArwings, iIndex, iAmount, Arwing_Energy);
 	
-	new iMaxEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy);
+	int iMaxEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy);
 	
 	if ((!bCheckOldValue || iOldEnergyAmount < iMaxEnergy) && iAmount >= iMaxEnergy)
 	{
-		if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled))
+		if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled)))
 		{
 			ArwingSpawnEffects(iArwing, EffectEvent_ArwingFullEnergy);
 			TurnOnEffectsOfEntityOfEvent(iArwing, EffectEvent_ArwingFullEnergy);
@@ -701,12 +700,12 @@ ArwingSetEnergy(iArwing, iAmount, bool:bCheckOldValue=true)
 	}
 }
 
-DisableArwing(iArwing, bool:bForce=false)
+void DisableArwing(int iArwing, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bForce && !bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled)) return;
+	if (!bForce && !view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_Enabled);
 	ResetArwingMove(iArwing);
@@ -728,10 +727,10 @@ DisableArwing(iArwing, bool:bForce=false)
 	RemoveEffectsFromEntityOfEvent(iArwing, EffectEvent_ArwingFullEnergy);
 	
 	// Sounds.
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig != INVALID_HANDLE)
 	{
-		decl String:sPath[PLATFORM_MAX_PATH];
+		char sPath[PLATFORM_MAX_PATH];
 		if (GetRandomStringFromArwingConfig(hConfig, "sound_flyloop", sPath, sizeof(sPath), 1) && sPath[0])
 		{
 			StopSound(iArwing, SNDCHAN_STATIC, sPath);
@@ -739,18 +738,18 @@ DisableArwing(iArwing, bool:bForce=false)
 	}
 }
 
-InsertPilotIntoArwing(iArwing, iPilot, bool:bImmediate=false)
+void InsertPilotIntoArwing(int iArwing, int iPilot, bool bImmediate=false)
 {
 	if (!IsValidEntity(iPilot)) return;
 
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed)) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed))) return;
 	
 	DebugMessage("InsertPilotIntoArwing START (%d, %d)", iArwing, iPilot);
 	
-	new iMyPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
+	int iMyPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
 	if (iMyPilot && iMyPilot != INVALID_ENT_REFERENCE) return;
 	
 	if (IsValidClient(iPilot))
@@ -767,12 +766,12 @@ InsertPilotIntoArwing(iArwing, iPilot, bool:bImmediate=false)
 	DebugMessage("InsertPilotIntoArwing END (%d, %d)", iArwing, iPilot);
 }
 
-EjectPilotFromArwing(iArwing, bool:bImmediate=false)
+void EjectPilotFromArwing(int iArwing, bool bImmediate=false)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	new iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
+	int iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
 	if (!iPilot || iPilot == INVALID_ENT_REFERENCE) return;
 	
 	DebugMessage("EjectPilotFromArwing START (%d)", iArwing);
@@ -785,12 +784,12 @@ EjectPilotFromArwing(iArwing, bool:bImmediate=false)
 	DebugMessage("EjectPilotFromArwing END (%d)", iArwing);
 }
 
-stock GetArwing(ent, &iIndex=-1)
+stock int GetArwing(int ent, int &iIndex=-1)
 {
 	if (!IsValidEntity(ent)) return -1;
 
-	decl iArwing;
-	for (new i = 0, iSize = GetArraySize(g_hArwings); i < iSize; i++)
+	int iArwing;
+	for (int i = 0, iSize = GetArraySize(g_hArwings); i < iSize; i++)
 	{
 		iArwing = EntRefToEntIndex(GetArrayCell(g_hArwings, i));
 		if (!iArwing || iArwing == INVALID_ENT_REFERENCE) continue;
@@ -806,33 +805,33 @@ stock GetArwing(ent, &iIndex=-1)
 }
 
 
-ResetArwingLaser(iArwing)
+void ResetArwingLaser(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
 	SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_NextLaserAttackTime);
 }
 
-ResetArwingMove(iArwing)
+void ResetArwingMove(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
 	SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_ForwardMove);
 	SetArrayCell(g_hArwings, iIndex, 0.0, Arwing_SideMove);
 }
 
-ArwingStartTilt(iArwing, Float:flDesiredDirection)
+void ArwingStartTilt(int iArwing, float flDesiredDirection)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled))) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InTilt)) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InTilt))) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return;
 	
 	KvRewind(hConfig);
@@ -842,39 +841,39 @@ ArwingStartTilt(iArwing, Float:flDesiredDirection)
 	SetArrayCell(g_hArwings, iIndex, flDesiredDirection, Arwing_TiltDirection);
 }
 
-ArwingStopTilt(iArwing)
+void ArwingStopTilt(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_InTilt)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InTilt))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InTilt);
 }
 
-ArwingStartBarrelRoll(iArwing, Float:flDesiredDirection)
+void ArwingStartBarrelRoll(int iArwing, float flDesiredDirection)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled))) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll)) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll))) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_HasBarrelRollAbility)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_HasBarrelRollAbility))) return;
 	
 	if (GetGameTime() < GetArrayCell(g_hArwings, iIndex, Arwing_NextBarrelRollTime)) return;
 	
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_InBarrelRoll);
 	SetArrayCell(g_hArwings, iIndex, flDesiredDirection, Arwing_BarrelRollDirection);
 	
-	new iPropEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
+	int iPropEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
 	if (iPropEnt && iPropEnt != INVALID_ENT_REFERENCE)
 	{
 		DeleteEntity(iPropEnt);
 	}
 	
-	new iRotateEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotateEnt));
+	int iRotateEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotateEnt));
 	if (iRotateEnt && iRotateEnt != INVALID_ENT_REFERENCE)
 	{
 		DeleteEntity(iRotateEnt);
@@ -886,14 +885,14 @@ ArwingStartBarrelRoll(iArwing, Float:flDesiredDirection)
 	iRotateEnt = CreateEntityByName("prop_dynamic_override");
 	if (iRotateEnt != -1)
 	{
-		decl Float:flArwingPos[3], Float:flArwingAng[3];
+		float flArwingPos[3], flArwingAng[3];
 		GetEntPropVector(iArwing, Prop_Data, "m_vecAbsOrigin", flArwingPos);
 		GetEntPropVector(iArwing, Prop_Data, "m_angAbsRotation", flArwingAng);
 		
-		decl Float:flRotatePos[3];
-		flRotatePos[0] = Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotatePosX);
-		flRotatePos[1] = Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotatePosY);
-		flRotatePos[2] = Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotatePosZ);
+		float flRotatePos[3];
+		flRotatePos[0] = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotatePosX));
+		flRotatePos[1] = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotatePosY));
+		flRotatePos[2] = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotatePosZ));
 		
 		VectorTransform(flRotatePos, flArwingPos, flArwingAng, flRotatePos);
 		
@@ -902,7 +901,7 @@ ArwingStartBarrelRoll(iArwing, Float:flDesiredDirection)
 		ActivateEntity(iRotateEnt);
 		TeleportEntity(iRotateEnt, flRotatePos, flArwingAng, NULL_VECTOR);
 		
-		new iTrailEnt = CreateEntityByName("env_spritetrail");
+		int iTrailEnt = CreateEntityByName("env_spritetrail");
 		if (iTrailEnt != -1)
 		{
 			//DispatchKeyValue(iTrailEnt, "spritename", ARWING_LASER_TRAIL_MATERIAL);
@@ -925,7 +924,7 @@ ArwingStartBarrelRoll(iArwing, Float:flDesiredDirection)
 		iPropEnt = CreateEntityByName("prop_dynamic_override");
 		if (iPropEnt != -1)
 		{
-			decl String:sModel[PLATFORM_MAX_PATH];
+			char sModel[PLATFORM_MAX_PATH];
 			GetEntPropString(iArwing, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
 			
 			SetEntityModel(iPropEnt, sModel);
@@ -946,8 +945,8 @@ ArwingStartBarrelRoll(iArwing, Float:flDesiredDirection)
 		}
 	}
 	
-	CreateTimer(Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDuration), Timer_ArwingStopBarrelRoll, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
-	SetArrayCell(g_hArwings, iIndex, GetGameTime() + Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollCooldown), Arwing_NextBarrelRollTime);
+	CreateTimer(view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDuration)), Timer_ArwingStopBarrelRoll, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
+	SetArrayCell(g_hArwings, iIndex, GetGameTime() + view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollCooldown)), Arwing_NextBarrelRollTime);
 	SetArrayCell(g_hArwings, iIndex, GetGameTime(), Arwing_LastBarrelRollTime);
 	
 	ArwingParentMyEffectsToSelfOfEvent(iArwing, EffectEvent_All);
@@ -955,20 +954,22 @@ ArwingStartBarrelRoll(iArwing, Float:flDesiredDirection)
 	TurnOnEffectsOfEntityOfEvent(iArwing, EffectEvent_ArwingBarrelRoll);
 }
 
-stock ArwingParentMyEffectsToSelfOfEvent(iArwing, EffectEvent:iEvent, bool:bIgnoreKill=false)
+stock void ArwingParentMyEffectsToSelfOfEvent(int iArwing, EffectEvent iEvent, bool bIgnoreKill=false)
 {
-	decl iEffect, iEffectOwner, EffectEvent:iEffectEvent;
-	for (new i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
+	int iEffect, iEffectOwner;
+	EffectEvent iEffectEvent;
+
+	for (int i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
 	{
 		iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, i));
 		if (!iEffect || iEffect == INVALID_ENT_REFERENCE) continue;
 		
-		if (!bIgnoreKill && bool:GetArrayCell(g_hEffects, i, Effect_InKill)) continue;
+		if (!bIgnoreKill && view_as<bool>(GetArrayCell(g_hEffects, i, Effect_InKill))) continue;
 		
 		iEffectOwner = EntRefToEntIndex(GetArrayCell(g_hEffects, i, Effect_Owner));
 		if (!iEffectOwner || iEffectOwner == INVALID_ENT_REFERENCE || iEffectOwner != iArwing) return;
 		
-		iEffectEvent = EffectEvent:GetArrayCell(g_hEffects, i, Effect_Event);
+		iEffectEvent = view_as<EffectEvent>(GetArrayCell(g_hEffects, i, Effect_Event));
 		if (iEvent == EffectEvent_All || iEffectEvent == iEvent)
 		{
 			ArwingParentMyEffectToSelf(iArwing, i);
@@ -976,12 +977,12 @@ stock ArwingParentMyEffectsToSelfOfEvent(iArwing, EffectEvent:iEvent, bool:bIgno
 	}
 }
 
-public Action:Timer_ArwingBarrelRoll(Handle:timer, any:entref)
+public Action Timer_ArwingBarrelRoll(Handle timer, any entref)
 {
-	new iEnt = EntRefToEntIndex(entref);
+	int iEnt = EntRefToEntIndex(entref);
 	if (!iEnt || iEnt == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	decl Float:flAng[3]; // Get angles local to parent.
+	float flAng[3]; // Get angles local to parent.
 	GetEntPropVector(iEnt, Prop_Data, "m_angRotation", flAng);
 	flAng[2] -= 150.0;
 	flAng[2] = AngleNormalize(flAng[2]);
@@ -990,29 +991,29 @@ public Action:Timer_ArwingBarrelRoll(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-public Action:Timer_ArwingStopBarrelRoll(Handle:timer, any:entref)
+public Action Timer_ArwingStopBarrelRoll(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return;
 	
 	ArwingStopBarrelRoll(iArwing);
 }
 
-ArwingStopBarrelRoll(iArwing)
+void ArwingStopBarrelRoll(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InBarrelRoll);
 	
 	VehicleParentMyEffectsToSelfOfEvent(iArwing, EffectEvent_All);
 	
-	new iEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
+	int iEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
 	if (iEnt && iEnt != INVALID_ENT_REFERENCE)
 	{
 		DeleteEntity(iEnt);
@@ -1032,25 +1033,25 @@ ArwingStopBarrelRoll(iArwing)
 	RemoveEffectsFromEntityOfEvent(iArwing, EffectEvent_ArwingBarrelRoll);
 }
 
-ArwingStartUTurn(iArwing, bool:bForce=false)
+void ArwingStartUTurn(int iArwing, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_Obliterated)) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Obliterated))) return;
 	
-	if (!bForce && (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBoost) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBrake)))
+	if (!bForce && (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBoost)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBrake))))
 	{
 		return;
 	}
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_HasUTurnAbility)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_HasUTurnAbility))) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return; // Highly unlikely that this will happen.
 	
 	if (!bForce && GetArrayCell(g_hArwings, iIndex, Arwing_Energy) < GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy)) return;
@@ -1058,23 +1059,23 @@ ArwingStartUTurn(iArwing, bool:bForce=false)
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_InUTurn);
 	SetArrayCell(g_hArwings, iIndex, GetGameTime(), Arwing_LastUTurnTime);
 	
-	new Handle:hTimer = CreateTimer(Float:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnEnergyBurnRate), Timer_ArwingUTurnBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	Handle hTimer = CreateTimer(view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnEnergyBurnRate)), Timer_ArwingUTurnBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_UTurnEnergyBurnTimer);
 	TriggerTimer(hTimer, true);
 	
 	// Set to phase 1. The semi-somersault.
 	SetArrayCell(g_hArwings, iIndex, 1, Arwing_UTurnPhase);
-	hTimer = CreateTimer(Float:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnSomersaultDuration), Timer_ArwingUTurnPhaseOne, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
+	hTimer = CreateTimer(view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnSomersaultDuration)), Timer_ArwingUTurnPhaseOne, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_UTurnPhaseTimer);
 	
-	hTimer = CreateTimer(Float:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnDuration), Timer_ArwingStopUTurn, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
+	hTimer = CreateTimer(view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnDuration)), Timer_ArwingStopUTurn, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_UTurnTimer);
 	
-	decl Float:flArwingAng[3];
+	float flArwingAng[3];
 	GetEntPropVector(iArwing, Prop_Data, "m_angAbsRotation", flArwingAng);
 	SetArrayCell(g_hArwings, iIndex, flArwingAng[1], Arwing_UTurnYawAngle);
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	if (GetRandomStringFromArwingConfig(hConfig, "sound_uturn_somersault", sPath, sizeof(sPath)) && sPath[0])
 	{
 		EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -1084,17 +1085,17 @@ ArwingStartUTurn(iArwing, bool:bForce=false)
 	TurnOnEffectsOfEntityOfEvent(iArwing, EffectEvent_ArwingUTurn);
 }
 
-public Action:Timer_ArwingUTurnBurnEnergy(Handle:timer, any:entref)
+public Action Timer_ArwingUTurnBurnEnergy(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnEnergyBurnTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnEnergyBurnTimer))) return Plugin_Stop;
 	
-	new iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
+	int iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
 	if (iEnergy > 0)
 	{
 		ArwingSetEnergy(iArwing, iEnergy - 1);
@@ -1103,49 +1104,49 @@ public Action:Timer_ArwingUTurnBurnEnergy(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-public Action:Timer_ArwingUTurnPhaseOne(Handle:timer, any:entref)
+public Action Timer_ArwingUTurnPhaseOne(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnPhaseTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnPhaseTimer))) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return; // Highly unlikely that this will happen.
 	
 	// Set to phase two. The boost. This will last for the rest of the U-turn manuever.
 	SetArrayCell(g_hArwings, iIndex, 2, Arwing_UTurnPhase);
 	SetArrayCell(g_hArwings, iIndex, INVALID_HANDLE, Arwing_UTurnPhaseTimer);
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	if (GetRandomStringFromArwingConfig(hConfig, "sound_uturn_boost", sPath, sizeof(sPath)) && sPath[0])
 	{
 		EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
 	}
 }
 
-public Action:Timer_ArwingStopUTurn(Handle:timer, any:entref)
+public Action Timer_ArwingStopUTurn(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnTimer))) return;
 	
 	ArwingStopUTurn(iArwing);
 }
 
-ArwingStopUTurn(iArwing)
+void ArwingStopUTurn(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InUTurn);
 	SetArrayCell(g_hArwings, iIndex, INVALID_HANDLE, Arwing_UTurnEnergyBurnTimer);
@@ -1156,34 +1157,34 @@ ArwingStopUTurn(iArwing)
 	RemoveEffectsFromEntityOfEvent(iArwing, EffectEvent_ArwingUTurn);
 }
 
-ArwingStartBoost(iArwing)
+void ArwingStartBoost(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBoost) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBrake) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn))
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBoost)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBrake)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn)))
 	{
 		return;
 	}
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_HasBoostAbility)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_HasBoostAbility))) return;
 	
 	if (GetArrayCell(g_hArwings, iIndex, Arwing_Energy) < GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy)) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return;
 	
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_InBoost);
 	SetArrayCell(g_hArwings, iIndex, GetGameTime(), Arwing_LastBoostTime);
 	
-	new Handle:hTimer = CreateTimer(Float:GetArrayCell(g_hArwings, iIndex, Arwing_BoostEnergyBurnRate), Timer_ArwingBoostBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	Handle hTimer = CreateTimer(view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BoostEnergyBurnRate)), Timer_ArwingBoostBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_BoostEnergyBurnTimer);
 	TriggerTimer(hTimer, true);
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	if (GetRandomStringFromArwingConfig(hConfig, "sound_boost", sPath, sizeof(sPath)) && sPath[0])
 	{
 		EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -1193,12 +1194,12 @@ ArwingStartBoost(iArwing)
 	TurnOnEffectsOfEntityOfEvent(iArwing, EffectEvent_ArwingBoost);
 }
 
-ArwingStopBoost(iArwing)
+void ArwingStopBoost(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBoost)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBoost))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InBoost);
 	SetArrayCell(g_hArwings, iIndex, INVALID_HANDLE, Arwing_BoostEnergyBurnTimer);
@@ -1206,17 +1207,17 @@ ArwingStopBoost(iArwing)
 	RemoveEffectsFromEntityOfEvent(iArwing, EffectEvent_ArwingBoost);
 }
 
-public Action:Timer_ArwingBoostBurnEnergy(Handle:timer, any:entref)
+public Action Timer_ArwingBoostBurnEnergy(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_BoostEnergyBurnTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_BoostEnergyBurnTimer))) return Plugin_Stop;
 	
-	new iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
+	int iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
 	if (iEnergy <= 0)
 	{
 		ArwingStopBoost(iArwing);
@@ -1228,34 +1229,34 @@ public Action:Timer_ArwingBoostBurnEnergy(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-ArwingStartBrake(iArwing)
+void ArwingStartBrake(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBoost) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBrake) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn))
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBoost)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBrake)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn)))
 	{
 		return;
 	}
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_HasBrakeAbility)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_HasBrakeAbility))) return;
 	
 	if (GetArrayCell(g_hArwings, iIndex, Arwing_Energy) < GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy)) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return;
 	
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_InBrake);
 	SetArrayCell(g_hArwings, iIndex, GetGameTime(), Arwing_LastBrakeTime);
 	
-	new Handle:hTimer = CreateTimer(Float:GetArrayCell(g_hArwings, iIndex, Arwing_BrakeEnergyBurnRate), Timer_ArwingBrakeBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	Handle hTimer = CreateTimer(view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BrakeEnergyBurnRate)), Timer_ArwingBrakeBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_BrakeEnergyBurnTimer);
 	TriggerTimer(hTimer, true);
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	if (GetRandomStringFromArwingConfig(hConfig, "sound_brake", sPath, sizeof(sPath)) && sPath[0])
 	{
 		EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -1265,12 +1266,12 @@ ArwingStartBrake(iArwing)
 	TurnOnEffectsOfEntityOfEvent(iArwing, EffectEvent_ArwingBrake);
 }
 
-ArwingStopBrake(iArwing)
+void ArwingStopBrake(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBrake)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBrake))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InBrake);
 	SetArrayCell(g_hArwings, iIndex, INVALID_HANDLE, Arwing_BrakeEnergyBurnTimer);
@@ -1278,17 +1279,17 @@ ArwingStopBrake(iArwing)
 	RemoveEffectsFromEntityOfEvent(iArwing, EffectEvent_ArwingBrake);
 }
 
-public Action:Timer_ArwingBrakeBurnEnergy(Handle:timer, any:entref)
+public Action Timer_ArwingBrakeBurnEnergy(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_BrakeEnergyBurnTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_BrakeEnergyBurnTimer))) return Plugin_Stop;
 	
-	new iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
+	int iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
 	if (iEnergy <= 0)
 	{
 		ArwingStopBrake(iArwing);
@@ -1300,44 +1301,44 @@ public Action:Timer_ArwingBrakeBurnEnergy(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-ArwingStartSomersault(iArwing, bool:bIgnoreEnergy=false)
+void ArwingStartSomersault(int iArwing, bool bIgnoreEnergy=false)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBoost) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBrake) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn))
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBoost)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBrake)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn)))
 	{
 		return;
 	}
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_HasSomersaultAbility)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_HasSomersaultAbility))) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return;
 	
 	if (!bIgnoreEnergy && GetArrayCell(g_hArwings, iIndex, Arwing_Energy) < GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy)) return;
 	
-	decl Float:flArwingPos[3], Float:flArwingAng[3];
+	float flArwingPos[3], flArwingAng[3];
 	GetEntPropVector(iArwing, Prop_Data, "m_vecAbsOrigin", flArwingPos);
 	GetEntPropVector(iArwing, Prop_Data, "m_angAbsRotation", flArwingAng);
 	
-	new Float:flCurTime = GetGameTime();
-	new Float:flDuration = Float:GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultDuration);
+	float flCurTime = GetGameTime();
+	float flDuration = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultDuration));
 	
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_InSomersault);
 	SetArrayCell(g_hArwings, iIndex, flCurTime, Arwing_LastSomersaultTime);
 	SetArrayCell(g_hArwings, iIndex, flArwingAng[1], Arwing_SomersaultYawAngle);
 	
-	new Handle:hTimer = CreateTimer(Float:GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultEnergyBurnRate), Timer_ArwingSomersaultBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	Handle hTimer = CreateTimer(view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultEnergyBurnRate)), Timer_ArwingSomersaultBurnEnergy, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_SomersaultEnergyBurnTimer);
 	
 	hTimer = CreateTimer(flDuration, Timer_ArwingStopSomersault, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_SomersaultTimer);
 	
-	decl String:sPath[PLATFORM_MAX_PATH];
+	char sPath[PLATFORM_MAX_PATH];
 	if (GetRandomStringFromArwingConfig(hConfig, "sound_somersault", sPath, sizeof(sPath)) && sPath[0])
 	{
 		EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -1347,17 +1348,17 @@ ArwingStartSomersault(iArwing, bool:bIgnoreEnergy=false)
 	TurnOnEffectsOfEntityOfEvent(iArwing, EffectEvent_ArwingSomersault);
 }
 
-public Action:Timer_ArwingSomersaultBurnEnergy(Handle:timer, any:entref)
+public Action Timer_ArwingSomersaultBurnEnergy(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultEnergyBurnTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultEnergyBurnTimer))) return Plugin_Stop;
 	
-	new iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
+	int iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
 	if (iEnergy > 0)
 	{
 		ArwingSetEnergy(iArwing, iEnergy - 1);
@@ -1366,25 +1367,25 @@ public Action:Timer_ArwingSomersaultBurnEnergy(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-public Action:Timer_ArwingStopSomersault(Handle:timer, any:entref)
+public Action Timer_ArwingStopSomersault(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultTimer))) return;
 	
 	ArwingStopSomersault(iArwing);
 }
 
-ArwingStopSomersault(iArwing)
+void ArwingStopSomersault(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InSomersault);
 	SetArrayCell(g_hArwings, iIndex, INVALID_HANDLE, Arwing_SomersaultEnergyBurnTimer);
@@ -1393,14 +1394,14 @@ ArwingStopSomersault(iArwing)
 	RemoveEffectsFromEntityOfEvent(iArwing, EffectEvent_ArwingSomersault);
 }
 
-ArwingRemoveHealthBar(iArwing)
+void ArwingRemoveHealthBar(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
 	// No health bar entities? Initialize them.
-	new iHealthBarStartEntity = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_HealthBarStartEntity));
-	new iHealthBarEndEntity = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_HealthBarEndEntity));
+	int iHealthBarStartEntity = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_HealthBarStartEntity));
+	int iHealthBarEndEntity = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_HealthBarEndEntity));
 	
 	if ((!iHealthBarStartEntity || iHealthBarStartEntity == INVALID_ENT_REFERENCE) ||
 		(!iHealthBarEndEntity || iHealthBarEndEntity == INVALID_ENT_REFERENCE))
@@ -1414,21 +1415,21 @@ ArwingRemoveHealthBar(iArwing)
 	SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_HealthBarEndEntity);
 }
 
-public bool:OnClientEnterArwing(client, iArwing, bool:bImmediate)
+public bool OnClientEnterArwing(int client, int iArwing, bool bImmediate)
 {
 	if (!IsValidClient(client) || !IsValidEntity(iArwing)) return false;
 	
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return false;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return false;
 	
 	// Set up the camera first.
-	new iCamera = CreateEntityByName("point_viewcontrol");
+	int iCamera = CreateEntityByName("point_viewcontrol");
 	if (iCamera != -1)
 	{
-		decl Float:flCameraPos[3], Float:flCameraAng[3];
+		float flCameraPos[3], flCameraAng[3];
 		GetClientEyePosition(client, flCameraPos);
 		GetClientEyeAngles(client, flCameraAng);
 		TeleportEntity(iCamera, flCameraPos, flCameraAng, NULL_VECTOR);
@@ -1445,14 +1446,14 @@ public bool:OnClientEnterArwing(client, iArwing, bool:bImmediate)
 		SetArrayCell(g_hArwings, iIndex, true, Arwing_InPilotSequence);
 	
 		// Set up the fake model.
-		new iFakeModel = CreateEntityByName("prop_dynamic_override");
+		int iFakeModel = CreateEntityByName("prop_dynamic_override");
 		if (iFakeModel != -1)
 		{
-			decl Float:flPos[3], Float:flAng[3];
+			float flPos[3], flAng[3];
 			GetClientAbsOrigin(client, flPos);
 			GetClientAbsAngles(client, flAng);
 			
-			decl String:sModel[PLATFORM_MAX_PATH];
+			char sModel[PLATFORM_MAX_PATH];
 			GetEntPropString(client, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
 			SetEntityModel(iFakeModel, sModel);
 			TeleportEntity(iFakeModel, flPos, flAng, NULL_VECTOR);
@@ -1470,7 +1471,7 @@ public bool:OnClientEnterArwing(client, iArwing, bool:bImmediate)
 			SetEntPropFloat(iFakeModel, Prop_Send, "m_flModelScale", GetEntPropFloat(client, Prop_Send, "m_flModelScale"));
 			
 			// Attach dummy trail to enable movement.
-			new iTrailEnt = CreateEntityByName("env_spritetrail");
+			int iTrailEnt = CreateEntityByName("env_spritetrail");
 			if (iTrailEnt != -1)
 			{
 				DispatchSpawn(iTrailEnt);
@@ -1479,9 +1480,9 @@ public bool:OnClientEnterArwing(client, iArwing, bool:bImmediate)
 				AcceptEntityInput(iTrailEnt, "SetParent", iFakeModel);
 			}
 			
-			SetEntPropVector(iFakeModel, Prop_Data, "m_vecAngVelocity", Float:{ 720.0, 0.0, 0.0 });
+			SetEntPropVector(iFakeModel, Prop_Data, "m_vecAngVelocity", view_as<float>({ 720.0, 0.0, 0.0 }));
 			
-			new iFlags = GetEntProp(client, Prop_Send, "m_fEffects");
+			int iFlags = GetEntProp(client, Prop_Send, "m_fEffects");
 			if (!(iFlags & 1)) iFlags |= 1;
 			if (!(iFlags & iFlags)) iFlags |= 512;
 			SetEntProp(client, Prop_Send, "m_fEffects", iFlags);
@@ -1493,14 +1494,14 @@ public bool:OnClientEnterArwing(client, iArwing, bool:bImmediate)
 			
 			SetArrayCell(g_hArwings, iIndex, EntIndexToEntRef(iFakeModel), Arwing_FakePilotModel);
 			
-			TeleportEntity(iFakeModel, NULL_VECTOR, NULL_VECTOR, Float:{ 0.0, 0.0, 1200.0 });
+			TeleportEntity(iFakeModel, NULL_VECTOR, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 1200.0 }));
 			
-			decl Float:flOffset[3];
+			float flOffset[3];
 			KvRewind(hConfig);
 			KvGetVector(hConfig, "pilot_player_pos_offset", flOffset);
 			
-			new Handle:hPack;
-			new Handle:hTimer = CreateDataTimer(0.01, Timer_FakePilotModelMoveToOffsetOfEntity, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+			Handle hPack;
+			Handle hTimer = CreateDataTimer(0.01, Timer_FakePilotModelMoveToOffsetOfEntity, hPack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 			WritePackCell(hPack, EntIndexToEntRef(iFakeModel));
 			WritePackCell(hPack, EntIndexToEntRef(iArwing));
 			WritePackFloat(hPack, flOffset[0]);
@@ -1525,7 +1526,7 @@ public bool:OnClientEnterArwing(client, iArwing, bool:bImmediate)
 	TF2_RemovePlayerDisguise(client);
 	
 	// Remove default TF2 hud elements.
-	new iHideHud = GetEntProp(client, Prop_Send, "m_iHideHUD");
+	int iHideHud = GetEntProp(client, Prop_Send, "m_iHideHUD");
 	iHideHud |= HIDEHUD_HEALTH;
 	iHideHud |= HIDEHUD_WEAPONSELECTION;
 	iHideHud |= HIDEHUD_INVEHICLE;
@@ -1543,12 +1544,12 @@ public bool:OnClientEnterArwing(client, iArwing, bool:bImmediate)
 	return true;
 }
 
-public OnClientEnterArwingPost(client, iArwing)
+public void OnClientEnterArwingPost(int client, int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return;
 	
 	g_hPlayerVehicleSequenceTimer[client] = INVALID_HANDLE;
@@ -1556,7 +1557,7 @@ public OnClientEnterArwingPost(client, iArwing)
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InPilotSequence);
 	
 	// Remove fake model.
-	new iFakeModel = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_FakePilotModel));
+	int iFakeModel = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_FakePilotModel));
 	if (iFakeModel && iFakeModel != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(client, "ClearParent");
@@ -1564,11 +1565,11 @@ public OnClientEnterArwingPost(client, iArwing)
 	}
 	
 	// Place the player in our offset position.
-	decl Float:flPos[3], Float:flArwingPos[3], Float:flArwingAng[3];
+	float flPos[3], flArwingPos[3], flArwingAng[3];
 	GetEntPropVector(iArwing, Prop_Data, "m_vecAbsOrigin", flArwingPos);
 	GetEntPropVector(iArwing, Prop_Data, "m_angAbsRotation", flArwingAng);
 	
-	new iFlags = GetEntProp(client, Prop_Send, "m_fEffects");
+	int iFlags = GetEntProp(client, Prop_Send, "m_fEffects");
 	if (iFlags & 1) iFlags &= ~1;
 	if (iFlags & 512) iFlags &= ~512;
 	SetEntProp(client, Prop_Send, "m_fEffects", iFlags);
@@ -1578,7 +1579,7 @@ public OnClientEnterArwingPost(client, iArwing)
 	
 	KvRewind(hConfig);
 	KvGetVector(hConfig, "pilot_player_pos_offset", flPos);
-	TeleportEntity(client, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
+	TeleportEntity(client, flPos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 	
 	SetEntProp(client, Prop_Data, "m_takedamage", 0);
 	SetEntityMoveType(client, MOVETYPE_NONE);
@@ -1594,17 +1595,17 @@ public OnClientEnterArwingPost(client, iArwing)
 	EnableArwing(iArwing);
 }
 
-public OnClientExitArwing(client, iArwing, bool:bImmediate)
+public void OnClientExitArwing(int client, int iArwing, bool bImmediate)
 {
 	if (!IsValidClient(client)) return;
 	
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
 	// Remove all my hud elements.
-	decl iHudElement;
-	new Handle:hArray = CloneArray(g_hHudElements);
-	for (new i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
+	int iHudElement;
+	Handle hArray = CloneArray(g_hHudElements);
+	for (int i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
 	{
 		iHudElement = EntRefToEntIndex(GetArrayCell(hArray, i));
 		if (!iHudElement || iHudElement == INVALID_ENT_REFERENCE) continue;
@@ -1616,7 +1617,7 @@ public OnClientExitArwing(client, iArwing, bool:bImmediate)
 	
 	CloseHandle(hArray);
 	
-	new iCamera = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_CameraEnt));
+	int iCamera = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_CameraEnt));
 	if (iCamera && iCamera != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(iCamera, "Disable");
@@ -1625,7 +1626,7 @@ public OnClientExitArwing(client, iArwing, bool:bImmediate)
 	
 	SetArrayCell(g_hArwings, iIndex, INVALID_ENT_REFERENCE, Arwing_CameraEnt);
 	
-	new iFakeModel = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_FakePilotModel));
+	int iFakeModel = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_FakePilotModel));
 	if (iFakeModel && iFakeModel != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(client, "ClearParent");
@@ -1640,7 +1641,7 @@ public OnClientExitArwing(client, iArwing, bool:bImmediate)
 	SetEntityRenderMode(client, RENDER_TRANSCOLOR);
 	SetEntityRenderColor(client, 255, 255, 255, 255);
 	
-	new iHideHud = GetEntProp(client, Prop_Send, "m_iHideHUD");
+	int iHideHud = GetEntProp(client, Prop_Send, "m_iHideHUD");
 	iHideHud &= ~HIDEHUD_HEALTH;
 	iHideHud &= ~HIDEHUD_WEAPONSELECTION;
 	iHideHud &= ~HIDEHUD_INVEHICLE;
@@ -1651,9 +1652,9 @@ public OnClientExitArwing(client, iArwing, bool:bImmediate)
 	// Turn this off.
 	DisableArwing(iArwing);
 	
-	for (new i = 0; i <= 5; i++)
+	for (int i = 0; i <= 5; i++)
 	{
-		new iWeapon = GetPlayerWeaponSlot(client, i);
+		int iWeapon = GetPlayerWeaponSlot(client, i);
 		if (IsValidEntity(iWeapon))
 		{
 			SetEntityRenderMode(iWeapon, RENDER_NORMAL);
@@ -1666,52 +1667,47 @@ public OnClientExitArwing(client, iArwing, bool:bImmediate)
 	ClientSetFOV(client, RoundFloat(g_flPlayerDesiredFOV[client]));
 }
 
-public Hook_ArwingVPhysicsUpdate(iArwing)
+public void Hook_ArwingVPhysicsUpdate(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	decl Float:flAng[3], Float:flPos[3], Float:flVelocity[3], Float:flAngVelocity[3];
+	float flAng[3], flPos[3], flVelocity[3], flAngVelocity[3];
 	GetEntPropVector(iArwing, Prop_Data, "m_angAbsRotation", flAng);
 	GetEntPropVector(iArwing, Prop_Data, "m_vecAbsOrigin", flPos);
 	GetEntitySmoothedVelocity(iArwing, flVelocity);
 	GetEntPropVector(iArwing, Prop_Data, "m_vecAngVelocity", flAngVelocity);
 	
-	new bool:bEnabled = bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled);
+	bool bEnabled = view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled));
 	
-	new Float:flForwardMove = Float:GetArrayCell(g_hArwings, iIndex, Arwing_ForwardMove);
-	new Float:flSideMove = Float:GetArrayCell(g_hArwings, iIndex, Arwing_SideMove);
+	float flForwardMove = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_ForwardMove));
+	float flSideMove = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_SideMove));
 	
-	new Float:flPitchRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_PitchRate);
-	new Float:flYawRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_YawRate);
-	new Float:flRollRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_RollRate); 
+	float flPitchRate = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_PitchRate));
+	float flYawRate = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_YawRate));
+	float flRollRate = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_RollRate));
 	
-	new bool:bInIntro = bool:GetArrayCell(g_hArwings, iIndex, Arwing_Intro);
-	new Float:flIntroStartTime = Float:GetArrayCell(g_hArwings, iIndex, Arwing_IntroStartTime);
-	new Float:flIntroEndTime = Float:GetArrayCell(g_hArwings, iIndex, Arwing_IntroEndTime);
-	new Float:flTotalIntroTime = flIntroEndTime - flIntroStartTime;
+	bool bInBarrelRoll = view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll));
+	bool bInSomersault = view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault));
+	bool bInTilt = view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InTilt));
+	bool bDestroyed = view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed));
 	
-	new bool:bInBarrelRoll = bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll);
-	new bool:bInSomersault = bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault);
-	new bool:bInTilt = bool:GetArrayCell(g_hArwings, iIndex, Arwing_InTilt);
-	new bool:bDestroyed = bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed);
-	
-	new bool:bInUTurn = bool:GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn);
-	new iUTurnPhase = GetArrayCell(g_hArwings, iIndex, Arwing_UTurnPhase);
+	bool bInUTurn = view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn));
+	int iUTurnPhase = GetArrayCell(g_hArwings, iIndex, Arwing_UTurnPhase);
 	
 	if (bInBarrelRoll)
 	{
-		new iRotateEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotateEnt));
+		int iRotateEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollRotateEnt));
 		if (iRotateEnt && iRotateEnt != INVALID_ENT_REFERENCE)
 		{
-			decl Float:flRotateAng[3];
+			float flRotateAng[3];
 			GetEntPropVector(iRotateEnt, Prop_Data, "m_angRotation", flRotateAng); // get angles relative to parent
 			
-			new bool:bRotate = false;
+			bool bRotate = false;
 			
-			new iRollNum = GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollNum);
+			int iRollNum = GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollNum);
 			
-			new Float:flTargetRoll = -360.0 * Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDirection);
+			float flTargetRoll = -360.0 * view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDirection));
 			if (flTargetRoll > 0.0)
 			{
 				if (flRotateAng[2] < flTargetRoll * iRollNum)
@@ -1727,24 +1723,24 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 				}
 			}
 			
-			new Float:flDuration = Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDuration);
-			new Float:flStartTime = Float:GetArrayCell(g_hArwings, iIndex, Arwing_LastBarrelRollTime);
-			new Float:flEndTime = flStartTime + flDuration;
+			float flDuration = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDuration));
+			float flStartTime = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_LastBarrelRollTime));
+			float flEndTime = flStartTime + flDuration;
 			
 			if (GetGameTime() >= flEndTime) bRotate = false;
 			
 			if (bRotate)
 			{
-				new Float:flX = (GetGameTime() - flStartTime) / flDuration;
-				new Float:flFinalAngVelocity[3];
+				float flX = (GetGameTime() - flStartTime) / flDuration;
+				float flFinalAngVelocity[3];
 				flFinalAngVelocity[2] = (2.0 * flTargetRoll * float(iRollNum) * (1.0 - flX)) / flDuration;
 				SetEntPropVector(iRotateEnt, Prop_Data, "m_vecAngVelocity", flFinalAngVelocity);
 			}
 			else
 			{
-				new Float:flFinalAng[3];
+				float flFinalAng[3];
 				flFinalAng[2] = flTargetRoll * float(iRollNum);
-				SetEntPropVector(iRotateEnt, Prop_Data, "m_vecAngVelocity", Float:{ 0.0, 0.0, 0.0 });
+				SetEntPropVector(iRotateEnt, Prop_Data, "m_vecAngVelocity", view_as<float>({ 0.0, 0.0, 0.0 }));
 				SetEntPropVector(iRotateEnt, Prop_Data, "m_angRotation", flFinalAng);
 			}
 		}
@@ -1752,13 +1748,13 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 	
 	if (bEnabled)
 	{
-		new bool:bApplyVelocity = true;
-		new bool:bApplyAngVelocity = true;
+		bool bApplyVelocity = true;
+		bool bApplyAngVelocity = true;
 		
 		// Calculate the goal angular velocity we should be in.
 		// Calculate the move angular velocity, first as local to object in terms of angles.
-		decl Float:flMoveAngVelocity[3];
-		decl Float:flMoveGoalAng[3];
+		float flMoveAngVelocity[3];
+		float flMoveGoalAng[3];
 		
 		if (flForwardMove != 0.0)
 		{
@@ -1770,8 +1766,8 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 			flMoveGoalAng[0] = 0.0;
 		}
 		
-		new Float:flTiltDirection = Float:GetArrayCell(g_hArwings, iIndex, Arwing_TiltDirection);
-		new Float:flTiltTurnRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_TiltTurnRate);
+		float flTiltDirection = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_TiltDirection));
+		float flTiltTurnRate = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_TiltTurnRate));
 		
 		if (flSideMove != 0.0) 
 		{
@@ -1810,7 +1806,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		
 		if (bInTilt)
 		{
-			flMoveGoalAng[2] = AngleNormalize(-1.0 * Float:GetArrayCell(g_hArwings, iIndex, Arwing_TiltDegrees) * Float:GetArrayCell(g_hArwings, iIndex, Arwing_TiltDirection));
+			flMoveGoalAng[2] = AngleNormalize(-1.0 * view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_TiltDegrees)) * view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_TiltDirection)));
 		}
 		
 		if (bInUTurn)
@@ -1820,7 +1816,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		
 		if (bInSomersault)
 		{
-			flMoveAngVelocity[1] = Float:GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultAngleFactor);
+			flMoveAngVelocity[1] = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultAngleFactor));
 			flMoveAngVelocity[2] = 0.0;
 			flMoveAngVelocity[0] = 0.0;
 		}
@@ -1828,7 +1824,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		{
 			if (iUTurnPhase == 1)
 			{
-				flMoveAngVelocity[1] = Float:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnSomersaultAngleFactor);
+				flMoveAngVelocity[1] = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnSomersaultAngleFactor));
 				flMoveAngVelocity[0] = 0.0;
 			}
 			else if (iUTurnPhase == 2)
@@ -1841,13 +1837,13 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		}
 		else
 		{
-			new Float:flRollRadians = DegToRad(flAng[2]);
+			float flRollRadians = DegToRad(flAng[2]);
 		
 			flMoveAngVelocity[1] = (flMoveGoalAng[0] - flAng[0]) * flPitchRate;
 			flMoveAngVelocity[0] = (flMoveGoalAng[2] - flAng[2]) * flRollRate;
 			
 			// Adjust and rotate angular velocity to compensate for roll.
-			decl Float:flOldMoveAngVelocity[3];
+			float flOldMoveAngVelocity[3];
 			CopyVectors(flMoveAngVelocity, flOldMoveAngVelocity);
 			
 			flMoveAngVelocity[2] = (flOldMoveAngVelocity[2] * Cosine(flRollRadians)) - (flOldMoveAngVelocity[1] * Sine(flRollRadians));
@@ -1855,57 +1851,57 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		}
 		
 		// Are we in a damage sequence? Factor that in!
-		if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InDamageSequence))
+		if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InDamageSequence)))
 		{
-			new Float:flLastDamageSequenceTime = Float:GetArrayCell(g_hArwings, iIndex, Arwing_LastDamageSequenceTime);
-			new Float:flLastDamageSequenceUpdateTime = Float:GetArrayCell(g_hArwings, iIndex, Arwing_LastDamageSequenceUpdateTime);
-			new Float:flCurTime = GetGameTime();
+			float flLastDamageSequenceTime = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_LastDamageSequenceTime));
+			float flLastDamageSequenceUpdateTime = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_LastDamageSequenceUpdateTime));
+			float flCurTime = GetGameTime();
 			
 			if (flLastDamageSequenceUpdateTime > 0.0)
 			{
-				new Float:flLastScale = (150.0 * (1.0 - ((flLastDamageSequenceUpdateTime - flLastDamageSequenceTime) / 4.0))) * Sine(flLastDamageSequenceUpdateTime * 20.0);
+				float flLastScale = (150.0 * (1.0 - ((flLastDamageSequenceUpdateTime - flLastDamageSequenceTime) / 4.0))) * Sine(flLastDamageSequenceUpdateTime * 20.0);
 				flMoveAngVelocity[0] += flLastScale;
 			}
 			
-			new Float:flScale = (150.0 * (1.0 - ((flCurTime - flLastDamageSequenceTime) / 4.0))) * Sine(flCurTime * 20.0);
+			float flScale = (150.0 * (1.0 - ((flCurTime - flLastDamageSequenceTime) / 4.0))) * Sine(flCurTime * 20.0);
 			flMoveAngVelocity[0] += flScale;
 			
 			SetArrayCell(g_hArwings, iIndex, flCurTime, Arwing_LastDamageSequenceUpdateTime);
 		}
 		
 		// Calculate the goal velocity we should be in.
-		decl Float:flMoveGoalVelocity[3];
+		float flMoveGoalVelocity[3];
 		
 		GetAngleVectors(flAng, flMoveGoalVelocity, NULL_VECTOR, NULL_VECTOR);
 		NormalizeVector(flMoveGoalVelocity, flMoveGoalVelocity);
 		
-		if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBoost))
+		if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBoost)))
 		{
-			ScaleVector(flMoveGoalVelocity, Float:GetArrayCell(g_hArwings, iIndex, Arwing_BoostSpeed));
+			ScaleVector(flMoveGoalVelocity, view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BoostSpeed)));
 		}
-		else if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBrake))
+		else if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBrake)))
 		{
-			ScaleVector(flMoveGoalVelocity, Float:GetArrayCell(g_hArwings, iIndex, Arwing_BrakeSpeed));
+			ScaleVector(flMoveGoalVelocity, view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BrakeSpeed)));
 		}
 		else if (bInSomersault)
 		{
-			ScaleVector(flMoveGoalVelocity, Float:GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultSpeed));
+			ScaleVector(flMoveGoalVelocity, view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultSpeed)));
 		}
 		else if (bInUTurn && iUTurnPhase == 1)
 		{
-			ScaleVector(flMoveGoalVelocity, Float:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnSomersaultSpeed));
+			ScaleVector(flMoveGoalVelocity, view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnSomersaultSpeed)));
 		}
 		else if (bInUTurn && iUTurnPhase == 2)
 		{
-			ScaleVector(flMoveGoalVelocity, Float:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnBoostSpeed));
+			ScaleVector(flMoveGoalVelocity, view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnBoostSpeed)));
 		}
 		else
 		{
-			ScaleVector(flMoveGoalVelocity, Float:GetArrayCell(g_hArwings, iIndex, Arwing_MaxSpeed));
+			ScaleVector(flMoveGoalVelocity, view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_MaxSpeed)));
 		}
 		
-		decl Float:flMoveVelocity[3];
-		new Float:flAccelFactor = Float:GetArrayCell(g_hArwings, iIndex, Arwing_AccelFactor);
+		float flMoveVelocity[3];
+		float flAccelFactor = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_AccelFactor));
 		
 		// Calculate the move velocity, user input only.
 		flMoveVelocity[0] = flVelocity[0] + (flMoveGoalVelocity[0] - flVelocity[0]) * flAccelFactor;
@@ -1919,12 +1915,12 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		// Barrel roll stuff.
 		if (bInBarrelRoll)
 		{
-			new iEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
+			int iEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
 			if (iEnt && iEnt != INVALID_ENT_REFERENCE)
 			{
-				decl Float:flTargetAng[3]; // Get angles local to parent.
+				float flTargetAng[3]; // Get angles local to parent.
 				GetEntPropVector(iEnt, Prop_Data, "m_angRotation", flTargetAng);
-				flTargetAng[2] -= 20.0 * Float:GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDirection);
+				flTargetAng[2] -= 20.0 * view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollDirection));
 				flTargetAng[2] = AngleNormalize(flTargetAng[2]);
 				TeleportEntity(iEnt, NULL_VECTOR, flTargetAng, NULL_VECTOR);
 			}
@@ -1932,18 +1928,18 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		*/
 		
 		// Sound stuff.
-		new Handle:hConfig = GetConfigOfArwing(iArwing);
+		Handle hConfig = GetConfigOfArwing(iArwing);
 		if (hConfig != INVALID_HANDLE)
 		{
-			decl Float:flArwingVelocity[3];
+			float flArwingVelocity[3];
 			GetEntitySmoothedVelocity(iArwing, flArwingVelocity);
-			new Float:flSpeed = GetVectorLength(flArwingVelocity);
-			new Float:flMaxSpeed = Float:GetArrayCell(g_hArwings, iIndex, Arwing_MaxSpeed);
+			float flSpeed = GetVectorLength(flArwingVelocity);
+			float flMaxSpeed = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_MaxSpeed));
 			
-			decl String:sPath[PLATFORM_MAX_PATH];
+			char sPath[PLATFORM_MAX_PATH];
 			if (GetRandomStringFromArwingConfig(hConfig, "sound_flyloop", sPath, sizeof(sPath), 1) && sPath[0])
 			{
-				new iPitch = RoundFloat(100.0 * (flSpeed / flMaxSpeed));
+				int iPitch = RoundFloat(100.0 * (flSpeed / flMaxSpeed));
 				if (iPitch < 25) iPitch = 25;
 				else if (iPitch > 200) iPitch = 200;
 				
@@ -1953,31 +1949,31 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 	}
 	
 	// Camera stuff.
-	new iCamera = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_CameraEnt));
+	int iCamera = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_CameraEnt));
 	if (iCamera && iCamera != INVALID_ENT_REFERENCE)
 	{
-		decl Float:flCameraAng[3], Float:flCameraPos[3], Float:flCameraVelocity[3], Float:flCameraAngVelocity[3];
+		float flCameraAng[3], flCameraPos[3], flCameraVelocity[3], flCameraAngVelocity[3];
 		GetEntPropVector(iCamera, Prop_Data, "m_angAbsRotation", flCameraAng);
 		GetEntPropVector(iCamera, Prop_Data, "m_vecAbsOrigin", flCameraPos);
 		GetEntPropVector(iCamera, Prop_Data, "m_vecAbsVelocity", flCameraVelocity);
 		GetEntPropVector(iCamera, Prop_Data, "m_vecAngVelocity", flCameraAngVelocity);
 		
-		new Float:flCameraPitchRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_CameraPitchRate);
-		new Float:flCameraYawRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_CameraYawRate);
-		new Float:flCameraRollRate = Float:GetArrayCell(g_hArwings, iIndex, Arwing_CameraRollRate); 
-		new Float:flAngAccelFactor = Float:GetArrayCell(g_hArwings, iIndex, Arwing_CameraAngAccelFactor);
+		float flCameraPitchRate = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_CameraPitchRate));
+		float flCameraYawRate = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_CameraYawRate));
+		float flCameraRollRate = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_CameraRollRate)); 
+		float flAngAccelFactor = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_CameraAngAccelFactor));
 		
-		new Handle:hConfig = GetConfigOfArwing(iArwing);
+		Handle hConfig = GetConfigOfArwing(iArwing);
 		KvRewind(hConfig);
 		
-		new Float:flCameraMoveGoalAng[3];
-		decl Float:flCameraMoveAngVelocity[3];
-		decl Float:flCameraMoveGoalVelocity[3], Float:flCameraMoveGoalPos[3];
+		float flCameraMoveGoalAng[3];
+		float flCameraMoveAngVelocity[3];
+		float flCameraMoveGoalVelocity[3], flCameraMoveGoalPos[3];
 		
 		// Calculate goal angular velocity.
 		if (bInSomersault)
 		{
-			decl Float:flCameraAngSomersault[3];
+			float flCameraAngSomersault[3];
 			KvGetVector(hConfig, "camera_somersault_ang_offset", flCameraAngSomersault);
 			
 			SubtractVectors(flPos, flCameraPos, flCameraMoveGoalAng);
@@ -1986,7 +1982,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		}
 		else if (bInUTurn)
 		{
-			decl Float:flCameraAngUTurn[3];
+			float flCameraAngUTurn[3];
 			
 			if (iUTurnPhase == 1)
 			{
@@ -2010,7 +2006,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		{
 			if (bEnabled && flForwardMove != 0.0) 
 			{
-				decl Float:flCameraAngUpOrDown[3];
+				float flCameraAngUpOrDown[3];
 				
 				if (flForwardMove > 0.0) 
 				{
@@ -2030,7 +2026,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 			
 			if (bEnabled && flSideMove != 0.0)
 			{
-				decl Float:flCameraAngLeftOrRight[3];
+				float flCameraAngLeftOrRight[3];
 				
 				if (flSideMove > 0.0)
 				{
@@ -2041,15 +2037,15 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 					KvGetVector(hConfig, "camera_turn_left_ang_offset", flCameraAngLeftOrRight);
 				}
 				
-				for (new i = 0; i < 2; i++) flCameraMoveGoalAng[i] = AngleNormalize(flAng[i] + (flCameraAngLeftOrRight[i] * FloatAbs(flSideMove)));
+				for (int i = 0; i < 2; i++) flCameraMoveGoalAng[i] = AngleNormalize(flAng[i] + (flCameraAngLeftOrRight[i] * FloatAbs(flSideMove)));
 				flCameraMoveGoalAng[2] = (flCameraAngLeftOrRight[2] * FloatAbs(flSideMove));
 			}
 			else
 			{
-				decl Float:flCameraAngDefault[3];
+				float flCameraAngDefault[3];
 				KvGetVector(hConfig, "camera_default_ang_offset", flCameraAngDefault);
 				
-				for (new i = 0; i < 2; i++) flCameraMoveGoalAng[i] = AngleNormalize(flAng[i] + flCameraAngDefault[i]);
+				for (int i = 0; i < 2; i++) flCameraMoveGoalAng[i] = AngleNormalize(flAng[i] + flCameraAngDefault[i]);
 				flCameraMoveGoalAng[2] = flCameraAngDefault[2];
 			}
 		}
@@ -2067,11 +2063,11 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		
 		if (bInSomersault)
 		{
-			decl Float:flCameraPosSomersault[3], Float:flTempAng[3];
+			float flCameraPosSomersault[3], flTempAng[3];
 			KvGetVector(hConfig, "camera_somersault_pos_offset", flCameraPosSomersault);
 			CopyVectors(flAng, flTempAng);
 			flTempAng[0] = 0.0;
-			flTempAng[1] = Float:GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultYawAngle);
+			flTempAng[1] = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_SomersaultYawAngle));
 			flTempAng[2] = 0.0;
 			VectorTransform(flCameraPosSomersault, flPos, flTempAng, flCameraPosSomersault);
 			
@@ -2079,7 +2075,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		}
 		else if (bInUTurn)
 		{
-			decl Float:flCameraPosUTurn[3], Float:flTempAng[3];
+			float flCameraPosUTurn[3], flTempAng[3];
 			
 			if (iUTurnPhase == 1)
 			{
@@ -2092,7 +2088,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 			
 			CopyVectors(flAng, flTempAng);
 			flTempAng[0] = 0.0;
-			flTempAng[1] = Float:GetArrayCell(g_hArwings, iIndex, Arwing_UTurnYawAngle);
+			flTempAng[1] = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_UTurnYawAngle));
 			flTempAng[2] = 0.0;
 			VectorTransform(flCameraPosUTurn, flPos, flTempAng, flCameraPosUTurn);
 			
@@ -2104,7 +2100,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		}
 		else
 		{
-			decl Float:flCameraPosDefault[3], Float:flCameraPosTurnLeft[3], Float:flCameraPosTurnRight[3];
+			float flCameraPosDefault[3], flCameraPosTurnLeft[3], flCameraPosTurnRight[3];
 			KvGetVector(hConfig, "camera_default_pos_offset", flCameraPosDefault);
 			VectorTransform(flCameraPosDefault, flPos, flAng, flCameraPosDefault);
 			KvGetVector(hConfig, "camera_turn_left_pos_offset", flCameraPosTurnLeft);
@@ -2129,7 +2125,7 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 		ScaleVector(flCameraMoveGoalVelocity, GetVectorDistance(flCameraPos, flCameraMoveGoalPos) * 5.0);
 		
 		// Calculate real velocity.
-		decl Float:flCameraMoveVelocity[3];
+		float flCameraMoveVelocity[3];
 		
 		if (bInSomersault)
 		{
@@ -2145,34 +2141,34 @@ public Hook_ArwingVPhysicsUpdate(iArwing)
 	}
 }
 
-public Hook_ArwingOnTakeDamagePost(iArwing, attacker, inflictor, Float:damage, damagetype, weapon, const Float:damageForce[3], const Float:damagePosition[3])
+public void Hook_ArwingOnTakeDamagePost(int iArwing, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3])
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
 	DamageArwing(iArwing, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition);
 }
 
-public Action:Timer_ArwingRechargeEnergy(Handle:timer, any:entref)
+public Action Timer_ArwingRechargeEnergy(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (Handle:GetArrayCell(g_hArwings, iIndex, Arwing_EnergyRechargeTimer) != timer) return Plugin_Stop;
+	if (view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_EnergyRechargeTimer) != timer)) return Plugin_Stop;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBoost) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBrake) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn))
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBoost)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBrake)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InSomersault)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InUTurn)))
 	{
 		return Plugin_Continue;
 	}
 	
-	new iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
-	new iMaxEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy);
+	int iEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_Energy);
+	int iMaxEnergy = GetArrayCell(g_hArwings, iIndex, Arwing_MaxEnergy);
 	
 	if (iEnergy < iMaxEnergy)
 	{
@@ -2182,29 +2178,31 @@ public Action:Timer_ArwingRechargeEnergy(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-public Action:Timer_PlayerEnteredArwing(Handle:timer, any:userid)
+public Action Timer_PlayerEnteredArwing(Handle timer, any userid)
 {
-	new client = GetClientOfUserId(userid);
+	int client = GetClientOfUserId(userid);
 	if (client <= 0) return;
 	
 	if (timer != g_hPlayerVehicleSequenceTimer[client]) return;
 	
-	OnClientEnterArwingPost(client, GetArwing(client));
+	// Did the Arwing magically disappear before the enter sequence is finished?
+	int arwing = GetArwing(client);
+	if (arwing != -1) OnClientEnterArwingPost(client, arwing);
 }
 
-DestroyArwing(iArwing, iAttacker, iInflictor)
+void DestroyArwing(int iArwing, int iAttacker, int iInflictor)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed)) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed))) return;
 	
 	DebugMessage("DestroyArwing START (%d)", iArwing);
 	
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_Destroyed);
 	SetArrayCell(g_hArwings, iIndex, GetGameTime() + 0.5, Arwing_ObliterateTime);
 	
-	new iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
+	int iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
 	
 	EjectPilotFromArwing(iArwing);
 	DisableArwing(iArwing);
@@ -2220,10 +2218,10 @@ DestroyArwing(iArwing, iAttacker, iInflictor)
 	SetVariantFloat(100.0);
 	AcceptEntityInput(iArwing, "physdamagescale");
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig != INVALID_HANDLE)
 	{
-		decl String:sPath[PLATFORM_MAX_PATH];
+		char sPath[PLATFORM_MAX_PATH];
 		if (GetRandomStringFromArwingConfig(hConfig, "sound_destroyed", sPath, sizeof(sPath)) && sPath[0])
 		{
 			EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -2237,26 +2235,26 @@ DestroyArwing(iArwing, iAttacker, iInflictor)
 	DebugMessage("DestroyArwing END (%d)", iArwing);
 }
 
-public Action:Timer_ObliterateArwing(Handle:timer, any:entref)
+public Action Timer_ObliterateArwing(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return;
 	
 	ObliterateArwing(iArwing);
 }
 
-ObliterateArwing(iArwing)
+void ObliterateArwing(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed)) return;
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Obliterated)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed))) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Obliterated))) return;
 	
-	if (GetGameTime() < Float:GetArrayCell(g_hArwings, iIndex, Arwing_ObliterateTime)) return;
+	if (GetGameTime() < view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_ObliterateTime))) return;
 	
 	DebugMessage("ObliterateArwing START (%d)", iArwing);
 	
@@ -2268,10 +2266,10 @@ ObliterateArwing(iArwing)
 	SetEntityRenderMode(iArwing, RENDER_TRANSCOLOR);
 	SetEntityRenderColor(iArwing, 0, 0, 0, 1);
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig != INVALID_HANDLE)
 	{
-		decl String:sPath[PLATFORM_MAX_PATH];
+		char sPath[PLATFORM_MAX_PATH];
 		if (GetRandomStringFromArwingConfig(hConfig, "sound_obliterated", sPath, sizeof(sPath)) && sPath[0])
 		{
 			EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -2284,17 +2282,17 @@ ObliterateArwing(iArwing)
 	DebugMessage("ObliterateArwing END (%d)", iArwing);
 }
 
-public DamageArwing(iArwing, iAttacker, iInflictor, Float:flDamage, iDamageType, iWeapon, const Float:flDamageForce[3], const Float:flDamagePosition[3])
+public void DamageArwing(int iArwing, int iAttacker, int iInflictor, float flDamage, int iDamageType, int iWeapon, const float flDamageForce[3], const float flDamagePosition[3])
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Obliterated))
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Obliterated)))
 	{
 		return;
 	}
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed))
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed)))
 	{
 		ObliterateArwing(iArwing);
 		return;
@@ -2304,14 +2302,14 @@ public DamageArwing(iArwing, iAttacker, iInflictor, Float:flDamage, iDamageType,
 	
 	if (!g_bFriendlyFire && iAttacker && IsValidEntity(iAttacker) && GetEntProp(iAttacker, Prop_Data, "m_iTeamNum") == GetArrayCell(g_hArwings, iIndex, Arwing_Team)) return;
 	
-	new iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
+	int iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
 	if (IsValidEntity(iPilot) && iPilot == iAttacker) return; // No self damage.
 	
-	new iHealth = GetArrayCell(g_hArwings, iIndex, Arwing_Health);
+	int iHealth = GetArrayCell(g_hArwings, iIndex, Arwing_Health);
 	iHealth -= RoundToFloor(flDamage);
 	ArwingSetHealth(iArwing, iHealth);
 	
-	new bool:bFromCollision = bool:(iDamageType & DMG_CRUSH);
+	bool bFromCollision = view_as<bool>(iDamageType & DMG_CRUSH);
 	
 	if (iHealth <= 0) 
 	{
@@ -2322,9 +2320,9 @@ public DamageArwing(iArwing, iAttacker, iInflictor, Float:flDamage, iDamageType,
 	{
 		ArwingStartDamageSequence(iArwing, bFromCollision);
 		
-		if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled) && bFromCollision) 
+		if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled) && bFromCollision))
 		{
-			decl Float:flForceVector[3];
+			float flForceVector[3];
 			NormalizeVector(flDamageForce, flForceVector);
 			ScaleVector(flForceVector, 3.0);
 			
@@ -2333,29 +2331,29 @@ public DamageArwing(iArwing, iAttacker, iInflictor, Float:flDamage, iDamageType,
 	}
 }
 
-ArwingStartDamageSequence(iArwing, bool:bFromWorld)
+void ArwingStartDamageSequence(int iArwing, bool bFromWorld)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, true, Arwing_InDamageSequence);
 	SetArrayCell(g_hArwings, iIndex, GetGameTime(), Arwing_LastDamageSequenceTime);
 	SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_LastDamageSequenceUpdateTime);
 	SetArrayCell(g_hArwings, iIndex, 0, Arwing_DamageSequenceRedBlink);
 	
-	new Handle:hTimer = CreateTimer(0.5, Timer_ArwingStopDamageSequence, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
+	Handle hTimer = CreateTimer(0.5, Timer_ArwingStopDamageSequence, EntIndexToEntRef(iArwing), TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_DamageSequenceTimer);
 	
 	hTimer = CreateTimer(0.025, Timer_ArwingDamageSequenceRedBlink, EntIndexToEntRef(iArwing), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	SetArrayCell(g_hArwings, iIndex, hTimer, Arwing_DamageSequenceRedBlinkTimer);
 	TriggerTimer(hTimer, true);
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig != INVALID_HANDLE)
 	{
-		decl String:sPath[PLATFORM_MAX_PATH];
+		char sPath[PLATFORM_MAX_PATH];
 		if (bFromWorld && GetRandomStringFromArwingConfig(hConfig, "sound_damaged_world", sPath, sizeof(sPath)) && sPath[0])
 		{
 			EmitSoundToAll(sPath, iArwing, SNDCHAN_STATIC, SNDLEVEL_HELICOPTER);
@@ -2368,10 +2366,10 @@ ArwingStartDamageSequence(iArwing, bool:bFromWorld)
 	
 	ArwingSpawnEffects(iArwing, EffectEvent_ArwingDamaged, true);
 	
-	new iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
+	int iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_Pilot));
 	if (IsValidClient(iPilot) && !IsFakeClient(iPilot))
 	{
-		new iFade = CreateEntityByName("env_fade");
+		int iFade = CreateEntityByName("env_fade");
 		SetEntPropFloat(iFade, Prop_Data, "m_Duration", 0.66);
 		SetEntPropFloat(iFade, Prop_Data, "m_HoldTime", 0.0);
 		SetEntProp(iFade, Prop_Data, "m_spawnflags", 5);
@@ -2382,39 +2380,39 @@ ArwingStartDamageSequence(iArwing, bool:bFromWorld)
 	}
 }
 
-public Action:Timer_ArwingDamageSequenceRedBlink(Handle:timer, any:entref)
+public Action Timer_ArwingDamageSequenceRedBlink(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_DamageSequenceRedBlinkTimer)) return Plugin_Stop;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_DamageSequenceRedBlinkTimer))) return Plugin_Stop;
 	
 	ArwingDamageSequenceDoRedBlink(iArwing);
 	
 	return Plugin_Continue;
 }
 
-ArwingDamageSequenceDoRedBlink(iArwing)
+void ArwingDamageSequenceDoRedBlink(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed)) return;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Destroyed))) return;
 	
-	new iColorEnt = iArwing;
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll))
+	int iColorEnt = iArwing;
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll)))
 	{
-		new iBarrelRollEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
+		int iBarrelRollEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
 		if (iBarrelRollEnt && iBarrelRollEnt != INVALID_ENT_REFERENCE)
 		{
 			iColorEnt = iBarrelRollEnt;
 		}
 	}
 	
-	new iPattern = GetArrayCell(g_hArwings, iIndex, Arwing_DamageSequenceRedBlink);
+	int iPattern = GetArrayCell(g_hArwings, iIndex, Arwing_DamageSequenceRedBlink);
 	if (iPattern == 1)
 	{
 		SetEntityRenderColor(iColorEnt, 255, 0, 0, 255);
@@ -2427,12 +2425,12 @@ ArwingDamageSequenceDoRedBlink(iArwing)
 	}
 }
 
-ArwingStopDamageSequence(iArwing)
+void ArwingStopDamageSequence(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hArwings, iIndex, Arwing_InDamageSequence)) return;
+	if (!view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InDamageSequence))) return;
 	
 	SetArrayCell(g_hArwings, iIndex, false, Arwing_InDamageSequence);
 	SetArrayCell(g_hArwings, iIndex, -1.0, Arwing_LastDamageSequenceUpdateTime);
@@ -2443,45 +2441,45 @@ ArwingStopDamageSequence(iArwing)
 	ArwingDamageSequenceDoRedBlink(iArwing);
 }
 
-public Action:Timer_ArwingStopDamageSequence(Handle:timer, any:entref)
+public Action Timer_ArwingStopDamageSequence(Handle timer, any entref)
 {
-	new iArwing = EntRefToEntIndex(entref);
+	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hArwings, entref);
+	int iIndex = FindValueInArray(g_hArwings, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hArwings, iIndex, Arwing_DamageSequenceTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hArwings, iIndex, Arwing_DamageSequenceTimer))) return;
 	
 	ArwingStopDamageSequence(iArwing);
 }
 
-ArwingOnSleep(iArwing)
+void ArwingOnSleep(int iArwing)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_Enabled) ||
-		bool:GetArrayCell(g_hArwings, iIndex, Arwing_InPilotSequence))
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_Enabled)) ||
+		view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InPilotSequence)))
 	{
 		Phys_Wake(iArwing);
 	}
 }
 
-ArwingSpawnEffects(iArwing, EffectEvent:iEvent, bool:bStartOn=false, bool:bOverridePos=false, const Float:flOverridePos[3]=NULL_VECTOR, const Float:flOverrideAng[3]=NULL_VECTOR)
+void ArwingSpawnEffects(int iArwing, EffectEvent iEvent, bool bStartOn=false, bool bOverridePos=false, const float flOverridePos[3]=NULL_VECTOR, const float flOverrideAng[3]=NULL_VECTOR)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig == INVALID_HANDLE) return;
 	
 	KvRewind(hConfig);
 	if (!KvJumpToKey(hConfig, "effects") || !KvGotoFirstSubKey(hConfig)) return;
 	
-	new Handle:hArray = CreateArray(64);
-	decl String:sSectionName[64];
-	decl String:sType[512];
+	Handle hArray = CreateArray(64);
+	char sSectionName[64];
+	char sType[512];
 	
 	do
 	{
@@ -2496,13 +2494,15 @@ ArwingSpawnEffects(iArwing, EffectEvent:iEvent, bool:bStartOn=false, bool:bOverr
 		return;
 	}
 	
-	decl String:sEffectName[64];
+	char sEffectName[64];
 	GetEffectEventName(iEvent, sEffectName, sizeof(sEffectName));
 	
-	decl iEffect, iEffectIndex, EffectType:iEffectType, iColor[4], Float:flLifeTime;
-	//decl String:sValue[PLATFORM_MAX_PATH];
+	int iEffect, iEffectIndex, iColor[4];
+	EffectType iEffectType;
+	float flLifeTime;
+	//char sValue[PLATFORM_MAX_PATH];
 	
-	for (new i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
+	for (int i = 0, iSize = GetArraySize(hArray); i < iSize; i++)
 	{
 		GetArrayString(hArray, i, sSectionName, sizeof(sSectionName));
 		KvRewind(hConfig);
@@ -2518,7 +2518,7 @@ ArwingSpawnEffects(iArwing, EffectEvent:iEvent, bool:bStartOn=false, bool:bOverr
 		
 		flLifeTime = KvGetFloat(hConfig, "lifetime");
 		
-		new bool:bCheckTeam = bool:KvGetNum(hConfig, "color_team");
+		bool bCheckTeam = view_as<bool>(KvGetNum(hConfig, "color_team"));
 		
 		iEffect = CreateEffect(iEffectType, iEvent, iArwing, i, bCheckTeam, iEffectIndex);
 		if (iEffect != -1)
@@ -2526,17 +2526,17 @@ ArwingSpawnEffects(iArwing, EffectEvent:iEvent, bool:bStartOn=false, bool:bOverr
 			// Parse through keyvalues, if specified.
 			if (KvJumpToKey(hConfig, "keyvalues"))
 			{
-				decl String:sWholeThing[512];
-				new String:sKeyValues[2][512];
+				char sWholeThing[512];
+				char sKeyValues[2][512];
 				
-				for (new i2 = 1;;i2++)
+				for (int i2 = 1;;i2++)
 				{
-					decl String:sIndex[16];
+					char sIndex[16];
 					IntToString(i2, sIndex, sizeof(sIndex));
 					KvGetString(hConfig, sIndex, sWholeThing, sizeof(sWholeThing));
 					if (!sWholeThing[0]) break; // ran out of key values. stop.
 					
-					new iCount = ExplodeString(sWholeThing, ";", sKeyValues, 2, 512);
+					int iCount = ExplodeString(sWholeThing, ";", sKeyValues, 2, 512);
 					if (iCount < 2) 
 					{
 						continue; // not a valid key value; warn about it and just continue on.
@@ -2557,7 +2557,7 @@ ArwingSpawnEffects(iArwing, EffectEvent:iEvent, bool:bStartOn=false, bool:bOverr
 					{
 						case EffectType_Smoketrail:
 						{
-							decl iColor2[4];
+							int iColor2[4];
 							KvGetColor(hConfig, "color_start", iColor[0], iColor[1], iColor[2], iColor[3]);
 							KvGetColor(hConfig, "color_end", iColor2[0], iColor2[1], iColor2[2], iColor2[3]);
 							
@@ -2593,13 +2593,13 @@ ArwingSpawnEffects(iArwing, EffectEvent:iEvent, bool:bStartOn=false, bool:bOverr
 	CloseHandle(hArray);
 }
 
-ArwingParentMyEffectToSelf(iArwing, iEffectIndex, bool:bOverridePos=false, const Float:flOverridePos[3]=NULL_VECTOR, const Float:flOverrideAng[3]=NULL_VECTOR)
+void ArwingParentMyEffectToSelf(int iArwing, int iEffectIndex, bool bOverridePos=false, const float flOverridePos[3]=NULL_VECTOR, const float flOverrideAng[3]=NULL_VECTOR)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
-	new iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex));
 	
 	// Get the appropriate offset positions we should use for the effect.
-	decl Float:flPos[3], Float:flAng[3];
+	float flPos[3], flAng[3];
 	if (bOverridePos)
 	{
 		CopyVectors(flOverridePos, flPos);
@@ -2607,16 +2607,16 @@ ArwingParentMyEffectToSelf(iArwing, iEffectIndex, bool:bOverridePos=false, const
 	}
 	else
 	{
-		new Handle:hConfig = GetConfigOfArwing(iArwing);
+		Handle hConfig = GetConfigOfArwing(iArwing);
 		if (hConfig == INVALID_HANDLE) return;
 		
 		KvRewind(hConfig);
 		if (!KvJumpToKey(hConfig, "effects") || !KvGotoFirstSubKey(hConfig)) return;
 	
-		new bool:bFoundEffect = false;
+		bool bFoundEffect = false;
 	
-		new iCustomIndex = GetArrayCell(g_hEffects, iEffectIndex, Effect_CustomIndex);
-		new iIndexCount;
+		int iCustomIndex = GetArrayCell(g_hEffects, iEffectIndex, Effect_CustomIndex);
+		int iIndexCount;
 		do
 		{
 			if (iIndexCount == iCustomIndex)
@@ -2635,27 +2635,27 @@ ArwingParentMyEffectToSelf(iArwing, iEffectIndex, bool:bOverridePos=false, const
 	}
 	
 	// Determine the proper entity we should parent to.
-	new iParentEnt = iArwing;
-	new iBarrelRollEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
-	if (bool:GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll) && iBarrelRollEnt && iBarrelRollEnt != INVALID_ENT_REFERENCE)
+	int iParentEnt = iArwing;
+	int iBarrelRollEnt = EntRefToEntIndex(GetArrayCell(g_hArwings, iIndex, Arwing_BarrelRollEnt));
+	if (view_as<bool>(GetArrayCell(g_hArwings, iIndex, Arwing_InBarrelRoll)) && iBarrelRollEnt && iBarrelRollEnt != INVALID_ENT_REFERENCE)
 	{
 		iParentEnt = iBarrelRollEnt;
 	}
 	
-	decl Float:flParentPos[3], Float:flParentAng[3];
+	float flParentPos[3], flParentAng[3];
 	GetEntPropVector(iParentEnt, Prop_Data, "m_vecAbsOrigin", flParentPos);
 	GetEntPropVector(iParentEnt, Prop_Data, "m_angAbsRotation", flParentAng);
 	
 	// Parent by offset.
 	SetVariantString("!activator");
 	AcceptEntityInput(iEffect, "SetParent", iParentEnt);
-	TeleportEntity(iEffect, flPos, flAng, Float:{ 0.0, 0.0, 0.0 });
+	TeleportEntity(iEffect, flPos, flAng, view_as<float>({ 0.0, 0.0, 0.0 }));
 }
 
-ArwingSetTeamColorOfEffects(iArwing)
+void ArwingSetTeamColorOfEffects(int iArwing)
 {
-	decl iEffect, iEffectOwner;
-	for (new i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
+	int iEffect, iEffectOwner;
+	for (int i = 0, iSize = GetArraySize(g_hEffects); i < iSize; i++)
 	{
 		iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, i));
 		if (!iEffect || iEffect == INVALID_ENT_REFERENCE) continue;
@@ -2663,32 +2663,32 @@ ArwingSetTeamColorOfEffects(iArwing)
 		iEffectOwner = EntRefToEntIndex(GetArrayCell(g_hEffects, i, Effect_Owner));
 		if (!iEffectOwner || iEffectOwner == INVALID_ENT_REFERENCE || iEffectOwner != iArwing) return;
 		
-		if (!bool:GetArrayCell(g_hEffects, i, Effect_ShouldCheckTeam)) continue;
+		if (!view_as<bool>(GetArrayCell(g_hEffects, i, Effect_ShouldCheckTeam))) continue;
 		
 		ArwingEffectSetTeamColor(iArwing, i);
 	}
 }
 
-ArwingEffectSetTeamColor(iArwing, iEffectIndex)
+void ArwingEffectSetTeamColor(int iArwing, int iEffectIndex)
 {
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(iArwing));
 	if (iIndex == -1) return;
 	
-	new iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex))
+	int iEffect = EntRefToEntIndex(GetArrayCell(g_hEffects, iEffectIndex));
 	if (!iEffect || iEffect == INVALID_ENT_REFERENCE) return;
 	
-	new iTeam = GetArrayCell(g_hArwings, iIndex, Arwing_Team);
-	new EffectType:iType = GetArrayCell(g_hEffects, iEffectIndex, Effect_Type);
+	int iTeam = GetArrayCell(g_hArwings, iIndex, Arwing_Team);
+	EffectType iType = GetArrayCell(g_hEffects, iEffectIndex, Effect_Type);
 	
-	new Handle:hConfig = GetConfigOfArwing(iArwing);
+	Handle hConfig = GetConfigOfArwing(iArwing);
 	if (hConfig != INVALID_HANDLE)
 	{
 		KvRewind(hConfig);
 		if (KvJumpToKey(hConfig, "effects") && KvGotoFirstSubKey(hConfig))
 		{
-			decl iColor[4], iColor2[4];
-			new iCustomIndex = GetArrayCell(g_hEffects, iEffectIndex, Effect_CustomIndex);
-			new iIndexCount;
+			int iColor[4], iColor2[4];
+			int iCustomIndex = GetArrayCell(g_hEffects, iEffectIndex, Effect_CustomIndex);
+			int iIndexCount;
 			
 			do
 			{
@@ -2736,14 +2736,14 @@ ArwingEffectSetTeamColor(iArwing, iEffectIndex)
 	}
 }
 
-public bool:TraceRayArwingTargeting(entity, contentsMask, any:data)
+public bool TraceRayArwingTargeting(int entity, int contentsMask, any data)
 {
 	if (entity == data) return false;
 	
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(data));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(data));
 	if (iIndex != -1)
 	{
-		new iTargetIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
+		int iTargetIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
 		if (iTargetIndex == -1)
 		{
 			if (IsValidClient(entity))
@@ -2763,25 +2763,25 @@ public bool:TraceRayArwingTargeting(entity, contentsMask, any:data)
 	return true;
 }
 
-public bool:TraceRayArwingTargetsOnly(entity, contentsMask, any:data)
+public bool TraceRayArwingTargetsOnly(int entity, int contentsMask, any data)
 {
 	if (entity == data) return false;
 	
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
 	if (iIndex == -1) return false;
 	
 	return true;
 }
 
-public bool:TraceRayArwingTargetingNoWorld(entity, contentsMask, any:data)
+public bool TraceRayArwingTargetingNoWorld(int entity, int contentsMask, any data)
 {
 	if (entity == data) return false;
 	if (entity == 0) return false;
 	
-	new iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(data));
+	int iIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(data));
 	if (iIndex != -1)
 	{
-		new iTargetIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
+		int iTargetIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(entity));
 		if (iTargetIndex == -1)
 		{
 			return false;

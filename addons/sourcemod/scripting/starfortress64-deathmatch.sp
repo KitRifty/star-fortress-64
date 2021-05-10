@@ -7,8 +7,10 @@
 #include <starfortress64>
 
 #define PLUGIN_VERSION "1.0.0"
+#pragma newdecls required			// Force 1.7 Syntax.
+#pragma semicolon 1
 
-public Plugin:myinfo = 
+public Plugin myinfo = 
 {
     name = "[SF64] Deathmatch Gamemode",
     author	= "KitRifty",
@@ -17,23 +19,22 @@ public Plugin:myinfo =
     url = ""
 }
 
-new bool:g_bEnabled = false;
-new g_iPlayerKills[MAXPLAYERS + 1];
+bool g_bEnabled = false;
+int g_iPlayerKills[MAXPLAYERS + 1];
 
-new g_iBGMusic = -1;
+int g_iBGMusic = -1;
 
-new bool:g_bRoundStarting = false;
-new bool:g_bRoundEnded = false;
-new Handle:g_hRoundTimer;
-new g_iRoundTime;
-new Handle:g_hRoundWinners;
-new Handle:g_hRoundWinnerHudSync;
+bool g_bRoundEnded = false;
+Handle g_hRoundTimer;
+int g_iRoundTime;
+Handle g_hRoundWinners;
+Handle g_hRoundWinnerHudSync;
 
-new Handle:g_cvRoundWarmupDuration;
-new Handle:g_cvRoundDuration;
-new Handle:g_cvRoundFragLimit;
+Handle g_cvRoundWarmupDuration;
+Handle g_cvRoundDuration;
+Handle g_cvRoundFragLimit;
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	g_hRoundWinners = CreateArray();
 	g_hRoundWinnerHudSync = CreateHudSynchronizer();
@@ -47,21 +48,21 @@ public OnPluginStart()
 	g_cvRoundFragLimit = CreateConVar("sf64_dm_round_frag_limit", "5");
 }
 
-public OnClientPutInServer(client)
+public void OnClientPutInServer(int client)
 {
 	g_iPlayerKills[client] = 0;
 	
 	if (!g_bEnabled) return;
 }
 
-public OnClientDisconnect_Post(client)
+public void OnClientDisconnect_Post(int client)
 {
 	if (!g_bEnabled) return;
 	
 	CheckToEndRound();
 }
 
-public SF64_GameRulesOnGetGameType(const String:sType[64])
+public int SF64_GameRulesOnGetGameType(const char[] sType)
 {
 	g_bEnabled = false;
 	g_iBGMusic = -1;
@@ -84,7 +85,7 @@ public SF64_GameRulesOnGetGameType(const String:sType[64])
 	PrintToServer("Initialized Deathmatch gamemode for SF64!");
 }
 
-public OnMapEnd()
+public void OnMapEnd()
 {
 	if (!g_bEnabled) return;
 	
@@ -96,7 +97,7 @@ public OnMapEnd()
 	g_iBGMusic = -1;
 }
 
-public Event_RoundStart(Handle:event, const String:sName[], bool:dB)
+public void Event_RoundStart(Handle event, const char[] sName, bool dB)
 {
 	if (!g_bEnabled) return;
 	
@@ -104,16 +105,16 @@ public Event_RoundStart(Handle:event, const String:sName[], bool:dB)
 	SF64_GameRulesInitializeRoundTimer(GetConVarInt(g_cvRoundWarmupDuration), GetMyHandle(), RoundWarmupTimerPost);
 }
 
-public Event_RoundEnd(Handle:event, const String:sName[], bool:dB)
+public void Event_RoundEnd(Handle event, const char[] sName, bool dB)
 {
 	if (!g_bEnabled) return;
 }
 
-public Event_PlayerDeath(Handle:event, const String:sName[], bool:dB)
+public void Event_PlayerDeath(Handle event, const char[] sName, bool dB)
 {
 	if (!g_bEnabled) return;
 	
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0) return;
 	
 	if (SF64_GameRulesGetRoundState() == SF64RoundState_Active)
@@ -122,7 +123,7 @@ public Event_PlayerDeath(Handle:event, const String:sName[], bool:dB)
 		{
 			if (SF64_GameRulesIsPlayerInGame(client) && !SF64_GameRulesIsPlayerEliminated(client))
 			{
-				new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+				int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 				if (attacker > 0 && attacker != client)
 				{
 					if (SF64_GameRulesIsPlayerInGame(attacker) && !SF64_GameRulesIsPlayerEliminated(attacker))
@@ -137,16 +138,16 @@ public Event_PlayerDeath(Handle:event, const String:sName[], bool:dB)
 	}
 }
 
-public RoundWarmupTimerPost()
+public void RoundWarmupTimerPost()
 {
-	new Handle:hQueueList = CreateArray();
+	Handle hQueueList = CreateArray();
 	SF64_GameRulesGetQueueList(hQueueList);
 	
-	new iMinPlayers = SF64_GameRulesGetMinPlayers();
+	int iMinPlayers = SF64_GameRulesGetMinPlayers();
 	
 	if (GetArraySize(hQueueList) >= iMinPlayers)
 	{
-		for (new i = 1; i <= MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (!IsClientInGame(i)) continue;
 			SF64_GameRulesSetPlayerVehicle(i, VehicleType_Arwing, "arwing");
@@ -161,15 +162,15 @@ public RoundWarmupTimerPost()
 	}
 }
 
-CheckToEndRound()
+void CheckToEndRound()
 {
 	if (SF64_GameRulesGetRoundState() != SF64RoundState_Active) return;
 	
-	new bool:bEndRound = false;
+	bool bEndRound = false;
 	
 	{
-		new iPlayerCount = 0;
-		for (new client = 1; client <= MaxClients; client++)
+		int iPlayerCount = 0;
+		for (int client = 1; client <= MaxClients; client++)
 		{
 			if (!IsClientInGame(client)) continue;
 			if (SF64_GameRulesIsPlayerInGame(client))
@@ -196,11 +197,11 @@ CheckToEndRound()
 	}
 }
 
-public EndActiveRound()
+public void EndActiveRound()
 {
 	SF64_GameRulesStopRoundTimer();
 	
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i))
 		{
@@ -212,7 +213,7 @@ public EndActiveRound()
 	g_hRoundTimer = CreateTimer(2.25, Timer_PreAnnounceRoundWinners, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action:Timer_PreActiveRound(Handle:timer)
+public Action Timer_PreActiveRound(Handle timer)
 {
 	if (timer != g_hRoundTimer) return Plugin_Stop;
 	
@@ -220,7 +221,6 @@ public Action:Timer_PreActiveRound(Handle:timer)
 	
 	if (g_iRoundTime <= 0)
 	{
-		g_bRoundStarting = false;
 		PrintToChatAll("GO!");
 		return Plugin_Stop;
 	}
@@ -234,10 +234,10 @@ public Action:Timer_PreActiveRound(Handle:timer)
 	return Plugin_Continue;
 }
 
-public SortWinnersArrayByKills(index1, index2, Handle:array, Handle:hndl)
+public int SortWinnersArrayByKills(int index1, int index2, Handle array, Handle hndl)
 {
-	new client1 = GetArrayCell(array, index1);
-	new client2 = GetArrayCell(array, index2);
+	int client1 = GetArrayCell(array, index1);
+	int client2 = GetArrayCell(array, index2);
 	
 	if (g_iPlayerKills[client1] > g_iPlayerKills[client2])
 	{
@@ -253,15 +253,15 @@ public SortWinnersArrayByKills(index1, index2, Handle:array, Handle:hndl)
 	}
 }
 
-public Action:Timer_PreAnnounceRoundWinners(Handle:timer)
+public Action Timer_PreAnnounceRoundWinners(Handle timer)
 {
 	if (timer != g_hRoundTimer) return;
 	
 	// TODO: Declare winrar and do celebratory effects. Also prevent the losers from firing.
 	
-	new Handle:hWinners = CreateArray();
+	Handle hWinners = CreateArray();
 	
-	for (new client = 1; client <= MaxClients; client++)
+	for (int client = 1; client <= MaxClients; client++)
 	{
 		if (!IsClientInGame(client)) continue;
 		if (!SF64_GameRulesIsPlayerInGame(client)) continue;
@@ -273,9 +273,9 @@ public Action:Timer_PreAnnounceRoundWinners(Handle:timer)
 	{
 		SortADTArrayCustom(hWinners, SortWinnersArrayByKills);
 		
-		new iBestScore = g_iPlayerKills[GetArrayCell(hWinners, 0)];
+		int iBestScore = g_iPlayerKills[GetArrayCell(hWinners, 0)];
 		
-		for (new i = 1, iSize = GetArraySize(hWinners); i < iSize; i++)
+		for (int i = 1, iSize = GetArraySize(hWinners); i < iSize; i++)
 		{
 			if (g_iPlayerKills[GetArrayCell(hWinners, i)] < iBestScore)
 			{
@@ -284,9 +284,9 @@ public Action:Timer_PreAnnounceRoundWinners(Handle:timer)
 			}
 		}
 		
-		new iNumWinners = GetArraySize(hWinners);
+		int iNumWinners = GetArraySize(hWinners);
 		
-		decl String:sWinText[64];
+		char sWinText[64];
 		if (iNumWinners == 1) strcopy(sWinText, sizeof(sWinText), "WINNER:");
 		else strcopy(sWinText, sizeof(sWinText), "WINNERS:");
 		
@@ -301,22 +301,22 @@ public Action:Timer_PreAnnounceRoundWinners(Handle:timer)
 			0.0,
 			0.5);
 			
-		for (new i = 1; i <= MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (!IsClientInGame(i)) continue;
 			ShowSyncHudText(i, g_hRoundWinnerHudSync, sWinText);
 		}
 		
-		decl String:sWinners[512];
+		char sWinners[512];
 		if (iNumWinners == 1) Format(sWinners, sizeof(sWinners), "%N", GetArrayCell(hWinners, 0));
 		else
 		{
 			strcopy(sWinners, sizeof(sWinners), "");
 		
-			for (new i = 0; i < iNumWinners; i++)
+			for (int i = 0; i < iNumWinners; i++)
 			{
-				new client = GetArrayCell(hWinners, i);
-				decl String:sTemp[64];
+				int client = GetArrayCell(hWinners, i);
+				char sTemp[64];
 				GetClientName(client, sTemp, sizeof(sTemp));
 				
 				if (i < iNumWinners - 1)
@@ -340,7 +340,7 @@ public Action:Timer_PreAnnounceRoundWinners(Handle:timer)
 			}
 		}
 		
-		new Handle:hPack;
+		Handle hPack;
 		CreateDataTimer(1.0, Timer_AnnounceRoundWinners, hPack, TIMER_FLAG_NO_MAPCHANGE);
 		WritePackString(hPack, sWinText);
 		WritePackString(hPack, sWinners);
@@ -351,14 +351,13 @@ public Action:Timer_PreAnnounceRoundWinners(Handle:timer)
 	g_hRoundTimer = CreateTimer(10.0, Timer_PostActiveRound, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action:Timer_AnnounceRoundWinners(Handle:timer, Handle:hPack)
+public Action Timer_AnnounceRoundWinners(Handle timer, Handle hPack)
 {
-	new String:sWinText[64], String:sWinners[512];
+	char sWinText[64], sWinners[512], sMessage[512];
 	ResetPack(hPack);
 	ReadPackString(hPack, sWinText, sizeof(sWinText));
 	ReadPackString(hPack, sWinners, sizeof(sWinners));
 	
-	decl String:sMessage[512];
 	Format(sMessage, sizeof(sMessage), "%s\n \n%s", sWinText, sWinners);
 	
 	SetHudTextParams(-1.0, 0.3,
@@ -372,14 +371,14 @@ public Action:Timer_AnnounceRoundWinners(Handle:timer, Handle:hPack)
 		0.0,
 		0.5);
 	
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i)) continue;
 		ShowSyncHudText(i, g_hRoundWinnerHudSync, sMessage);
 	}
 }
 
-public Action:Timer_PostActiveRound(Handle:timer)
+public Action Timer_PostActiveRound(Handle timer)
 {
 	if (timer != g_hRoundTimer) return;
 	
@@ -387,7 +386,7 @@ public Action:Timer_PostActiveRound(Handle:timer)
 	SF64_GameRulesInitializeRoundTimer(GetConVarInt(g_cvRoundWarmupDuration), GetMyHandle(), RoundWarmupTimerPost);
 }
 
-public SF64_GameRulesOnRoundStateStart(iRoundState)
+public int SF64_GameRulesOnRoundStateStart(int iRoundState)
 {
 	if (!g_bEnabled) return;
 	
@@ -400,7 +399,7 @@ public SF64_GameRulesOnRoundStateStart(iRoundState)
 			
 			SF64_GameRulesStopRoundTimer();
 			
-			for (new i = 1; i <= MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				g_iPlayerKills[i] = 0;
 				
@@ -410,7 +409,6 @@ public SF64_GameRulesOnRoundStateStart(iRoundState)
 				}
 			}
 			
-			g_bRoundStarting = true;
 			g_bRoundEnded = false;
 			g_iRoundTime = 4;
 			g_hRoundTimer = CreateTimer(1.0, Timer_PreActiveRound, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
@@ -421,7 +419,7 @@ public SF64_GameRulesOnRoundStateStart(iRoundState)
 	}
 }
 
-public SF64_GameRulesOnRoundStateEnd(iRoundState)
+public int SF64_GameRulesOnRoundStateEnd(int iRoundState)
 {
 	if (!g_bEnabled) return;
 	
@@ -436,12 +434,11 @@ public SF64_GameRulesOnRoundStateEnd(iRoundState)
 				SF64_MusicRemoveActiveMusicById(g_iBGMusic);
 			}
 			
-			for (new i = 1; i <= MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				g_iPlayerKills[i] = 0;
 			}
 			
-			g_bRoundStarting = false;
 			g_bRoundEnded = false;
 			g_hRoundTimer = INVALID_HANDLE;
 			g_iRoundTime = 0;

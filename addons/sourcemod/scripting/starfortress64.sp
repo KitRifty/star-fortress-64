@@ -6,7 +6,9 @@
 #include <tf2_stocks>
 #include <starfortress64>
 
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION "1.1.0"
+#pragma newdecls required			// Force 1.7 Syntax.
+#pragma semicolon 1
 
 public Plugin myinfo = 
 {
@@ -17,42 +19,45 @@ public Plugin myinfo =
     url = ""
 }
 
-#define DEBUG
+//	#define DEBUG						// When debugging, outcomment it.
 
 
-new Handle:g_hTargetReticles;
-new Handle:g_hLasers;
-new Handle:g_hChargedLasers;
-new Handle:g_hSBombs;
-new Handle:g_hPickups;
-new Handle:g_hPickupsGet;
-new Handle:g_hEffects;
-new Handle:g_hHudElements;
+Handle g_hTargetReticles;
+Handle g_hLasers;
+Handle g_hChargedLasers;
+Handle g_hSBombs;
+Handle g_hPickups;
+Handle g_hPickupsGet;
+Handle g_hEffects;
+Handle g_hHudElements;
 
-new bool:g_bPlayerInvertedXAxis[MAXPLAYERS + 1] = { false, ... };
-new bool:g_bPlayerInvertedYAxis[MAXPLAYERS + 1] = { true, ... };
+bool g_bPlayerInvertedXAxis[MAXPLAYERS + 1] = { false, ... };
+bool g_bPlayerInvertedYAxis[MAXPLAYERS + 1] = { true, ... };
 
-new g_iPlayerLastButtons[MAXPLAYERS + 1];
-new Float:g_flPlayerForwardMove[MAXPLAYERS + 1];
-new Float:g_flPlayerSideMove[MAXPLAYERS + 1];
-new Float:g_flPlayerDesiredFOV[MAXPLAYERS + 1];
+int g_iPlayerLastButtons[MAXPLAYERS + 1];
+float g_flPlayerForwardMove[MAXPLAYERS + 1];
+float g_flPlayerSideMove[MAXPLAYERS + 1];
+float g_flPlayerDesiredFOV[MAXPLAYERS + 1];
+bool g_bPlayerDisableHUD[MAXPLAYERS + 1] = { false, ... };
 
-new Handle:g_hPlayerVehicleSequenceTimer[MAXPLAYERS + 1];
-new Float:g_flPlayerVehicleBlockVoiceTime[MAXPLAYERS + 1];
+Handle g_hPlayerVehicleSequenceTimer[MAXPLAYERS + 1];
+float g_flPlayerVehicleBlockVoiceTime[MAXPLAYERS + 1];
 
-new Handle:g_cvFriendlyFire;
-new bool:g_bFriendlyFire;
+Handle g_cvFriendlyFire;
+bool g_bFriendlyFire;
 
-new Handle:g_cvInfiniteBombs;
+Handle g_cvInfiniteBombs;
 
 #if defined DEBUG
-new Handle:g_hHudSyncDebug;
+Handle g_hHudSyncDebug;
 #endif
 
-new Handle:g_hSDKGetSmoothedVelocity;
+Handle g_hHudControls;
 
-new g_offsPlayerFOV = -1;
-new g_offsPlayerDefaultFOV = -1;
+Handle g_hSDKGetSmoothedVelocity;
+
+int g_offsPlayerFOV = -1;
+int g_offsPlayerDefaultFOV = -1;
 
 // Helpers.
 #include "starfortress64/defines.sp"
@@ -89,7 +94,7 @@ new g_offsPlayerDefaultFOV = -1;
 
 
 
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	RegPluginLibrary("starfortress64");
 	
@@ -104,7 +109,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	return APLRes_Success;
 }
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	g_offsPlayerFOV = FindSendPropInfo("CBasePlayer", "m_iFOV");
 	if (g_offsPlayerFOV == -1) SetFailState("Couldn't find CBasePlayer offset for m_iFOV.");
@@ -135,6 +140,8 @@ public OnPluginStart()
 #if defined DEBUG
 	g_hHudSyncDebug = CreateHudSynchronizer();
 #endif
+
+	g_hHudControls = CreateHudSynchronizer();
 	
 	HookEvent("teamplay_round_start", Event_RoundStart);
 	HookEvent("teamplay_round_win", Event_RoundEnd);
@@ -145,6 +152,8 @@ public OnPluginStart()
 	RegAdminCmd("sm_sf64_spawn_arwing", Command_SpawnArwing, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf64_forceintovehicle", Command_ForceIntoVehicle, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf64_spawn_pickup", Command_SpawnPickup, ADMFLAG_CHEATS);
+
+	RegAdminCmd("sm_sf64_reloadconfigs", Command_ReloadConfigs, ADMFLAG_ROOT);
 	
 	AddCommandListener(Hook_CommandVoiceMenu, "voicemenu");
 	
@@ -168,7 +177,7 @@ public OnPluginStart()
 	LoadTranslations("common.phrases");
 }
 
-public OnConVarChanged(Handle:cvar, const String:oldValue[], const String:newValue[])
+public void OnConVarChanged(Handle cvar, const char[] oldValue, const char[] newValue)
 {
 	if (cvar == g_cvFriendlyFire)
 	{
@@ -176,18 +185,18 @@ public OnConVarChanged(Handle:cvar, const String:oldValue[], const String:newVal
 	}
 }
 
-public Action:Hook_CommandVoiceMenu(client, const String:command[], argc)
+public Action Hook_CommandVoiceMenu(int client, const char[] command, int argc)
 {
 	if (argc < 2) return Plugin_Continue;
 	if (!IsPlayerAlive(client)) return Plugin_Continue;
 	
-	decl String:arg1[32], String:arg2[32];
+	char arg1[32], arg2[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
 	GetCmdArg(2, arg2, sizeof(arg2));
 	
 	if (StringToInt(arg1) == 0 && StringToInt(arg2) == 0)
 	{
-		new iVehicle = GetCurrentVehicle(client);
+		int iVehicle = GetCurrentVehicle(client);
 		if (iVehicle && iVehicle != INVALID_ENT_REFERENCE)
 		{
 			if (!IsVehicleLocked(iVehicle))
@@ -199,7 +208,7 @@ public Action:Hook_CommandVoiceMenu(client, const String:command[], argc)
 		}
 		else
 		{
-			decl Float:flEyePos[3], Float:flEyeAng[3], Float:flDirection[3], Float:flEndPos[3];
+			float flEyePos[3], flEyeAng[3], flDirection[3], flEndPos[3];
 			GetClientEyePosition(client, flEyePos);
 			GetClientEyeAngles(client, flEyeAng);
 			GetAngleVectors(flEyeAng, flDirection, NULL_VECTOR, NULL_VECTOR);
@@ -207,9 +216,9 @@ public Action:Hook_CommandVoiceMenu(client, const String:command[], argc)
 			ScaleVector(flDirection, 300.0);
 			AddVectors(flEyePos, flDirection, flEndPos);
 			
-			new Handle:hTrace = TR_TraceRayFilterEx(flEyePos, flEndPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceRayDontHitEntity, client);
-			new bool:bHit = TR_DidHit(hTrace);
-			new iHitEntity = TR_GetEntityIndex(hTrace);
+			Handle hTrace = TR_TraceRayFilterEx(flEyePos, flEndPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceRayDontHitEntity, client);
+			bool bHit = TR_DidHit(hTrace);
+			int iHitEntity = TR_GetEntityIndex(hTrace);
 			CloseHandle(hTrace);
 			
 			if (bHit && iHitEntity)
@@ -229,9 +238,9 @@ public Action:Hook_CommandVoiceMenu(client, const String:command[], argc)
 	return Plugin_Continue;
 }
 
-SetupSDK()
+void SetupSDK()
 {
-	new Handle:hConfig = LoadGameConfigFile("starfortress64");
+	Handle hConfig = LoadGameConfigFile("starfortress64");
 	if (hConfig == INVALID_HANDLE) 
 	{
 		CloseHandle(hConfig);
@@ -250,15 +259,10 @@ SetupSDK()
 	CloseHandle(hConfig);
 }
 
-public OnMapStart()
-{
-}
-
 #if defined DEBUG
-public Action:Timer_HudUpdateDebug(Handle:timer)
+public Action Timer_HudUpdateDebug(Handle timer)
 {
-	/*
-	new iKitRifty = FindKitRifty();
+	int iKitRifty = FindKitRifty();
 	if (iKitRifty == -1) 
 	{
 		iKitRifty = 1;
@@ -266,8 +270,8 @@ public Action:Timer_HudUpdateDebug(Handle:timer)
 	
 	if (!IsValidClient(iKitRifty)) return Plugin_Continue;
 	
-	new iEdictCount;
-	for (new i = 0; i <= MAX_ENTITES; i++)
+	int iEdictCount;
+	for (int i = 0; i <= MAX_ENTITES; i++)
 	{
 		if (!IsValidEdict(i)) continue;
 		iEdictCount++;
@@ -289,13 +293,12 @@ public Action:Timer_HudUpdateDebug(Handle:timer)
 		GetArraySize(g_hPickups),
 		GetArraySize(g_hEffects),
 		GetArraySize(g_hTargetReticles));
-	*/
 	
 	return Plugin_Continue;
 }
 #endif
 
-PrecacheStuff()
+void PrecacheStuff()
 {
 #if defined _sf64_arwing_included
 	PrecacheModel(ARWING_BARRELROLL_ROTATE_ENT_MODEL, true);
@@ -322,7 +325,7 @@ PrecacheStuff()
 #endif
 }
 
-public OnConfigsExecuted()
+public void OnConfigsExecuted()
 {
 	g_bFriendlyFire = GetConVarBool(g_cvFriendlyFire);
 	
@@ -342,7 +345,7 @@ public OnConfigsExecuted()
 #endif
 
 	// Compensate for late load.
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsValidClient(i)) continue;
 		OnClientPutInServer(i);
@@ -353,21 +356,17 @@ public OnConfigsExecuted()
 #endif
 }
 
-public OnEntityDestroyed(entity)
+public void OnEntityDestroyed(int entity)
 {
 	if (entity <= 0 || !IsValidEntity(entity)) return;
 	
 #if defined _sf64_gamerules_included
 	GameRulesOnEntityDestroyed(entity);
 #endif
-
-#if defined _sf64_music_included
-	MusicOnEntityDestroyed(entity);
-#endif
 	
-	new bool:bCheckForRemoval = true;
-	new entref = EntIndexToEntRef(entity);
-	new iIndex = -1;
+	bool bCheckForRemoval = true;
+	int entref = EntIndexToEntRef(entity);
+	int iIndex = -1;
 	
 #if defined _sf64_arwing_ext_included
 	ArwingOnEntityDestroyed(entity);
@@ -462,7 +461,7 @@ public OnEntityDestroyed(entity)
 	}
 }
 
-public OnClientPutInServer(client)
+public void OnClientPutInServer(int client)
 {
 	g_hPlayerVehicleSequenceTimer[client] = INVALID_HANDLE;
 	g_flPlayerVehicleBlockVoiceTime[client] = 0.0;
@@ -491,7 +490,7 @@ public OnClientPutInServer(client)
 #endif
 }
 
-public QueryClientDesiredFOV(QueryCookie:cookie, client, ConVarQueryResult:result, const String:cvarName[], const String:cvarValue[])
+public void QueryClientDesiredFOV(QueryCookie cookie, int client, ConVarQueryResult result, const char[] cvarName, const char[] cvarValue)
 {
 	if (result != ConVarQuery_Okay)
 	{
@@ -502,7 +501,7 @@ public QueryClientDesiredFOV(QueryCookie:cookie, client, ConVarQueryResult:resul
 	g_flPlayerDesiredFOV[client] = StringToFloat(cvarValue);
 }
 
-public OnClientDisconnect(client)
+public void OnClientDisconnect(int client)
 {
 #if defined _sf64_gamerules_included
 	GameRulesOnClientDisconnect(client);
@@ -512,46 +511,47 @@ public OnClientDisconnect(client)
 	MusicOnClientDisconnect(client);
 #endif
 
-	new iVehicle = GetCurrentVehicle(client);
+	int iVehicle = GetCurrentVehicle(client);
 	if (iVehicle && iVehicle != INVALID_ENT_REFERENCE) VehicleEjectPilot(iVehicle, true);
 }
 
-public OnClientDisconnect_Post(client)
+public void OnClientDisconnect_Post(int client)
 {
 	g_iPlayerLastButtons[client] = 0;
 	g_flPlayerForwardMove[client] = 0.0;
 	g_flPlayerSideMove[client] = 0.0;
+	g_bPlayerDisableHUD[client] = false;
 }
 
-public Hook_ClientPreThink(client)
+public void Hook_ClientPreThink(int client)
 {
-	new iVehicle = GetCurrentVehicle(client);
+	int iVehicle = GetCurrentVehicle(client);
 	if (iVehicle && iVehicle != INVALID_ENT_REFERENCE)
 	{
 		SetEntPropFloat(client, Prop_Send, "m_flNextAttack", GetGameTime() + 1.0);
 	}
 }
 
-public Event_RoundStart(Handle:event, const String:name[], bool:DB)
+public void Event_RoundStart(Handle event, const char[] name, bool DB)
 {
 #if defined _sf64_gamerules_included
 	GameRulesOnTeamplayRoundStart(event);
 #endif
 }
 
-public Event_RoundEnd(Handle:event, const String:name[], bool:DB)
+public void Event_RoundEnd(Handle event, const char[] name, bool DB)
 {
 #if defined _sf64_gamerules_included
 	GameRulesOnTeamplayRoundEnd(event);
 #endif
 }
 
-public Event_PlayerSpawn(Handle:event, const String:name[], bool:DB)
+public void Event_PlayerSpawn(Handle event, const char[] name, bool DB)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0) return;
 	
-	new iVehicle = GetCurrentVehicle(client);
+	int iVehicle = GetCurrentVehicle(client);
 	if (iVehicle && iVehicle != INVALID_ENT_REFERENCE) VehicleEjectPilot(iVehicle, true);
 	
 #if defined _sf64_gamerules_included
@@ -559,30 +559,26 @@ public Event_PlayerSpawn(Handle:event, const String:name[], bool:DB)
 #endif
 }
 
-public Event_PlayerDeath(Handle:event, const String:name[], bool:DB)
+public void Event_PlayerDeath(Handle event, const char[] name, bool DB)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0) return;
 	
-	new iVehicle = GetCurrentVehicle(client);
+	int iVehicle = GetCurrentVehicle(client);
 	if (iVehicle && iVehicle != INVALID_ENT_REFERENCE) VehicleEjectPilot(iVehicle, true);
-	
-#if defined _sf64_gamerules_included
-	GameRulesOnPlayerDeath(event);
-#endif
 }
 
-public Event_PostInventoryApplication(Handle:event, const String:name[], bool:DB)
+public void Event_PostInventoryApplication(Handle event, const char[] name, bool DB)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (client <= 0) return;
 	
-	new iVehicle = GetCurrentVehicle(client);
+	int iVehicle = GetCurrentVehicle(client);
 	if (iVehicle && iVehicle != INVALID_ENT_REFERENCE)
 	{
-		for (new i = 0; i <= 5; i++)
+		for (int i = 0; i <= 5; i++)
 		{
-			new iWeapon = GetPlayerWeaponSlot(client, i);
+			int iWeapon = GetPlayerWeaponSlot(client, i);
 			if (IsValidEntity(iWeapon))
 			{
 				SetEntityRenderMode(iWeapon, RENDER_TRANSCOLOR);
@@ -594,48 +590,73 @@ public Event_PostInventoryApplication(Handle:event, const String:name[], bool:DB
 	}
 }
 
-public Action:Command_SpawnArwing(client, args)
+public Action Command_SpawnArwing(int client, int args)
 {
-	if (args < 1)
+	char sName[64], message[256];
+	if (args > 0)
+		GetCmdArg(1, sName, sizeof(sName));
+
+	// If the arwing does not exist, let the player know which configs exist.
+	Handle hConfig = GetArwingConfig(sName);
+	if (hConfig == INVALID_HANDLE)
 	{
-		ReplyToCommand(client, "Usage: sm_sf64_spawn_arwing <name>");
+		Handle hSnapshots = CreateTrieSnapshot(g_hArwingConfigs);
+		if (hSnapshots != null)
+		{
+			// Cycle through all loaded configs to determine which exist, and then print them out.
+			for (int i; i < GetTrieSize(g_hArwingConfigs); i++)
+			{
+				char sConfig[32];
+				GetTrieSnapshotKey(hSnapshots, i, sConfig, sizeof(sConfig));
+
+				if (message[0] == EOS)
+					strcopy(message, sizeof(message), sConfig);
+				else
+					Format(message, sizeof(message), "%s, %s", message, sConfig);
+			}
+			delete hSnapshots;
+		}
+
+		if (message[0] != EOS)
+			ReplyToCommand(client, "Usage: sm_sf64_spawn_arwing <%s>", message);
+		else
+			ReplyToCommand(client, "Error: There are currently no arwing configs loaded.");
+
 		return Plugin_Handled;
 	}
 	
-	decl String:sName[64];
-	GetCmdArg(1, sName, sizeof(sName));
-	if (!sName[0]) return Plugin_Handled;
-	
-	decl Float:flEyePos[3], Float:flEyeAng[3], Float:flEndPos[3];
+	float flEyePos[3], flEyeAng[3], flEndPos[3];
 	GetClientEyePosition(client, flEyePos);
 	GetClientEyeAngles(client, flEyeAng);
 	
-	new Handle:hTrace = TR_TraceRayFilterEx(flEyePos, flEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
+	Handle hTrace = TR_TraceRayFilterEx(flEyePos, flEyeAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRayDontHitEntity, client);
 	TR_GetEndPosition(flEndPos, hTrace);
 	CloseHandle(hTrace);
 	
-	SpawnArwing(sName, flEndPos, NULL_VECTOR, NULL_VECTOR);
+	flEyeAng[0] = 0.0; flEyeAng[2] = 0.0;
+
+	SpawnArwing(sName, flEndPos, flEyeAng, NULL_VECTOR);
 	
 	return Plugin_Handled;
 }
 
-public Action:Command_SpawnPickup(client, args)
+public Action Command_SpawnPickup(int client, int args)
 {
 	if (args < 2)
 	{
-		ReplyToCommand(client, "Usage: sm_sf64_spawn_pickup <name> <quantity> [can respawn 0/1]");
+		ReplyToCommand(client, "Usage: sm_sf64_spawn_pickup <laser, smartbomb, ring, ring2> <quantity> [can respawn 0/1]");
 		return Plugin_Handled;
 	}
 	
-	decl String:sType[64];
+	char sType[64];
 	GetCmdArg(1, sType, sizeof(sType));
 	if (!sType[0]) return Plugin_Handled;
 	
-	decl String:sQuantity[64];
+	char sQuantity[64];
 	GetCmdArg(2, sQuantity, sizeof(sQuantity));
 	if (!sQuantity[0]) return Plugin_Handled;
 	
-	new iType = PickupType_Invalid;
+	int iType = PickupType_Invalid;
 	if (StrEqual(sType, "laser")) iType = PickupType_Laser;
 	else if (StrEqual(sType, "smartbomb")) iType = PickupType_SmartBomb;
 	else if (StrEqual(sType, "ring")) iType = PickupType_Ring;
@@ -643,15 +664,15 @@ public Action:Command_SpawnPickup(client, args)
 	
 	if (iType == PickupType_Invalid) return Plugin_Handled;
 	
-	new bool:bCanRespawn = false;
+	bool bCanRespawn = false;
 	if (args > 2)
 	{
-		decl String:sCanRespawn[64];
+		char sCanRespawn[64];
 		GetCmdArg(3, sCanRespawn, sizeof(sCanRespawn));
-		bCanRespawn = bool:StringToInt(sCanRespawn);
+		bCanRespawn = view_as<bool>(StringToInt(sCanRespawn));
 	}
 	
-	decl Float:flPos[3];
+	float flPos[3];
 	GetClientAbsOrigin(client, flPos);
 	
 	SpawnPickup(iType, StringToInt(sQuantity), flPos, NULL_VECTOR, bCanRespawn);
@@ -659,7 +680,7 @@ public Action:Command_SpawnPickup(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_ForceIntoVehicle(client, args)
+public Action Command_ForceIntoVehicle(int client, int args)
 {
 	if (args < 1)
 	{
@@ -667,11 +688,12 @@ public Action:Command_ForceIntoVehicle(client, args)
 		return Plugin_Handled;
 	}
 	
-	decl String:arg1[32];
+	char arg1[32];
 	GetCmdArg(1, arg1, sizeof(arg1));
 	
-	decl String:target_name[MAX_TARGET_LENGTH];
-	decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
 	
 	if ((target_count = ProcessTargetString(
 			arg1,
@@ -687,7 +709,7 @@ public Action:Command_ForceIntoVehicle(client, args)
 		return Plugin_Handled;
 	}
 	
-	new iVehicle = INVALID_ENT_REFERENCE;
+	int iVehicle = INVALID_ENT_REFERENCE;
 	
 	if (args <= 1)
 	{
@@ -700,15 +722,15 @@ public Action:Command_ForceIntoVehicle(client, args)
 	}
 	else
 	{
-		decl String:arg2[64];
+		char arg2[64];
 		GetCmdArg(2, arg2, sizeof(arg2));
 	
-		for (new i = 0, iSize = GetArraySize(g_hArwings); i < iSize; i++)
+		for (int i = 0, iSize = GetArraySize(g_hArwings); i < iSize; i++)
 		{
-			new iArwing = EntRefToEntIndex(GetArrayCell(g_hArwings, i));
+			int iArwing = EntRefToEntIndex(GetArrayCell(g_hArwings, i));
 			if (!iArwing || iArwing == INVALID_ENT_REFERENCE) continue;
 			
-			decl String:sName[64];
+			char sName[64];
 			GetEntPropString(iArwing, Prop_Data, "m_iName", sName, sizeof(sName));
 			if (StrEqual(sName, arg2, false))
 			{
@@ -726,11 +748,19 @@ public Action:Command_ForceIntoVehicle(client, args)
 	return Plugin_Handled;
 }
 
-public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
+public Action Command_ReloadConfigs(int client, int args)
 {
-	for (new i = 0; i < MAX_BUTTONS; i++)
+	LoadAllArwingConfigs();
+	ReplyToCommand(client, "Arwing configs have been reloaded! Existing arwings will keep their current configs.");
+
+	return Plugin_Handled;
+}
+
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
+{
+	for (int i = 0; i < MAX_BUTTONS; i++)
 	{
-		new button = (1 << i);
+		int button = (1 << i);
 		
 		if ((buttons & button))
 		{
@@ -750,19 +780,19 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	return Plugin_Continue;
 }
 
-public OnClientButtonPress(client, iButton)
+public void OnClientButtonPress(int client, int iButton)
 {
-	new iVehicle = GetCurrentVehicle(client);
+	int iVehicle = GetCurrentVehicle(client);
 	if (iVehicle != -1) VehiclePressButton(iVehicle, iButton);
 }
 
-public OnClientButtonRelease(client, iButton)
+public void OnClientButtonRelease(int client, int iButton)
 {
-	new iVehicle = GetCurrentVehicle(client);
+	int iVehicle = GetCurrentVehicle(client);
 	if (iVehicle != -1) VehicleReleaseButton(iVehicle, iButton);
 }
 
-public Phys_OnObjectSleep(ent)
+public void Phys_OnObjectSleep(int ent)
 {
 	if (!IsValidEntity(ent)) return;
 	

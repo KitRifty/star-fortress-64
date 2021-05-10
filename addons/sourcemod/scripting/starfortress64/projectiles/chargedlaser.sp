@@ -13,22 +13,22 @@
 #define ARWING_CHARGEDLASER_SMOKESTACK_MATERIAL "sprites/light_glow02_add.vmt"
 
 
-SpawnChargedLaser(const Float:flPos[3],
-	const Float:flAng[3],
-	const Float:flVelocity[3],
-	iTeam,
-	iOwner,
-	iTarget,
-	Float:flDamage=150.0,
-	Float:flDamageRadius=512.0,
-	Float:flLifeTime=5.0,
-	Float:flMaxSpeed=2500.0,
-	Float:flTrackDuration=4.0,
-	bool:bCharging=false,
-	Float:flChargeTime=0.75,
-	&iIndex=-1)
+int SpawnChargedLaser(const float flPos[3],
+	const float flAng[3],
+	const float flVelocity[3],
+	int iTeam,
+	int iOwner,
+	int iTarget,
+	float flDamage=150.0,
+	float flDamageRadius=512.0,
+	float flLifeTime=5.0,
+	float flMaxSpeed=2500.0,
+	float flTrackDuration=4.0,
+	bool bCharging=false,
+	float flChargeTime=0.75,
+	int &iIndex=-1)
 {
-	new iChargedLaser = CreateEntityByName("tf_projectile_energy_ring");
+	int iChargedLaser = CreateEntityByName("tf_projectile_energy_ring");
 	if (iChargedLaser != -1)
 	{
 		SetEntPropEnt(iChargedLaser, Prop_Send, "m_hOwnerEntity", iOwner);
@@ -40,14 +40,14 @@ SpawnChargedLaser(const Float:flPos[3],
 		SetEntProp(iChargedLaser, Prop_Send, "m_usSolidFlags", FSOLID_NOT_SOLID | FSOLID_TRIGGER);
 		SetEntProp(iChargedLaser, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
 		
-		new iTrailEnt = CreateEntityByName("env_spritetrail");
+		int iTrailEnt = CreateEntityByName("env_spritetrail");
 		if (iTrailEnt != -1)
 		{
 			DispatchKeyValue(iTrailEnt, "spritename", ARWING_CHARGEDLASER_TRAIL_MATERIAL);
 			DispatchKeyValue(iTrailEnt, "renderamt", "255");
 			DispatchKeyValue(iTrailEnt, "rendermode", "5");
 			
-			if (iTeam == _:TFTeam_Red) 
+			if (iTeam == view_as<int>(TFTeam_Red)) 
 			{
 				DispatchKeyValue(iTrailEnt, "rendercolor", "255 0 0");
 			}
@@ -65,7 +65,7 @@ SpawnChargedLaser(const Float:flPos[3],
 			AcceptEntityInput(iTrailEnt, "SetParent", iChargedLaser);
 		}
 		
-		new iSmoke = CreateEntityByName("env_smokestack");
+		int iSmoke = CreateEntityByName("env_smokestack");
 		if (iSmoke != -1)
 		{
 			DispatchKeyValue(iSmoke, "SmokeMaterial", ARWING_CHARGEDLASER_SMOKESTACK_MATERIAL);
@@ -80,7 +80,7 @@ SpawnChargedLaser(const Float:flPos[3],
 			DispatchKeyValue(iSmoke, "renderamt", "255");
 			DispatchKeyValue(iSmoke, "rendermode", "5");
 			
-			if (iTeam == _:TFTeam_Red) 
+			if (iTeam == view_as<int>(TFTeam_Red)) 
 			{
 				DispatchKeyValue(iSmoke, "rendercolor", "255 150 150");
 			}
@@ -96,7 +96,7 @@ SpawnChargedLaser(const Float:flPos[3],
 			SetEdictFlags(iSmoke, FL_EDICT_ALWAYS);
 		}
 		
-		new iSmoke2 = CreateEntityByName("env_smokestack");
+		int iSmoke2 = CreateEntityByName("env_smokestack");
 		if (iSmoke2 != -1)
 		{
 			DispatchKeyValue(iSmoke2, "SmokeMaterial", ARWING_CHARGEDLASER_SMOKESTACK_MATERIAL);
@@ -111,7 +111,7 @@ SpawnChargedLaser(const Float:flPos[3],
 			DispatchKeyValue(iSmoke2, "renderamt", "255");
 			DispatchKeyValue(iSmoke2, "rendermode", "5");
 			
-			if (iTeam == _:TFTeam_Red) 
+			if (iTeam == view_as<int>(TFTeam_Red))
 			{
 				DispatchKeyValue(iSmoke2, "rendercolor", "255 70 70");
 			}
@@ -128,7 +128,7 @@ SpawnChargedLaser(const Float:flPos[3],
 			SetEdictFlags(iSmoke2, FL_EDICT_ALWAYS);
 		}
 		
-		new iSmoke3 = CreateEntityByName("env_smokestack");
+		int iSmoke3 = CreateEntityByName("env_smokestack");
 		if (iSmoke3 != -1)
 		{
 			DispatchKeyValue(iSmoke3, "SmokeMaterial", ARWING_CHARGEDLASER_SMOKESTACK_MATERIAL);
@@ -143,7 +143,7 @@ SpawnChargedLaser(const Float:flPos[3],
 			DispatchKeyValue(iSmoke3, "renderamt", "255");
 			DispatchKeyValue(iSmoke3, "rendermode", "5");
 			
-			if (iTeam == _:TFTeam_Red) 
+			if (iTeam == view_as<int>(TFTeam_Red)) 
 			{
 				DispatchKeyValue(iSmoke3, "rendercolor", "255 150 150");
 			}
@@ -190,33 +190,33 @@ SpawnChargedLaser(const Float:flPos[3],
 	return iChargedLaser;
 }
 
-public ChargedLaserOnEntityDestroyed(entity)
+public void ChargedLaserOnEntityDestroyed(int entity)
 {
 	if (GetArraySize(g_hChargedLasers) > 0)
 	{
-		new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(entity));
+		int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(entity));
 		if (iIndex != -1)
 		{
-			if (bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Hit))
+			if (view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Hit)))
 			{
-				new iParticleChargedLaser = PrecacheParticleSystem(ARWING_CHARGEDLASER_HIT_PARTICLE_BLUE);
-				if (GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Team) == _:TFTeam_Red)
+				int iParticleChargedLaser = PrecacheParticleSystem(ARWING_CHARGEDLASER_HIT_PARTICLE_BLUE);
+				if (GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Team) == view_as<int>(TFTeam_Red))
 				{
 					iParticleChargedLaser = PrecacheParticleSystem(ARWING_CHARGEDLASER_HIT_PARTICLE_RED);
 				}
 				
-				decl Float:flPos[3];
+				float flPos[3];
 				GetEntPropVector(entity, Prop_Data, "m_vecAbsOrigin", flPos);
 				
 				TE_SetupTFParticleEffect(iParticleChargedLaser, flPos, flPos);
 				TE_SendToAll();
 				
-				new iExplode = CreateEntityByName("env_explosion");
+				int iExplode = CreateEntityByName("env_explosion");
 				if (iExplode != -1)
 				{
 					SetEntProp(iExplode, Prop_Data, "m_spawnflags", 4 + 8 + 16 + 32 + 64 + 256 + 512 + 1024);
-					SetEntProp(iExplode, Prop_Data, "m_iMagnitude", RoundToFloor(Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Damage)));
-					SetEntProp(iExplode, Prop_Data, "m_iRadiusOverride", RoundToFloor(Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_DamageRadius)));
+					SetEntProp(iExplode, Prop_Data, "m_iMagnitude", RoundToFloor(view_as<float>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Damage))));
+					SetEntProp(iExplode, Prop_Data, "m_iRadiusOverride", RoundToFloor(view_as<float>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_DamageRadius))));
 					DispatchSpawn(iExplode);
 					ActivateEntity(iExplode);
 					TeleportEntity(iExplode, flPos, NULL_VECTOR, NULL_VECTOR);
@@ -224,12 +224,12 @@ public ChargedLaserOnEntityDestroyed(entity)
 					AcceptEntityInput(iExplode, "Explode");
 				}
 				
-				new iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
+				int iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
 				if (iSmoke && iSmoke != INVALID_ENT_REFERENCE)
 				{
 					AcceptEntityInput(iSmoke, "TurnOff");
 					AcceptEntityInput(iSmoke, "ClearParent");
-					TeleportEntity(iSmoke, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
+					TeleportEntity(iSmoke, flPos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 					DeleteEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
 				}
 				
@@ -238,7 +238,7 @@ public ChargedLaserOnEntityDestroyed(entity)
 				{
 					AcceptEntityInput(iSmoke, "TurnOff");
 					AcceptEntityInput(iSmoke, "ClearParent");
-					TeleportEntity(iSmoke, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
+					TeleportEntity(iSmoke, flPos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 					DeleteEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
 				}
 				
@@ -247,7 +247,7 @@ public ChargedLaserOnEntityDestroyed(entity)
 				{
 					AcceptEntityInput(iSmoke, "TurnOff");
 					AcceptEntityInput(iSmoke, "ClearParent");
-					TeleportEntity(iSmoke, flPos, NULL_VECTOR, Float:{ 0.0, 0.0, 0.0 });
+					TeleportEntity(iSmoke, flPos, NULL_VECTOR, view_as<float>({ 0.0, 0.0, 0.0 }));
 					DeleteEntity(iSmoke, (GetEntPropFloat(iSmoke, Prop_Send, "m_JetLength") / GetEntPropFloat(iSmoke, Prop_Send, "m_Speed")));
 				}
 				
@@ -259,70 +259,66 @@ public ChargedLaserOnEntityDestroyed(entity)
 	}
 }
 
-public Hook_ChargedLaserStartTouchPost(iChargedLaser, other)
+public void Hook_ChargedLaserStartTouchPost(int iChargedLaser, int other)
 {
-	new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
+	int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging))
+	if (!view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging)))
 	{
-		new iOwner = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Owner));
+		int iOwner = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Owner));
 		
-		new bool:bHit = false;
+		bool bHitAirwing = false;
+		bool bHitPlayer = false;
 		
 		if (iOwner && iOwner != other)
 		{
-			new iOtherEntRef = EntIndexToEntRef(other);
-			new iOtherIndex = FindValueInArray(g_hArwings, iOtherEntRef);
+			int iOtherEntRef = EntIndexToEntRef(other);
+			int iOtherIndex = FindValueInArray(g_hArwings, iOtherEntRef);
+			// Is the hit entity another Airwing or a player?
 			if (iOtherIndex != -1)
 			{
 				if (EntRefToEntIndex(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot)) != iOwner)
-				{
-					bHit = true;
-				}
+					bHitAirwing = true;
 			}
-			else if (IsValidClient(other))
-			{
-				bHit = true;
-			}
-			else
-			{
-				bHit = true;
-			}
+			else if (other > 0 && other <= MaxClients)
+				bHitPlayer = true;
 		}
 		
-		if (bHit) 
-		{
+		if (bHitAirwing || bHitPlayer)
 			SetArrayCell(g_hChargedLasers, iIndex, true, ChargedLaser_Hit);
+
+		// DO NOT DELETE THE LASER ENTITY WHEN HITTING A PLAYER, IT CRASHES for some godknown reason...
+		// It might try to delete the entity twice in a row, causing the game crash?
+		if (bHitAirwing)
 			DeleteEntity(iChargedLaser);
-		}
 	}
 }
 
-bool:ChargedLaserCanTrackTarget(iChargedLaser, iTarget)
+bool ChargedLaserCanTrackTarget(int iChargedLaser, int iTarget)
 {
 	if (!IsValidEntity(iChargedLaser) || !IsValidEntity(iTarget)) return false;
 	
-	new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
+	int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
 	if (iIndex == -1) return false;
 	
-	new iOwner = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Owner));
-	new iOwnerVehicle = GetCurrentVehicle(iOwner);
+	int iOwner = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Owner));
+	int iOwnerVehicle = GetCurrentVehicle(iOwner);
 	
 	if (!VehicleCanTarget(iOwnerVehicle, iTarget)) return false;
 	
-	decl Float:flOwnerPos[3], Float:flOwnerAng[3];
+	float flOwnerPos[3], flOwnerAng[3];
 	VehicleGetAbsOrigin(iOwnerVehicle, flOwnerPos);
 	VehicleGetAbsAngles(iOwnerVehicle, flOwnerAng);
 	
-	decl Float:flTargetPos[3];
+	float flTargetPos[3];
 	VehicleGetOBBCenter(iTarget, flTargetPos);
 	
 	if (!IsPointWithinFOV(flOwnerPos, flOwnerAng, 180.0, flTargetPos)) return false;
 	
-	new Handle:hTrace = TR_TraceRayFilterEx(flOwnerPos, flTargetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceRayArwingTargeting, iOwnerVehicle);
-	new iHitEntity = TR_GetEntityIndex(hTrace);
-	new bool:bHit = TR_DidHit(hTrace);
+	Handle hTrace = TR_TraceRayFilterEx(flOwnerPos, flTargetPos, MASK_PLAYERSOLID, RayType_EndPoint, TraceRayArwingTargeting, iOwnerVehicle);
+	int iHitEntity = TR_GetEntityIndex(hTrace);
+	bool bHit = TR_DidHit(hTrace);
 	CloseHandle(hTrace);
 	
 	if (bHit && iHitEntity != iTarget) return false;
@@ -330,27 +326,27 @@ bool:ChargedLaserCanTrackTarget(iChargedLaser, iTarget)
 	return true;
 }
 
-public Action:Timer_ChargedLaserThink(Handle:timer, any:entref)
+public Action Timer_ChargedLaserThink(Handle timer, any entref)
 {
-	new iChargedLaser = EntRefToEntIndex(entref);
+	int iChargedLaser = EntRefToEntIndex(entref);
 	if (!iChargedLaser || iChargedLaser == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hChargedLasers, entref);
+	int iIndex = FindValueInArray(g_hChargedLasers, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	if (!bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging))
+	if (!view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging)))
 	{
-		new iTarget = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Target));
+		int iTarget = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_Target));
 		if (ChargedLaserCanTrackTarget(iChargedLaser, iTarget))
 		{
-			decl Float:flPos[3], Float:flVelocity[3];
+			float flPos[3], flVelocity[3];
 			GetEntPropVector(iChargedLaser, Prop_Data, "m_vecAbsOrigin", flPos);
 			GetEntPropVector(iChargedLaser, Prop_Data, "m_vecAbsVelocity", flVelocity);
 			
-			decl Float:flGoalVelocity[3];
+			float flGoalVelocity[3];
 			if (GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsTracking))
 			{
-				decl Float:flTargetPos[3];
+				float flTargetPos[3];
 				GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", flTargetPos);
 				SubtractVectors(flTargetPos, flPos, flGoalVelocity);
 			}
@@ -360,9 +356,9 @@ public Action:Timer_ChargedLaserThink(Handle:timer, any:entref)
 			}
 			
 			NormalizeVector(flGoalVelocity, flGoalVelocity);
-			ScaleVector(flGoalVelocity, Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_MaxSpeed));
+			ScaleVector(flGoalVelocity, view_as<float>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_MaxSpeed)));
 			
-			decl Float:flNewVelocity[3];
+			float flNewVelocity[3];
 			LerpVectors(flVelocity, flGoalVelocity, flNewVelocity, 0.25);
 			TeleportEntity(iChargedLaser, NULL_VECTOR, NULL_VECTOR, flNewVelocity);
 		}
@@ -373,7 +369,7 @@ public Action:Timer_ChargedLaserThink(Handle:timer, any:entref)
 	}
 	else
 	{
-		new Float:flFinishTime = Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_ChargeEndTime);
+		float flFinishTime = view_as<float>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_ChargeEndTime));
 		if (flFinishTime > 0.0 && GetGameTime() >= flFinishTime)
 		{
 			SetArrayCell(g_hChargedLasers, iIndex, -1.0, ChargedLaser_ChargeEndTime);
@@ -384,12 +380,12 @@ public Action:Timer_ChargedLaserThink(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-StartChargingChargedLaser(iChargedLaser, Float:flChargeTime, bool:bForce=false)
+void StartChargingChargedLaser(int iChargedLaser, float flChargeTime, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
+	int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
 	if (iIndex == -1) return;
 	
-	if (!bForce && bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging)) return;
+	if (!bForce && view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging))) return;
 	
 	SetArrayCell(g_hChargedLasers, iIndex, true, ChargedLaser_IsCharging);
 	SetArrayCell(g_hChargedLasers, iIndex, GetGameTime(), ChargedLaser_ChargeStartTime);
@@ -399,7 +395,7 @@ StartChargingChargedLaser(iChargedLaser, Float:flChargeTime, bool:bForce=false)
 	
 	SetEntityMoveType(iChargedLaser, MOVETYPE_NONE);
 	
-	new iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
+	int iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
 	if (iSmoke && iSmoke != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(iSmoke, "TurnOff");
@@ -418,19 +414,19 @@ StartChargingChargedLaser(iChargedLaser, Float:flChargeTime, bool:bForce=false)
 	}
 }
 
-FinishChargingChargedLaser(iChargedLaser, bool:bForce=false)
+void FinishChargingChargedLaser(int iChargedLaser, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
+	int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
 	if (iIndex == -1) return;
 	
-	if (!bForce && !bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging)) return;
+	if (!bForce && !view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging))) return;
 	
 	SetArrayCell(g_hChargedLasers, iIndex, true, ChargedLaser_IsCharging);
 	StopTrackingOnChargedLaser(iChargedLaser, true);
 	
 	SetEntityMoveType(iChargedLaser, MOVETYPE_NONE);
 	
-	new iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
+	int iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
 	if (iSmoke && iSmoke != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(iSmoke, "TurnOn");
@@ -449,12 +445,12 @@ FinishChargingChargedLaser(iChargedLaser, bool:bForce=false)
 	}
 }
 
-ReleaseChargedLaser(iChargedLaser, bool:bForce=false)
+void ReleaseChargedLaser(int iChargedLaser, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
+	int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
 	if (iIndex == -1) return;
 	
-	if (!bForce && !bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging)) return;
+	if (!bForce && !view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsCharging))) return;
 	
 	SetArrayCell(g_hChargedLasers, iIndex, false, ChargedLaser_IsCharging);
 	StartTrackingOnChargedLaser(iChargedLaser, true);
@@ -462,7 +458,7 @@ ReleaseChargedLaser(iChargedLaser, bool:bForce=false)
 	AcceptEntityInput(iChargedLaser, "ClearParent");
 	SetEntityMoveType(iChargedLaser, MOVETYPE_FLY);
 	
-	new iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
+	int iSmoke = EntRefToEntIndex(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrailEnt1));
 	if (iSmoke && iSmoke != INVALID_ENT_REFERENCE)
 	{
 		AcceptEntityInput(iSmoke, "TurnOn");
@@ -480,27 +476,27 @@ ReleaseChargedLaser(iChargedLaser, bool:bForce=false)
 		AcceptEntityInput(iSmoke, "TurnOn");
 	}
 	
-	DeleteEntity(iChargedLaser, Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_LifeTime));
+	DeleteEntity(iChargedLaser, view_as<float>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_LifeTime)));
 }
 
-StartTrackingOnChargedLaser(iChargedLaser, bool:bForce=false)
+void StartTrackingOnChargedLaser(int iChargedLaser, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
+	int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
 	if (iIndex == -1) return;
 	
-	if (!bForce && bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsTracking)) return;
+	if (!bForce && view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsTracking))) return;
 	
 	SetArrayCell(g_hChargedLasers, iIndex, true, ChargedLaser_IsTracking);
 	SetArrayCell(g_hChargedLasers, iIndex, GetGameTime(), ChargedLaser_TrackStartTime);
-	SetArrayCell(g_hChargedLasers, iIndex, GetGameTime() + Float:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrackDuration), ChargedLaser_TrackEndTime);
+	SetArrayCell(g_hChargedLasers, iIndex, GetGameTime() + view_as<float>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_TrackDuration)), ChargedLaser_TrackEndTime);
 }
 
-StopTrackingOnChargedLaser(iChargedLaser, bool:bForce=false)
+void StopTrackingOnChargedLaser(int iChargedLaser, bool bForce=false)
 {
-	new iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
+	int iIndex = FindValueInArray(g_hChargedLasers, EntIndexToEntRef(iChargedLaser));
 	if (iIndex == -1) return;
 	
-	if (!bForce && !bool:GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsTracking)) return;
+	if (!bForce && !view_as<bool>(GetArrayCell(g_hChargedLasers, iIndex, ChargedLaser_IsTracking))) return;
 	
 	SetArrayCell(g_hChargedLasers, iIndex, true, ChargedLaser_IsTracking);
 	SetArrayCell(g_hChargedLasers, iIndex, 0.0, ChargedLaser_TrackStartTime);

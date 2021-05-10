@@ -16,7 +16,7 @@
 #define PICKUP_RING2_SOUND "arwing/pickups/smartbomb/smartbomb_pickup.mp3"
 
 
-PrecachePickups()
+void PrecachePickups()
 {
 	PrecacheModel2(PICKUP_LASER_MODEL);
 	PrecacheSound2(PICKUP_LASER_SOUND);
@@ -37,9 +37,9 @@ PrecachePickups()
 	PrecacheSound2(PICKUP_RING2_SOUND);
 }
 
-SpawnPickup(iType, iQuantity, const Float:flPos[3], const Float:flAng[3], bool:bCanRespawn=false, &iIndex=-1)
+int SpawnPickup(int iType, int iQuantity, const float flPos[3], const float flAng[3], bool bCanRespawn=false, int &iIndex=-1)
 {
-	new iPickup = CreateEntityByName("prop_dynamic_override");
+	int iPickup = CreateEntityByName("prop_dynamic_override");
 	if (iPickup != -1)
 	{
 		switch (iType)
@@ -74,7 +74,7 @@ SpawnPickup(iType, iQuantity, const Float:flPos[3], const Float:flAng[3], bool:b
 		SetEntProp(iPickup, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
 		
 		// Attach trail to enable movement.
-		new iTrailEnt = CreateEntityByName("env_spritetrail");
+		int iTrailEnt = CreateEntityByName("env_spritetrail");
 		if (iTrailEnt != -1)
 		{
 			DispatchKeyValue(iTrailEnt, "spritename", ARWING_LASER_TRAIL_MATERIAL);
@@ -98,22 +98,22 @@ SpawnPickup(iType, iQuantity, const Float:flPos[3], const Float:flAng[3], bool:b
 		
 		TeleportEntity(iPickup, flPos, flAng, NULL_VECTOR);
 		SDKHook(iPickup, SDKHook_StartTouchPost, Hook_PickupStartTouchPost);
-		new Handle:hTimer = CreateTimer(0.25, Timer_PickupThink, EntIndexToEntRef(iPickup), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+		Handle hTimer = CreateTimer(0.25, Timer_PickupThink, EntIndexToEntRef(iPickup), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 		TriggerTimer(hTimer, true);
 		
 		switch (iType)
 		{
 			case PickupType_Laser, PickupType_SmartBomb:
 			{
-				SetEntPropVector(iPickup, Prop_Data, "m_vecAngVelocity", Float:{ 0.0, 360.0, 0.0 });
+				SetEntPropVector(iPickup, Prop_Data, "m_vecAngVelocity", view_as<float>({ 0.0, 360.0, 0.0 }));
 			}
 			case PickupType_Ring:
 			{
-				SetEntPropVector(iPickup, Prop_Data, "m_vecAngVelocity", Float:{ 180.0, 0.0, 0.0 });
+				SetEntPropVector(iPickup, Prop_Data, "m_vecAngVelocity", view_as<float>({ 180.0, 0.0, 0.0 }));
 			}
 			case PickupType_Ring2:
 			{
-				SetEntPropVector(iPickup, Prop_Data, "m_vecAngVelocity", Float:{ 0.0, 0.0, 180.0 });
+				SetEntPropVector(iPickup, Prop_Data, "m_vecAngVelocity", view_as<float>({ 0.0, 0.0, 180.0 }));
 			}
 		}
 	}
@@ -121,21 +121,21 @@ SpawnPickup(iType, iQuantity, const Float:flPos[3], const Float:flAng[3], bool:b
 	return iPickup;
 }
 
-SpawnPickupGet(iPickup, iTarget, &iIndex=-1)
+int SpawnPickupGet(int iPickup, int iTarget, int &iIndex=-1)
 {
 	if (!IsValidEntity(iPickup)) return -1;
 	
-	new iPickupIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
+	int iPickupIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
 	if (iPickupIndex == -1) return -1;
 
-	new iPickupGet = CreateEntityByName("prop_dynamic_override");
+	int iPickupGet = CreateEntityByName("prop_dynamic_override");
 	if (iPickupGet != -1)
 	{
-		decl Float:flPos[3], Float:flAng[3];
+		float flPos[3], flAng[3];
 		GetEntPropVector(iPickup, Prop_Data, "m_vecAbsOrigin", flPos);
 		GetEntPropVector(iPickup, Prop_Data, "m_angAbsRotation", flAng);
 	
-		decl String:sModelName[PLATFORM_MAX_PATH];
+		char sModelName[PLATFORM_MAX_PATH];
 		GetEntPropString(iPickup, Prop_Data, "m_ModelName", sModelName, sizeof(sModelName));
 		
 		SetEntPropFloat(iPickupGet, Prop_Send, "m_flModelScale", GetEntPropFloat(iPickup, Prop_Send, "m_flModelScale"));
@@ -149,7 +149,7 @@ SpawnPickupGet(iPickup, iTarget, &iIndex=-1)
 		SetEntProp(iPickupGet, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
 		
 		// Attach trail to enable movement.
-		new iTrailEnt = CreateEntityByName("env_spritetrail");
+		int iTrailEnt = CreateEntityByName("env_spritetrail");
 		if (iTrailEnt != -1)
 		{
 			DispatchKeyValue(iTrailEnt, "spritename", ARWING_LASER_TRAIL_MATERIAL);
@@ -166,14 +166,14 @@ SpawnPickupGet(iPickup, iTarget, &iIndex=-1)
 		
 		TeleportEntity(iPickupGet, flPos, flAng, NULL_VECTOR);
 		
-		new iType = GetArrayCell(g_hPickups, iPickupIndex, Pickup_Type);
+		int iType = GetArrayCell(g_hPickups, iPickupIndex, Pickup_Type);
 		
 		iIndex = PushArrayCell(g_hPickupsGet, EntIndexToEntRef(iPickupGet));
 		SetArrayCell(g_hPickupsGet, iIndex, GetGameTime(), PickupGet_LastSpawnTime);
 		SetArrayCell(g_hPickupsGet, iIndex, iType, PickupGet_Type);
 		SetArrayCell(g_hPickupsGet, iIndex, IsValidEntity(iTarget) ? EntIndexToEntRef(iTarget) : INVALID_ENT_REFERENCE, PickupGet_Target);
 		
-		new Handle:hTimer = CreateTimer(0.01, Timer_PickupGetThink, EntIndexToEntRef(iPickupGet), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+		Handle hTimer = CreateTimer(0.01, Timer_PickupGetThink, EntIndexToEntRef(iPickupGet), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 		TriggerTimer(hTimer, true);
 		
 		DeleteEntity(iPickupGet, 1.0);
@@ -182,15 +182,15 @@ SpawnPickupGet(iPickup, iTarget, &iIndex=-1)
 		{
 			case PickupType_Laser, PickupType_SmartBomb:
 			{
-				SetEntPropVector(iPickupGet, Prop_Data, "m_vecAngVelocity", Float:{ 0.0, 520.0, 0.0 });
+				SetEntPropVector(iPickupGet, Prop_Data, "m_vecAngVelocity", view_as<float>({ 0.0, 520.0, 0.0 }));
 			}
 			case PickupType_Ring:
 			{
-				SetEntPropVector(iPickupGet, Prop_Data, "m_vecAngVelocity", Float:{ 520.0, 0.0, 0.0 });
+				SetEntPropVector(iPickupGet, Prop_Data, "m_vecAngVelocity", view_as<float>({ 520.0, 0.0, 0.0 }));
 			}
 			case PickupType_Ring2:
 			{
-				SetEntPropVector(iPickupGet, Prop_Data, "m_vecAngVelocity", Float:{ 0.0, 0.0, 520.0 });
+				SetEntPropVector(iPickupGet, Prop_Data, "m_vecAngVelocity", view_as<float>({ 0.0, 0.0, 520.0 }));
 			}
 		}
 	}
@@ -198,21 +198,21 @@ SpawnPickupGet(iPickup, iTarget, &iIndex=-1)
 	return iPickupGet;
 }
 
-public Hook_PickupStartTouchPost(iPickup, other)
+public void Hook_PickupStartTouchPost(int iPickup, int other)
 {
-	new iIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
+	int iIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hPickups, iIndex, Pickup_Enabled)) return;
+	if (!view_as<bool>(GetArrayCell(g_hPickups, iIndex, Pickup_Enabled))) return;
 	
-	new iOtherIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(other));
+	int iOtherIndex = FindValueInArray(g_hArwings, EntIndexToEntRef(other));
 	if (iOtherIndex != -1)
 	{
-		if (bool:GetArrayCell(g_hArwings, iOtherIndex, Arwing_Enabled))
+		if (view_as<bool>(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Enabled)))
 		{
-			new iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot));
-			new iType = GetArrayCell(g_hPickups, iIndex, Pickup_Type);
-			new iQuantity = GetArrayCell(g_hPickups, iIndex, Pickup_Quantity);
+			int iPilot = EntRefToEntIndex(GetArrayCell(g_hArwings, iOtherIndex, Arwing_Pilot));
+			int iType = GetArrayCell(g_hPickups, iIndex, Pickup_Type);
+			int iQuantity = GetArrayCell(g_hPickups, iIndex, Pickup_Quantity);
 			
 			DisablePickup(iPickup);
 			SpawnPickupGet(iPickup, other);
@@ -223,8 +223,8 @@ public Hook_PickupStartTouchPost(iPickup, other)
 				{
 					if (IsValidClient(iPilot)) EmitSoundToClient(iPilot, PICKUP_LASER_SOUND, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
 					
-					new iUpgradeLevel = GetArrayCell(g_hArwings, iOtherIndex, Arwing_LaserUpgradeLevel);
-					new iMaxUpgradeLevel = GetArrayCell(g_hArwings, iOtherIndex, Arwing_LaserMaxUpgradeLevel);
+					int iUpgradeLevel = GetArrayCell(g_hArwings, iOtherIndex, Arwing_LaserUpgradeLevel);
+					int iMaxUpgradeLevel = GetArrayCell(g_hArwings, iOtherIndex, Arwing_LaserMaxUpgradeLevel);
 					
 					if (iUpgradeLevel < iMaxUpgradeLevel)
 					{
@@ -238,8 +238,8 @@ public Hook_PickupStartTouchPost(iPickup, other)
 				{
 					if (IsValidClient(iPilot)) EmitSoundToClient(iPilot, PICKUP_BOMB_SOUND, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
 					
-					new iNum = GetArrayCell(g_hArwings, iOtherIndex, Arwing_SmartBombNum);
-					new iMaxNum = GetArrayCell(g_hArwings, iOtherIndex, Arwing_SmartBombMaxNum);
+					int iNum = GetArrayCell(g_hArwings, iOtherIndex, Arwing_SmartBombNum);
+					int iMaxNum = GetArrayCell(g_hArwings, iOtherIndex, Arwing_SmartBombMaxNum);
 					
 					if (iNum < iMaxNum)
 					{
@@ -257,8 +257,8 @@ public Hook_PickupStartTouchPost(iPickup, other)
 						else EmitSoundToClient(iPilot, PICKUP_RING2_SOUND, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
 					}
 					
-					new iHealth = GetArrayCell(g_hArwings, iOtherIndex, Arwing_Health);
-					new iMaxHealth = GetArrayCell(g_hArwings, iOtherIndex, Arwing_MaxHealth);
+					int iHealth = GetArrayCell(g_hArwings, iOtherIndex, Arwing_Health);
+					int iMaxHealth = GetArrayCell(g_hArwings, iOtherIndex, Arwing_MaxHealth);
 					
 					if (iHealth < iMaxHealth)
 					{
@@ -270,9 +270,9 @@ public Hook_PickupStartTouchPost(iPickup, other)
 				}
 			}
 			
-			if (bool:GetArrayCell(g_hPickups, iIndex, Pickup_CanRespawn))
+			if (view_as<bool>(GetArrayCell(g_hPickups, iIndex, Pickup_CanRespawn)))
 			{
-				new Handle:hTimer = CreateTimer(30.0, Timer_EnablePickup, EntIndexToEntRef(iPickup), TIMER_FLAG_NO_MAPCHANGE);
+				Handle hTimer = CreateTimer(30.0, Timer_EnablePickup, EntIndexToEntRef(iPickup), TIMER_FLAG_NO_MAPCHANGE);
 				SetArrayCell(g_hPickups, iIndex, hTimer, Pickup_RespawnTimer);
 			}
 			else
@@ -283,19 +283,19 @@ public Hook_PickupStartTouchPost(iPickup, other)
 	}
 }
 
-public Action:Timer_PickupThink(Handle:timer, any:entref)
+public Action Timer_PickupThink(Handle timer, any entref)
 {
-	new iPickup = EntRefToEntIndex(entref);
+	int iPickup = EntRefToEntIndex(entref);
 	if (!iPickup || iPickup == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hPickups, entref);
+	int iIndex = FindValueInArray(g_hPickups, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	decl Float:flPickupAng[3], Float:flNewAng[3];
+	float flPickupAng[3], flNewAng[3];
 	GetEntPropVector(iPickup, Prop_Data, "m_angAbsRotation", flPickupAng);
 	CopyVectors(flPickupAng, flNewAng);
 	
-	new iType = GetArrayCell(g_hPickups, iIndex, Pickup_Type);
+	int iType = GetArrayCell(g_hPickups, iIndex, Pickup_Type);
 	switch (iType)
 	{
 		case PickupType_Laser, PickupType_SmartBomb:
@@ -327,34 +327,34 @@ public Action:Timer_PickupThink(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-public Action:Timer_PickupGetThink(Handle:timer, any:entref)
+public Action Timer_PickupGetThink(Handle timer, any entref)
 {
-	new iPickupGet = EntRefToEntIndex(entref);
+	int iPickupGet = EntRefToEntIndex(entref);
 	if (!iPickupGet || iPickupGet == INVALID_ENT_REFERENCE) return Plugin_Stop;
 	
-	new iIndex = FindValueInArray(g_hPickupsGet, entref);
+	int iIndex = FindValueInArray(g_hPickupsGet, entref);
 	if (iIndex == -1) return Plugin_Stop;
 	
-	new Float:flModelScale = GetEntPropFloat(iPickupGet, Prop_Send, "m_flModelScale");
+	float flModelScale = GetEntPropFloat(iPickupGet, Prop_Send, "m_flModelScale");
 	if (flModelScale > 0.1)
 	{
 		SetEntPropFloat(iPickupGet, Prop_Send, "m_flModelScale", flModelScale - 0.1);
 	}
 	
-	new iTarget = EntRefToEntIndex(GetArrayCell(g_hPickupsGet, iIndex, PickupGet_Target));
+	int iTarget = EntRefToEntIndex(GetArrayCell(g_hPickupsGet, iIndex, PickupGet_Target));
 	if (iTarget && iTarget != INVALID_ENT_REFERENCE)
 	{
-		decl Float:flPickupPos[3], Float:flTargetPos[3];
+		float flPickupPos[3], flTargetPos[3];
 		GetEntPropVector(iPickupGet, Prop_Data, "m_vecAbsOrigin", flPickupPos);
 		GetEntPropVector(iTarget, Prop_Data, "m_vecAbsOrigin", flTargetPos);
 		
-		decl Float:flPickupVelocity[3], Float:flGoalVelocity[3];
+		float flPickupVelocity[3], flGoalVelocity[3];
 		GetEntPropVector(iPickupGet, Prop_Data, "m_vecAbsVelocity", flPickupVelocity);
 		SubtractVectors(flTargetPos, flPickupPos, flGoalVelocity);
 		NormalizeVector(flGoalVelocity, flGoalVelocity);
 		ScaleVector(flGoalVelocity, 2000.0);
 		
-		decl Float:flMoveVelocity[3];
+		float flMoveVelocity[3];
 		LerpVectors(flPickupVelocity, flGoalVelocity, flMoveVelocity, 0.25);
 		TeleportEntity(iPickupGet, NULL_VECTOR, NULL_VECTOR, flMoveVelocity);
 	}
@@ -362,35 +362,35 @@ public Action:Timer_PickupGetThink(Handle:timer, any:entref)
 	return Plugin_Continue;
 }
 
-public Action:Timer_EnablePickup(Handle:timer, any:entref)
+public Action Timer_EnablePickup(Handle timer, any entref)
 {
-	new iPickup = EntRefToEntIndex(entref);
+	int iPickup = EntRefToEntIndex(entref);
 	if (!iPickup || iPickup == INVALID_ENT_REFERENCE) return;
 	
-	new iIndex = FindValueInArray(g_hPickups, entref);
+	int iIndex = FindValueInArray(g_hPickups, entref);
 	if (iIndex == -1) return;
 	
-	if (timer != Handle:GetArrayCell(g_hPickups, iIndex, Pickup_RespawnTimer)) return;
+	if (timer != view_as<Handle>(GetArrayCell(g_hPickups, iIndex, Pickup_RespawnTimer))) return;
 	
 	EnablePickup(iPickup);
 }
 
-EnablePickup(iPickup)
+void EnablePickup(int iPickup)
 {
-	new iIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
+	int iIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
 	if (iIndex == -1) return;
 	
-	if (bool:GetArrayCell(g_hPickups, iIndex, Pickup_Enabled)) return;
+	if (view_as<bool>(GetArrayCell(g_hPickups, iIndex, Pickup_Enabled))) return;
 	
 	SetArrayCell(g_hPickups, iIndex, true, Pickup_Enabled);
 	SetEntityRenderMode(iPickup, RENDER_TRANSCOLOR);
 	SetEntityRenderColor(iPickup, 255, 255, 255, 255);
 	
-	decl Float:flPickupAng[3], Float:flNewAng[3];
+	float flPickupAng[3], flNewAng[3];
 	GetEntPropVector(iPickup, Prop_Data, "m_angAbsRotation", flPickupAng);
 	CopyVectors(flPickupAng, flNewAng);
 	
-	new iType = GetArrayCell(g_hPickups, iIndex, Pickup_Type);
+	int iType = GetArrayCell(g_hPickups, iIndex, Pickup_Type);
 	switch (iType)
 	{
 		case PickupType_Laser, PickupType_SmartBomb:
@@ -411,12 +411,12 @@ EnablePickup(iPickup)
 	}
 }
 
-DisablePickup(iPickup)
+void DisablePickup(int iPickup)
 {
-	new iIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
+	int iIndex = FindValueInArray(g_hPickups, EntIndexToEntRef(iPickup));
 	if (iIndex == -1) return;
 	
-	if (!bool:GetArrayCell(g_hPickups, iIndex, Pickup_Enabled)) return;
+	if (!view_as<bool>(GetArrayCell(g_hPickups, iIndex, Pickup_Enabled))) return;
 	
 	SetArrayCell(g_hPickups, iIndex, false, Pickup_Enabled);
 	SetEntityRenderMode(iPickup, RENDER_TRANSCOLOR);
