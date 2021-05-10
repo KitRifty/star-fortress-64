@@ -35,6 +35,8 @@ https://www.youtube.com/watch?v=A24JMjyenpI
 - [SteamTools](https://builds.limetech.io/?p=steamtools)
 - [DHooks](https://github.com/peace-maker/DHooks2/releases)
 
+If you are compiling, you must use [this updated `vphysics.inc` file](https://github.com/asherkin/vphysics/blob/master/vphysics.inc). 
+
 # Assets
 [Star Fox Arwing Model](https://garrysmods.org/download/17957/arwingzip)
 
@@ -42,7 +44,7 @@ https://www.youtube.com/watch?v=A24JMjyenpI
 > :warning: The Woonwing model is missing its material and is unfortunately lost to time.
 
 # Configuration
-- **`sv_maxvelocity`** - Laser projectiles move extremely fast, so you must set this hidden cvar via `sm_cvar` to a value higher than any of the projectiles' speeds. If a projectile exceeds this limit, the projectile's velocity will be clamped down and the projectile will fly off in a random direction. For reference, the Arwing laser projectile's default speed is `18500`, so set `sv_maxvelocity` higher than this.
+- **`sv_maxvelocity`** - Laser projectiles move extremely fast, so you must set this hidden cvar via `sm_cvar` to a value higher than any of the projectiles' speeds. Projectile's velocity will be clamped down to this value by default. For reference, the Arwing laser projectile's default speed is `18500`, so set `sv_maxvelocity` higher than this.
 
 # Controls
 To enter an Arwing, walk up and point at it then call MEDIC (default is 'E').
@@ -58,6 +60,7 @@ To enter an Arwing, walk up and point at it then call MEDIC (default is 'E').
 | Brake | HOLD Crouch |
 | Somersault | Strafe Back + Jump |
 | U-Turn | Strafe Back + Crouch |
+| Toggle HUD instructions | Crouch 2x |
 
 # Commands
 | Name | Description | Admin Flags |
