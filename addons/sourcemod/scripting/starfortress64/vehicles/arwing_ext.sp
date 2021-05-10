@@ -315,6 +315,12 @@ void ArwingFireLasers(int iArwing)
 	}
 	
 	float flLaserSpeed = view_as<float>(GetArrayCell(g_hArwings, iIndex, Arwing_LaserSpeed));
+
+	// We need to clamp down the speed if the cvar value is smaller than the projectile speed,
+	// otherwise the projectile speed will be clamped down by the engine and somehow ends up flying into a random direction.
+	ConVar cvMaxVelocity = FindConVar("sv_maxvelocity");
+	if (cvMaxVelocity != null && flLaserSpeed > cvMaxVelocity.FloatValue)
+		flLaserSpeed = cvMaxVelocity.FloatValue;
 	
 	if (bAutoAim)
 	{
