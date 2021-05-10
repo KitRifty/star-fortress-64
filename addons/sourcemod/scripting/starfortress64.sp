@@ -152,6 +152,8 @@ public void OnPluginStart()
 	RegAdminCmd("sm_sf64_spawn_arwing", Command_SpawnArwing, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf64_forceintovehicle", Command_ForceIntoVehicle, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_sf64_spawn_pickup", Command_SpawnPickup, ADMFLAG_CHEATS);
+
+	RegAdminCmd("sm_sf64_reloadconfigs", Command_ReloadConfigs, ADMFLAG_ROOT);
 	
 	AddCommandListener(Hook_CommandVoiceMenu, "voicemenu");
 	
@@ -720,6 +722,14 @@ public Action Command_ForceIntoVehicle(int client, int args)
 		InsertPilotIntoVehicle(iVehicle, target_list[0]);
 	}
 	
+	return Plugin_Handled;
+}
+
+public Action Command_ReloadConfigs(int client, int args)
+{
+	LoadAllArwingConfigs();
+	ReplyToCommand(client, "Arwing configs have been reloaded! Existing arwings will keep their current configs.");
+
 	return Plugin_Handled;
 }
 
