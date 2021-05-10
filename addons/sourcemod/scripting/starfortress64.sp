@@ -6,7 +6,7 @@
 #include <tf2_stocks>
 #include <starfortress64>
 
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION "1.1.0"
 #pragma newdecls required			// Force 1.7 Syntax.
 #pragma semicolon 1
 
@@ -592,15 +592,38 @@ public void Event_PostInventoryApplication(Handle event, const char[] name, bool
 
 public Action Command_SpawnArwing(int client, int args)
 {
-	if (args < 1)
+	char sName[64], message[256];
+	if (args > 0)
+		GetCmdArg(1, sName, sizeof(sName));
+
+	// If the arwing does not exist, let the player know which configs exist.
+	Handle hConfig = GetArwingConfig(sName);
+	if (hConfig == INVALID_HANDLE)
 	{
-		ReplyToCommand(client, "Usage: sm_sf64_spawn_arwing <name>");
+		Handle hSnapshots = CreateTrieSnapshot(g_hArwingConfigs);
+		if (hSnapshots != null)
+		{
+			// Cycle through all loaded configs to determine which exist, and then print them out.
+			for (int i; i < GetTrieSize(g_hArwingConfigs); i++)
+			{
+				char sConfig[32];
+				GetTrieSnapshotKey(hSnapshots, i, sConfig, sizeof(sConfig));
+
+				if (message[0] == EOS)
+					strcopy(message, sizeof(message), sConfig);
+				else
+					Format(message, sizeof(message), "%s, %s", message, sConfig);
+			}
+			delete hSnapshots;
+		}
+
+		if (message[0] != EOS)
+			ReplyToCommand(client, "Usage: sm_sf64_spawn_arwing <%s>", message);
+		else
+			ReplyToCommand(client, "Error: There are currently no arwing configs loaded.");
+
 		return Plugin_Handled;
 	}
-	
-	char sName[64];
-	GetCmdArg(1, sName, sizeof(sName));
-	if (!sName[0]) return Plugin_Handled;
 	
 	float flEyePos[3], flEyeAng[3], flEndPos[3];
 	GetClientEyePosition(client, flEyePos);
@@ -621,7 +644,7 @@ public Action Command_SpawnPickup(int client, int args)
 {
 	if (args < 2)
 	{
-		ReplyToCommand(client, "Usage: sm_sf64_spawn_pickup <name> <quantity> [can respawn 0/1]");
+		ReplyToCommand(client, "Usage: sm_sf64_spawn_pickup <laser, smartbomb, ring, ring2> <quantity> [can respawn 0/1]");
 		return Plugin_Handled;
 	}
 	
