@@ -792,7 +792,7 @@ public void OnClientButtonRelease(int client, int iButton)
 	if (iVehicle != -1) VehicleReleaseButton(iVehicle, iButton);
 }
 
-public int Phys_OnObjectSleep(int ent)
+public void Phys_OnObjectSleep(int ent)
 {
 	if (!IsValidEntity(ent)) return;
 	
