@@ -14,6 +14,9 @@
 =============================================================================================================
 =============================================================================================================
 ```
+<p align="center">
+  <img src="https://github.com/KitRifty/star-fortress-64/actions/workflows/build.yml/badge.svg?branch=master"/>
+</p>
 
 Where Star Fox and Team Fortress 2 two love each other so much they decided to make a baby.
 
