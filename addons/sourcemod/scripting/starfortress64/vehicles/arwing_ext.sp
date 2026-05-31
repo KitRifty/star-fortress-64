@@ -779,7 +779,7 @@ void ArwingUpdateHealthBar(int iArwing)
 				break;
 			}
 		}
-		while KvGotoNextKey(hConfig);
+		while (KvGotoNextKey(hConfig));
 	}
 	
 	if (iModelIndex == -1) return; // No material; we're done here.
