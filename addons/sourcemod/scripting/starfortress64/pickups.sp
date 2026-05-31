@@ -362,7 +362,7 @@ public Action Timer_PickupGetThink(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_EnablePickup(Handle timer, any entref)
+public void Timer_EnablePickup(Handle timer, any entref)
 {
 	int iPickup = EntRefToEntIndex(entref);
 	if (!iPickup || iPickup == INVALID_ENT_REFERENCE) return;
