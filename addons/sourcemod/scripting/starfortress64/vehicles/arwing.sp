@@ -991,7 +991,7 @@ public Action Timer_ArwingBarrelRoll(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_ArwingStopBarrelRoll(Handle timer, any entref)
+public void Timer_ArwingStopBarrelRoll(Handle timer, any entref)
 {
 	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
@@ -1104,7 +1104,7 @@ public Action Timer_ArwingUTurnBurnEnergy(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_ArwingUTurnPhaseOne(Handle timer, any entref)
+public void Timer_ArwingUTurnPhaseOne(Handle timer, any entref)
 {
 	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
@@ -1128,7 +1128,7 @@ public Action Timer_ArwingUTurnPhaseOne(Handle timer, any entref)
 	}
 }
 
-public Action Timer_ArwingStopUTurn(Handle timer, any entref)
+public void Timer_ArwingStopUTurn(Handle timer, any entref)
 {
 	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
@@ -1367,7 +1367,7 @@ public Action Timer_ArwingSomersaultBurnEnergy(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_ArwingStopSomersault(Handle timer, any entref)
+public void Timer_ArwingStopSomersault(Handle timer, any entref)
 {
 	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
@@ -2178,7 +2178,7 @@ public Action Timer_ArwingRechargeEnergy(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_PlayerEnteredArwing(Handle timer, any userid)
+public void Timer_PlayerEnteredArwing(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
 	if (client <= 0) return;
@@ -2235,7 +2235,7 @@ void DestroyArwing(int iArwing, int iAttacker, int iInflictor)
 	DebugMessage("DestroyArwing END (%d)", iArwing);
 }
 
-public Action Timer_ObliterateArwing(Handle timer, any entref)
+public void Timer_ObliterateArwing(Handle timer, any entref)
 {
 	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
@@ -2441,7 +2441,7 @@ void ArwingStopDamageSequence(int iArwing)
 	ArwingDamageSequenceDoRedBlink(iArwing);
 }
 
-public Action Timer_ArwingStopDamageSequence(Handle timer, any entref)
+public void Timer_ArwingStopDamageSequence(Handle timer, any entref)
 {
 	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
