@@ -253,7 +253,7 @@ public int SortWinnersArrayByKills(int index1, int index2, Handle array, Handle 
 	}
 }
 
-public Action Timer_PreAnnounceRoundWinners(Handle timer)
+public void Timer_PreAnnounceRoundWinners(Handle timer)
 {
 	if (timer != g_hRoundTimer) return;
 	
@@ -351,7 +351,7 @@ public Action Timer_PreAnnounceRoundWinners(Handle timer)
 	g_hRoundTimer = CreateTimer(10.0, Timer_PostActiveRound, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public Action Timer_AnnounceRoundWinners(Handle timer, Handle hPack)
+public void Timer_AnnounceRoundWinners(Handle timer, Handle hPack)
 {
 	char sWinText[64], sWinners[512], sMessage[512];
 	ResetPack(hPack);
@@ -378,7 +378,7 @@ public Action Timer_AnnounceRoundWinners(Handle timer, Handle hPack)
 	}
 }
 
-public Action Timer_PostActiveRound(Handle timer)
+public void Timer_PostActiveRound(Handle timer)
 {
 	if (timer != g_hRoundTimer) return;
 	
