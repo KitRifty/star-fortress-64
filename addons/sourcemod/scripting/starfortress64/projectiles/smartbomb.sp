@@ -245,7 +245,7 @@ bool SmartBombCanTrackTarget(int iSmartBomb, int iTarget)
 	return true;
 }
 
-public Action Timer_DetonateSmartBomb(Handle timer, any entref)
+public void Timer_DetonateSmartBomb(Handle timer, any entref)
 {
 	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return;
@@ -370,7 +370,7 @@ public Action Timer_SmartBombDetonateHurt(Handle timer, any entref)
 	return Plugin_Continue;
 }
 
-public Action Timer_SmartBombDetonateStopHurt(Handle timer, any entref)
+public void Timer_SmartBombDetonateStopHurt(Handle timer, any entref)
 {
 	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return;
@@ -390,7 +390,7 @@ public Action Timer_SmartBombDetonateStopHurt(Handle timer, any entref)
 	SetArrayCell(g_hSBombs, iIndex, INVALID_HANDLE, SBomb_DetonateStopHurtTimer);
 }
 
-public Action Timer_SmartBombDetonateKill(Handle timer, any entref)
+public void Timer_SmartBombDetonateKill(Handle timer, any entref)
 {
 	int iSmartBomb = EntRefToEntIndex(entref);
 	if (!iSmartBomb || iSmartBomb == INVALID_ENT_REFERENCE) return;
