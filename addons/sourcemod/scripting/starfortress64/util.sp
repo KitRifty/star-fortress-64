@@ -482,28 +482,28 @@ stock void FloatToTimeHMS(float time, int &h, int &m, int &s)
 	s = s % 60;
 }
 
-public Action Timer_KillEntity(Handle timer, any entref)
+public void Timer_KillEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE) return;
 	AcceptEntityInput(ent, "Kill");
 }
 
-public Action Timer_StopEntity(Handle timer, any entref)
+public void Timer_StopEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE) return;
 	AcceptEntityInput(ent, "Stop");
 }
 
-public Action Timer_TurnOffEntity(Handle timer, any entref)
+public void Timer_TurnOffEntity(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE) return;
 	AcceptEntityInput(ent, "TurnOff");
 }
 
-public Action Timer_RegeneratePlayer(Handle timer, any entref)
+public void Timer_RegeneratePlayer(Handle timer, any entref)
 {
 	int ent = EntRefToEntIndex(entref);
 	if (!ent || ent == INVALID_ENT_REFERENCE || !IsValidClient(ent)) return;

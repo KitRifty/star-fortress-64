@@ -508,7 +508,7 @@ void ArwingStartChargedLaser(int iArwing)
 	}
 }
 
-public Action Timer_ArwingChargedLaserKillTimer(Handle timer, any entref)
+public void Timer_ArwingChargedLaserKillTimer(Handle timer, any entref)
 {
 	int iArwing = EntRefToEntIndex(entref);
 	if (!iArwing || iArwing == INVALID_ENT_REFERENCE) return;
@@ -686,7 +686,7 @@ void ArwingUpdateHealthBar(int iArwing)
 				break;
 			}
 		}
-		while KvGotoNextKey(hConfig);
+		while (KvGotoNextKey(hConfig));
 	}
 	
 	// This arwing does not have a health bar. Ignored.
@@ -779,7 +779,7 @@ void ArwingUpdateHealthBar(int iArwing)
 				break;
 			}
 		}
-		while KvGotoNextKey(hConfig);
+		while (KvGotoNextKey(hConfig));
 	}
 	
 	if (iModelIndex == -1) return; // No material; we're done here.

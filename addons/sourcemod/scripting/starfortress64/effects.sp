@@ -217,7 +217,7 @@ stock void RemoveEffectsFromEntityOfEvent(int iOwner, EffectEvent iEvent, bool b
 	CloseHandle(hArray);
 }
 
-public Action Timer_EffectRemove(Handle timer, any entref)
+public void Timer_EffectRemove(Handle timer, any entref)
 {
 	int iEffect = EntRefToEntIndex(entref);
 	if (!iEffect || iEffect == INVALID_ENT_REFERENCE) return;

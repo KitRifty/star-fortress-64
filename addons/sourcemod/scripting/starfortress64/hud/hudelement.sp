@@ -87,7 +87,7 @@ int SpawnHudElement(const float flPos[3],
 	return iHudElement;
 }
 
-public Action Timer_HudElementInitialize(Handle timer, any entref)
+public void Timer_HudElementInitialize(Handle timer, any entref)
 {
 	int iHudElement = EntRefToEntIndex(entref);
 	

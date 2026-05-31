@@ -482,22 +482,22 @@ public int Native_MusicActiveMusicIdExists(Handle hPlugin, int iNumParams)
 	return MusicActiveMusicIdExists(GetNativeCell(1));
 }
 
-public int Native_MusicRemoveActiveMusicById(Handle hPlugin, int iNumParams)
+public void Native_MusicRemoveActiveMusicById(Handle hPlugin, int iNumParams)
 {
 	MusicRemoveActiveMusicById(GetNativeCell(1));
 }
 
-public int Native_MusicPlayActiveMusicIdToPlayer(Handle hPlugin, int iNumParams)
+public void Native_MusicPlayActiveMusicIdToPlayer(Handle hPlugin, int iNumParams)
 {
 	MusicPlayActiveMusicIdToPlayer(GetNativeCell(1), GetNativeCell(2));
 }
 
-public int Native_MusicRemoveActiveMusicIdFromPlayer(Handle hPlugin, int iNumParams)
+public void Native_MusicRemoveActiveMusicIdFromPlayer(Handle hPlugin, int iNumParams)
 {
 	MusicRemoveActiveMusicIdFromPlayer(GetNativeCell(1), GetNativeCell(2));
 }
 
-public int Native_MusicRemoveAllActiveMusicIdsFromPlayer(Handle hPlugin, int iNumParams)
+public void Native_MusicRemoveAllActiveMusicIdsFromPlayer(Handle hPlugin, int iNumParams)
 {
 	MusicRemoveAllActiveMusicIdsFromPlayer(GetNativeCell(1));
 }
