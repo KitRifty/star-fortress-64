@@ -1,11 +1,13 @@
 name: Build
 
 on:
+  workflow_dispatch: 
   push:
     branches: [master]
     paths:
       - "**.sp"
       - "**.inc"
+      - "**.yml"
     tags:
         - v*
   pull_request:
@@ -13,6 +15,7 @@ on:
     paths:
       - "**.sp"
       - "**.inc"
+      - "**.yml"
 
 jobs:
   build:
@@ -20,16 +23,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
         with:
           submodules: true
 
-      - name: SourceMod
+      - name: Download SourceMod
         run: |
-          wget -q "http://www.sourcemod.net/latest.php?version=1.10&os=linux" -O sourcemod.tar.gz
+          wget -q "http://www.sourcemod.net/latest.php?version=1.12&os=linux" -O sourcemod.tar.gz
           tar -xf sourcemod.tar.gz
 
-      - name: External Includes
+      - name: Download external includes
         working-directory: ./addons/sourcemod/scripting/include
         run: |
           wget -O vphysics.inc https://github.com/asherkin/vphysics/raw/master/vphysics.inc
@@ -43,7 +46,7 @@ jobs:
           ./spcomp starfortress64-deathmatch.sp -o starfortress64-deathmatch.smx
           
       - name: Upload Release Assets
-        uses: softprops/action-gh-release@v0.1.5
+        uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
