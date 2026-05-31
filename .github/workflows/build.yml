@@ -35,15 +35,14 @@ jobs:
       - name: Download external includes
         working-directory: ./addons/sourcemod/scripting/include
         run: |
-          wget -O vphysics.inc https://github.com/asherkin/vphysics/raw/master/vphysics.inc
+          wget -O vphysics.inc https://github.com/Alienmario/vphysics/raw/patch-1/vphysics.inc
           wget -O steamtools.inc https://github.com/asherkin/SteamTools/raw/master/plugin/steamtools.inc
-          wget -O dhooks.inc https://github.com/peace-maker/DHooks2/raw/dynhooks/sourcemod_files/scripting/include/dhooks.inc
 
       - name: Compile
         working-directory: ./addons/sourcemod/scripting
         run: |
-          ./spcomp starfortress64.sp -o starfortress64.smx
-          ./spcomp starfortress64-deathmatch.sp -o starfortress64-deathmatch.smx
+          ./spcomp64 starfortress64.sp -o starfortress64.smx
+          ./spcomp64 starfortress64-deathmatch.sp -o starfortress64-deathmatch.smx
           
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v3
