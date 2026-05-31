@@ -6,16 +6,16 @@
 		{
 			"CBaseEntity::GetSmoothedVelocity"
 			{
-				"windows"	"145"
-				"linux"		"146"
-				"mac"		"146"
+				"windows"	"146"
+				"linux"		"147"
+				"mac"		"147"
 			}
 			
 			"CBaseEntity::GetSoundEmissionOrigin"
 			{
-				"windows"	"156"
-				"linux"	"157"
-				"mac"	"157"
+				"windows"	"157"
+				"linux"	"158"
+				"mac"	"158"
 			}
 		}
 	}
